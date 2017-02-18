@@ -21,7 +21,13 @@ With Cozmo you can do:
 - picking up cubes
 - placing cubes on the ground or on another cube
 
+Improved security compared to Cozmo ScratchX extension:
+- everything runs on your computer without third-party servers or scripts
+- programs you save reside on your computer and have no links to third-party scripts in them - just plain Blockly XML programs
+
 Some other features:
+- can be rendered in a mobile browser and supports touch interaction (tested in iOS 10.2)
+- view camera in the same browser tab (just another blockly tab) - can be potentially overlaid
 - blocks are highlighted when being executed
 - view your program transled into Python or XML AST
 - view Cozmo's camera (only when program is running)
@@ -29,23 +35,33 @@ Some other features:
 ## How to run
 1. Check out this repository with "git" or download it as zip archive.
 2. Install prerequisites:
-	a. `pip3 install --user tornado`
-	b. `pip3 install --cozmo[camera]`
+	* `pip3 install --user cozmo[camera]`
+	* `pip3 install --user tornado ws4py`
+	* it is highly recommended to install Node.js as described in [Security considerations](#security-considerations) section
 3. Go to `server` folder
-4. Start server: python3 server.py -n <the future programmer's name>
+4. Start the server: `python3 server.py -n <the future programmer's name>`
 5. Point your browser to `http://localhost:9090/blockly/demos/cozmo/`
-6. Build your program and run with the red play button in the top-right corner
+6. Build your program and run with the red `play` button in the top-right corner
 
 If your program hangs, or you just want to stop it, click the stop button.
 
 The last executed program will be stored in `.last` file for you to be able to reload it.
 You can also save any program with any other name and load any previously saved programs.
 
-## Security concerns
-By default the program you build with the blocks is translated into python and sent to the `server.py` for execution.
-This model is intended for contained environments (e.g. in a home network).
-Later instructions will be added how to install `nodejs` and run additional service that will instead let `server.py` receive XML AST of your program, which would be much more secure.
-If you're not sure if your network is secure, or if you're planning to let people with potentially malicious intentions program your Cozmo, don't use this yet and wait for the update.
+## Security considerations
+There are two modes of code execution: `secure` and `non-secure`.
+
+`secure` mode requires installation of [Node.js](https://nodejs.org).
+In that mode the code you create with Blockly and execute with the `play` button is sent as Blockly XML AST to the server and there translated to an actual Python code and executed.
+
+After you download and install NodeJS go to the `nodejs` folder and run `npm install`. That would install all the modules that are required for that additional service.
+
+`non-secure` mode doesn't require Node.js. In that mode your program is traslated into Python code and is sent to the server for execution.
+This mode is intended for contained environments (e.g. in a home network).
+The risk here is that the server accepts arbitrary code from the network for execution.
+If you are not sure your local home network is secure, or if you're planning to let people with potentially malicious intentions program your Cozmo, or you're running `server.py` not in your local home network, it is highly recommended to run `server.py` in `secure` mode.
+
+By default `server.py` runs in `secure` mode. To run it in `non-secure` mode use `--nonsecure` command argument.
 
 ## Developing
 There are two Javascript versions: compressed and uncompressed.

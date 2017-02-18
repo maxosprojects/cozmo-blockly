@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 try:
 	import tornado.ioloop
@@ -18,14 +18,19 @@ import json
 import re
 from CodeExecutor import CodeExecutor
 from cozmobot import CozmoBot
+from subprocess import Popen
 
 cozmoBlockly = None
+nodejs = None
 
 def signal_handler(signal, frame):
-	global cozmoBlockly
+	global cozmoBlockly, nodejs
 
 	print('Got ' + str(signal) + ' signal. Shutting down...')
 	cozmoBlockly.stop()
+	if nodejs != None:
+		nodejs.terminate()
+		nodejs.wait()
 	exit(0)
 
 class CozmoBlockly(tornado.web.Application):
@@ -69,10 +74,9 @@ class CozmoBlockly(tornado.web.Application):
 		@gen.coroutine
 		def post(self):
 			data = self.request.body
-			# print "Got XML:\n", data
 			try:
 				code = str(data, 'utf-8')
-				print('Executing code: ')
+				print('Received code: ')
 				print(code)
 				with (yield self.application._lock.acquire()):
 					self.application._executor.start(code, self.application)
@@ -136,7 +140,12 @@ class CozmoBlockly(tornado.web.Application):
 			t = loader.load(file)
 			includes = t.generate()
 
-			self.render(path + 'index.html', includes=includes, name=self.args.name)
+			if self.args.nonsecure:
+				nonsec = 'true'
+			else:
+				nonsec = 'false'
+
+			self.render(path + 'index.html', includes=includes, name=self.args.name, nonsecure=nonsec)
 
 	def highlightBlock(self, block):
 		try:
@@ -159,7 +168,8 @@ class CozmoBlockly(tornado.web.Application):
 		tornado.ioloop.IOLoop.instance().stop()
 
 	def start(args):
-		global cozmoBlockly
+		global cozmoBlockly, nodejs
+
 		app = CozmoBlockly([
 			(r'/(blockly/demos/cozmo/)', CozmoBlockly.HomeHandler, dict(args=args)),
 			(r'/blockly/(.*)', tornado.web.StaticFileHandler if not args.dev else CozmoBlockly.NoCacheStaticFileHandler, dict(path='../blockly')),
@@ -171,6 +181,9 @@ class CozmoBlockly(tornado.web.Application):
 			(r'/camPub', CozmoBlockly.WSCameraPubHandler),
 		])
 		cozmoBlockly = app
+
+		nodejs = Popen(['nodejs', '../nodejs/headless.js'])
+
 		print('[Server] Starting server...')
 
 		tornado.platform.asyncio.AsyncIOMainLoop().install()
@@ -178,7 +191,7 @@ class CozmoBlockly(tornado.web.Application):
 			print('[Server] Running in debug mode')
 		app.listen(9090)
 
-		app._executor = CodeExecutor()
+		app._executor = CodeExecutor(args.nonsecure)
 		app._lock = locks.Lock()
 		app._wsHighlighter = None
 		app._wsCamera = None
@@ -197,6 +210,8 @@ def main():
 	                    help='default file name to load/save')
 	parser.add_argument('-d', '--dev', action="store_true",
 						help='enable development mode (disables caching)')
+	parser.add_argument('--nonsecure', action="store_true",
+						help="run server in non-secure mode, which doesn't require nodejs but python code is accepted from the network for execution")
 	args = parser.parse_args()
 
 	CozmoBlockly.start(args)

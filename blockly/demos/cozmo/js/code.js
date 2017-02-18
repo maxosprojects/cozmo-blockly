@@ -661,7 +661,13 @@ Code.runJS = function() {
 
 Code.sendCodeToUrl = function(urlToSendTo) {
   Code.sendXmlToUrl('/saves/.last');
-  var code = Blockly.Python.workspaceToCode(Code.workspace);
+  var code;
+  if (NONSECURE) {
+    code = Blockly.Python.workspaceToCode(Code.workspace);
+  } else {
+    var xml = Blockly.Xml.workspaceToDom(Code.workspace);
+    code = Blockly.Xml.domToText(xml);
+  }
 
   var highlighter = new cozmoWs();
 
@@ -669,6 +675,7 @@ Code.sendCodeToUrl = function(urlToSendTo) {
     Code.workspace.highlightBlock(evt.data);
   };
   highlighter.onOpen = function(evt) {
+    // Send code after highlighter websocket is connected.
     $.ajax({
       url: urlToSendTo,
       method: 'POST',

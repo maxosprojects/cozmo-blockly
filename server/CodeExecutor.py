@@ -1,21 +1,41 @@
 from multiprocessing import Process
 import signal, time
 from cozmobot import CozmoBot
-import cozmo
-import asyncio
+import urllib.request
 
 class CodeExecutor():
-	def __init__(self):
+	def __init__(self, nonsecure = False):
 		self._starter = None
 		self._task = None
+		self._nonsecure = nonsecure
+		if nonsecure:
+			print("WARNING: Code will be executed in non-secure manner - Python code is accepted from the network for execution!")
 
 	def start(self, code, app):
 		self.stop()
-		if code.find("def on_start():") == -1:
+
+		if self._nonsecure:
+			toExecute = code
+		else:
+			try:
+				req = urllib.request.Request(
+					url='http://localhost:9091/translate',
+					headers={'Content-Type': 'text/plain'},
+					data=bytes(code, 'utf-8'))
+				with urllib.request.urlopen(req) as f:
+					toExecute = f.read().decode('utf-8')
+				print('Executing code:')
+				print(toExecute)
+			except Exception as e:
+				import traceback
+				traceback.print_exc()
+				raise e
+
+		if toExecute.find("def on_start():") == -1:
 			print("Block on_start() not defined")
 			return
 
-		starter_code = code + """
+		starter_code = toExecute + """
 try:
 	if callable(on_cube_tapped):
 		robot.world.add_event_handler(cozmo.objects.EvtObjectTapped, on_cube_tapped)

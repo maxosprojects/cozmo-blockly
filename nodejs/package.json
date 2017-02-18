@@ -1,0 +1,32 @@
+{
+  "name": "cozmo-blockly-translator",
+  "version": "0.1.0",
+  "description": "A service to translate Blockly XML AST to Python code to execute on Cozmo",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "body-parser": "1.16.1",
+    "express": "4.13.3",
+    "xmldom": "0.1.27"
+  },
+  "engines": {
+    "node": "4.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/maxosprojects/cozmo-blockly"
+  },
+  "keywords": [
+    "node",
+    "express",
+    "cozmo",
+    "blockly"
+  ],
+  "author": "maxosprojects",
+  "contributors": [
+    "maxosprojects (https://github.com/maxosprojects/cozmo-blockly)"
+  ],
+  "license": "MIT"
+}
