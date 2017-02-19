@@ -35,18 +35,32 @@ def signal_handler(signal, frame):
 
 class CozmoBlockly(tornado.web.Application):
 
-	class WSHighlightHandler(tornado.websocket.WebSocketHandler):
+	class WSHighlightSubHandler(tornado.websocket.WebSocketHandler):
 		def open(self):
-			print('[Server] WS Client connected')
+			print('[Server] HighlighterSub client connected')
 			self.application._wsHighlighter = self
 
 		def on_close(self):
-			print('[Server] WS Client diconnected')
+			print('[Server] HighlighterSub client disconnected')
 
 		def on_message(self, message):
-			print('[Server] WS message: ' + message)
+			print('[Server] HighlighterSub client message: ' + message)
 			# echo message back to client
 			self.write_message(message)
+
+	class WSHighlightPubHandler(tornado.websocket.WebSocketHandler):
+		def open(self):
+			print('[Server] HighlighterPub client connected')
+
+		def on_message(self, message):
+			try:
+				if self.application._wsHighlighter:
+					self.application._wsHighlighter.write_message(message)
+			except Exception:
+				pass
+
+		def on_close(self):
+			print('[Server] HighlighterPub client disconnected')
 
 	class WSCameraSubHandler(tornado.websocket.WebSocketHandler):
 		def open(self):
@@ -70,6 +84,28 @@ class CozmoBlockly(tornado.web.Application):
 		def on_close(self):
 			print('[Server] CameraPub client disconnected')
 
+	class WS3dSubHandler(tornado.websocket.WebSocketHandler):
+		def open(self):
+			print('[Server] 3dSub client connected')
+			self.application._ws3d = self
+
+		def on_close(self):
+			print('[Server] 3dSub client disconnected')
+
+	class WS3dPubHandler(tornado.websocket.WebSocketHandler):
+		def open(self):
+			print('[Server] 3dPub client connected')
+
+		def on_message(self, message):
+			try:
+				if self.application._ws3d:
+					self.application._ws3d.write_message(message, binary=True)
+			except Exception:
+				pass
+
+		def on_close(self):
+			print('[Server] 3dPub client disconnected')
+
 	class RobotSubmitHandler(tornado.web.RequestHandler):
 		@gen.coroutine
 		def post(self):
@@ -79,7 +115,7 @@ class CozmoBlockly(tornado.web.Application):
 				print('Received code: ')
 				print(code)
 				with (yield self.application._lock.acquire()):
-					self.application._executor.start(code, self.application)
+					self.application._executor.start(code)
 				self.write('OK')
 			except Exception as e:
 				err = str(e)
@@ -147,19 +183,6 @@ class CozmoBlockly(tornado.web.Application):
 
 			self.render(path + 'index.html', includes=includes, name=self.args.name, nonsecure=nonsec)
 
-	def highlightBlock(self, block):
-		try:
-			self._wsHighlighter.write_message(block)
-		except Exception:
-			pass
-
-	def publishCamera(self, img):
-		try:
-			self._wsCamera.write_message(img)
-		except Exception as e:
-			# pass
-			print (e)
-
 	def stop(self):
 		# with (yield self._lock.acquire()):
 		# 	self._executor.stop()
@@ -176,7 +199,8 @@ class CozmoBlockly(tornado.web.Application):
 			(r'/(saves)/(.*)', CozmoBlockly.SavesHandler),
 			(r'/robot/submit', CozmoBlockly.RobotSubmitHandler),
 			(r'/robot/terminate', CozmoBlockly.RobotTerminateHandler),
-			(r'/highlight', CozmoBlockly.WSHighlightHandler),
+			(r'/highlightSub', CozmoBlockly.WSHighlightSubHandler),
+			(r'/highlightPub', CozmoBlockly.WSHighlightPubHandler),
 			(r'/camSub', CozmoBlockly.WSCameraSubHandler),
 			(r'/camPub', CozmoBlockly.WSCameraPubHandler),
 		])

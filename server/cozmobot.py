@@ -29,11 +29,23 @@ emotions = {
 	"STARTLED": cozmo.anim.Triggers.ReactToUnexpectedMovement
 }
 
+class Highlighter:
+	def __init__(self):
+		self._client = None
+
+	def start(self):
+		from ws4py.client.threadedclient import WebSocketClient
+
+		self._client = WebSocketClient('ws://localhost:9090/highlightPub')
+		self._client.connect()
+
+	def send(self, block):
+		self._client.send(block)
+
 class CozmoBot:
-	def __init__(self, app):
+	def __init__(self):
 		self._robot = None
 		self._origin = None
-		self._app = app
 		self._camPubThread = None
 
 	def start(self, code):
@@ -49,7 +61,10 @@ class CozmoBot:
 			self._robot.camera.image_stream_enabled = True
 
 			bot = self
-			app = self._app
+
+			highlighter = Highlighter()
+			highlighter.start()
+
 			import cozmo
 			exec(code, locals(), locals())
 

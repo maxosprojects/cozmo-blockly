@@ -29,11 +29,11 @@ Some other features:
 - can be rendered in a mobile browser and supports touch interaction (tested in iOS 10.2)
 - view camera in the same browser tab (just another blockly tab) - can be potentially overlaid
 - blocks are highlighted when being executed
-- view your program transled into Python or XML AST
+- view your program translated into Python or XML AST
 - view Cozmo's camera (only when program is running)
 
 ## How to run
-1. Check out this repository with "git" or download it as zip archive.
+1. Check out this repository with "git", or download it as a zip archive and unpack
 2. Install prerequisites:
 	* `pip3 install --user cozmo[camera]`
 	* `pip3 install --user tornado ws4py`
@@ -69,7 +69,7 @@ Compressed version is compiled with google's closure library, is minified and ob
 Uncompressed version is debuggable.
 
 To run uncompressed version: `python3 server.py -d` which enables debug mode.
-You may encounter some caching issues. If so, restart the server.
+You may encounter some caching issues. If so, restart `server.py`
 
 ## Issues
 Any issues? Report an issue above.

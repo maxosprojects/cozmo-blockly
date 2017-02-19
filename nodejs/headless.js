@@ -31,7 +31,7 @@ require('../blockly/generators/python/procedures.js');
 
 require('../blockly/msg/messages.js');
 
-Blockly.Python.STATEMENT_PREFIX = 'app.highlightBlock(%1)\n';
+Blockly.Python.STATEMENT_PREFIX = 'highlighter.send(%1)\n';
 
 var express = require('express');
 var bodyParser = require('body-parser')

@@ -47,6 +47,7 @@ Code.LANGUAGE_RTL = ['ar', 'fa', 'he', 'lki'];
 Code.workspace = null;
 
 Code.camera = null;
+Code.highlighter = null;
 
 /**
  * Angle increases clockwise (true) or counterclockwise (false).
@@ -65,8 +66,8 @@ Blockly.FieldAngle.OFFSET = 0;
  */
 Blockly.FieldAngle.WRAP = 360;
 
-Blockly.Python.STATEMENT_PREFIX = 'app.highlightBlock(%1)\n';
-Blockly.Python.addReservedWords('app', 'highlightBlock', 'cozmo, robot, bot, tapped_cube');
+Blockly.Python.STATEMENT_PREFIX = 'highlighter.send(%1)\n';
+Blockly.Python.addReservedWords('highlighter', 'cozmo, robot, bot, tapped_cube');
 
 /**
  * Extracts a parameter from the URL.
@@ -256,11 +257,10 @@ Code.tabClick = function(clickedName) {
     }
   }
 
-  // Disconnect camera WS.
-  if (Code.camera) {
-    Code.camera.doDisconnect()
-  }
+  Code.stopCamera();
+  Code.stopHighlighter();
 
+  // If blocks tab was open, hide workspace.
   if (document.getElementById('tab_blocks').className == 'tabon') {
     Code.workspace.setVisible(false);
   }
@@ -278,9 +278,6 @@ Code.tabClick = function(clickedName) {
   document.getElementById('content_' + clickedName).style.visibility =
       'visible';
   Code.renderContent();
-  if (clickedName == 'blocks') {
-    Code.workspace.setVisible(true);
-  }
   Blockly.svgResize(Code.workspace);
 };
 
@@ -303,67 +300,40 @@ Code.drawImageBinary = function(data, canvas, context) {
  */
 Code.renderContent = function() {
   var content = document.getElementById('content_' + Code.selected);
+  var renderInnerContent = function(code, type) {
+    content.textContent = code;
+    if (typeof prettyPrintOne == 'function') {
+      code = content.textContent;
+      code = prettyPrintOne(code, type);
+      content.innerHTML = code;
+    }
+  };
   // Initialize the pane.
-  if (content.id == 'content_xml') {
-    var xmlTextarea = document.getElementById('content_xml');
+  if (Code.selected == 'xml') {
     var xmlDom = Blockly.Xml.workspaceToDom(Code.workspace);
     var xmlText = Blockly.Xml.domToPrettyText(xmlDom);
-    xmlTextarea.value = xmlText;
-    xmlTextarea.focus();
-  } else if (content.id == 'content_camera') {
-    var canvas = document.getElementById('canvas_cam');
-    var context = canvas.getContext("2d");
-
-    Code.camera = new cozmoWs();
-
-    Code.camera.onMessage = function(msg) {
-      Code.drawImageBinary(msg.data, canvas, context);
-    };
-
-    var loc = window.location;
-    var wsurl = 'ws://' + loc.host + '/camSub';
-    Code.camera.doConnect(wsurl, true);
-
-  } else if (content.id == 'content_javascript') {
+    content.value = xmlText;
+    content.focus();
+  } else if (Code.selected == 'blocks') {
+    Code.workspace.setVisible(true);
+    Code.startHighlighter();
+  } else if (Code.selected == 'camera') {
+    Code.startCamera();
+  } else if (Code.selected == 'javascript') {
     var code = Blockly.JavaScript.workspaceToCode(Code.workspace);
-    content.textContent = code;
-    if (typeof prettyPrintOne == 'function') {
-      code = content.textContent;
-      code = prettyPrintOne(code, 'js');
-      content.innerHTML = code;
-    }
-  } else if (content.id == 'content_python') {
-    code = Blockly.Python.workspaceToCode(Code.workspace);
-    content.textContent = code;
-    if (typeof prettyPrintOne == 'function') {
-      code = content.textContent;
-      code = prettyPrintOne(code, 'py');
-      content.innerHTML = code;
-    }
-  } else if (content.id == 'content_php') {
-    code = Blockly.PHP.workspaceToCode(Code.workspace);
-    content.textContent = code;
-    if (typeof prettyPrintOne == 'function') {
-      code = content.textContent;
-      code = prettyPrintOne(code, 'php');
-      content.innerHTML = code;
-    }
-  } else if (content.id == 'content_dart') {
-    code = Blockly.Dart.workspaceToCode(Code.workspace);
-    content.textContent = code;
-    if (typeof prettyPrintOne == 'function') {
-      code = content.textContent;
-      code = prettyPrintOne(code, 'dart');
-      content.innerHTML = code;
-    }
-  } else if (content.id == 'content_lua') {
-    code = Blockly.Lua.workspaceToCode(Code.workspace);
-    content.textContent = code;
-    if (typeof prettyPrintOne == 'function') {
-      code = content.textContent;
-      code = prettyPrintOne(code, 'lua');
-      content.innerHTML = code;
-    }
+    renderInnerContent(code, 'js');
+  } else if (Code.selected == 'python') {
+    var code = Blockly.Python.workspaceToCode(Code.workspace);
+    renderInnerContent(code, 'py');
+  } else if (Code.selected == 'php') {
+    var code = Blockly.PHP.workspaceToCode(Code.workspace);
+    renderInnerContent(code, 'php');
+  } else if (Code.selected == 'dart') {
+    var code = Blockly.Dart.workspaceToCode(Code.workspace);
+    renderInnerContent(code, 'dart');
+  } else if (Code.selected == 'lua') {
+    var code = Blockly.Lua.workspaceToCode(Code.workspace);
+    renderInnerContent(code, 'lua');
   }
 };
 
@@ -583,8 +553,11 @@ Code.init = function() {
 
   for (var i = 0; i < Code.TABS_.length; i++) {
     var name = Code.TABS_[i];
-    Code.bindClick('tab_' + name,
-        function(name_) {return function() {Code.tabClick(name_);};}(name));
+    Code.bindClick('tab_' + name, function(name_) {
+        return function() {
+          Code.tabClick(name_);
+        };
+      }(name));
   }
   onresize();
   Blockly.svgResize(Code.workspace);
@@ -669,12 +642,7 @@ Code.sendCodeToUrl = function(urlToSendTo) {
     code = Blockly.Xml.domToText(xml);
   }
 
-  var highlighter = new cozmoWs();
-
-  highlighter.onMessage = function(evt) {
-    Code.workspace.highlightBlock(evt.data);
-  };
-  highlighter.onOpen = function(evt) {
+  var onHighlighterConnected = function() {
     // Send code after highlighter websocket is connected.
     $.ajax({
       url: urlToSendTo,
@@ -686,18 +654,66 @@ Code.sendCodeToUrl = function(urlToSendTo) {
       console.log('success');
     })
     .fail(function(jqXHR, textStatus, errorThrown) {
-      alert(errorThrown);
       console.log(errorThrown);
     });
   };
-  highlighter.onClose = function(evt) {
+
+  Code.startHighlighter(onHighlighterConnected);
+};
+
+Code.startHighlighter = function(onConnectFunc) {
+  Code.stopHighlighter();
+
+  Code.highlighter = new cozmoWs();
+
+  Code.highlighter.onMessage = function(evt) {
+    if (document.getElementById('tab_blocks').className == 'tabon') {
+      Code.workspace.highlightBlock(evt.data);
+    }
+  };
+  Code.highlighter.onOpen = function(evt) {
+    if (onConnectFunc) {
+      onConnectFunc();
+    }
+  };
+  Code.highlighter.onClose = function(evt) {
     Code.workspace.highlightBlock(null);
   };
 
   var loc = window.location;
-  var wsurl = 'ws://' + loc.host + '/highlight';
-  highlighter.doConnect(wsurl);
-};
+  var wsurl = 'ws://' + loc.host + '/highlightSub';
+  Code.highlighter.doConnect(wsurl);
+}
+
+Code.stopHighlighter = function() {
+  if (Code.highlighter) {
+    Code.highlighter.doDisconnect();
+    Code.highlighter = null;
+  }
+}
+
+Code.startCamera = function() {
+    var canvas = document.getElementById('canvas_cam');
+    var context = canvas.getContext("2d");
+
+    Code.camera = new cozmoWs();
+
+    Code.camera.onMessage = function(msg) {
+      Code.drawImageBinary(msg.data, canvas, context);
+    };
+
+    var loc = window.location;
+    var wsurl = 'ws://' + loc.host + '/camSub';
+    Code.camera.doConnect(wsurl, true);
+}
+
+Code.stopCamera = function() {
+  // Disconnect camera WS.
+  if (Code.camera) {
+    Code.camera.doDisconnect()
+    Code.camera = null;
+  }
+}
 
 Code.sendXmlToUrl = function(urlToSendTo) {
   var xml = Blockly.Xml.workspaceToDom(Code.workspace);
@@ -786,7 +802,8 @@ Code.stopRemoteExecution = function() {
     method: 'POST'
   })
   .done(function(data, textStatus, jqXHR) {
-    Code.workspace.highlightBlock(null);
+      // Disconnect highlighter WS.
+    Code.stopHighlighter();
     console.log('terminated');
   })
   .fail(function(jqXHR, textStatus, errorThrown) {

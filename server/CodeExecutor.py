@@ -11,7 +11,7 @@ class CodeExecutor():
 		if nonsecure:
 			print("WARNING: Code will be executed in non-secure manner - Python code is accepted from the network for execution!")
 
-	def start(self, code, app):
+	def start(self, code):
 		self.stop()
 
 		if self._nonsecure:
@@ -52,7 +52,7 @@ except NameError:
 on_start()
 """
 
-		self._starter = Process(target=self._exec_code, args=(starter_code, app))
+		self._starter = Process(target=self._exec_code, args=(starter_code, ))
 		self._starter.start()
 
 	def stop(self):
@@ -61,7 +61,7 @@ on_start()
 			self._starter.join()
 			self._starter = None
 
-	def _exec_code(self, code, app):
+	def _exec_code(self, code):
 
 		def signal_handler(signal, frame):
 			print('CodeExecutor process got ' + str(signal) + ' signal. Exitting...')
@@ -70,5 +70,5 @@ on_start()
 		signal.signal(signal.SIGINT, signal_handler)
 		signal.signal(signal.SIGTERM, signal_handler)
 
-		bot = CozmoBot(app)
+		bot = CozmoBot()
 		bot.start(code)
