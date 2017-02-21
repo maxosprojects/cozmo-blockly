@@ -227,7 +227,7 @@ Code.LANG = Code.getLang();
  * @private
  */
 // Code.TABS_ = ['blocks', 'javascript', 'php', 'python', 'dart', 'lua', 'xml'];
-Code.TABS_ = ['blocks', 'camera', 'python', 'xml'];
+Code.TABS_ = ['blocks', 'camera', '3d', 'python', 'xml'];
 
 Code.selected = 'blocks';
 
@@ -319,6 +319,8 @@ Code.renderContent = function() {
     Code.startHighlighter();
   } else if (Code.selected == 'camera') {
     Code.startCamera();
+  } else if (Code.selected == '3d') {
+    cozmo3d();
   } else if (Code.selected == 'javascript') {
     var code = Blockly.JavaScript.workspaceToCode(Code.workspace);
     renderInnerContent(code, 'js');
