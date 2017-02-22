@@ -99,7 +99,7 @@ class CozmoBlockly(tornado.web.Application):
 		def on_message(self, message):
 			try:
 				if self.application._ws3d:
-					self.application._ws3d.write_message(message, binary=True)
+					self.application._ws3d.write_message(message, binary=False)
 			except Exception:
 				pass
 
@@ -203,6 +203,8 @@ class CozmoBlockly(tornado.web.Application):
 			(r'/highlightPub', CozmoBlockly.WSHighlightPubHandler),
 			(r'/camSub', CozmoBlockly.WSCameraSubHandler),
 			(r'/camPub', CozmoBlockly.WSCameraPubHandler),
+			(r'/3dSub', CozmoBlockly.WS3dSubHandler),
+			(r'/3dPub', CozmoBlockly.WS3dPubHandler),
 		])
 		cozmoBlockly = app
 
@@ -219,6 +221,7 @@ class CozmoBlockly(tornado.web.Application):
 		app._lock = locks.Lock()
 		app._wsHighlighter = None
 		app._wsCamera = None
+		app._ws3d = None
 
 		app._ioloop = tornado.ioloop.IOLoop.current()
 		app._ioloop.start()
