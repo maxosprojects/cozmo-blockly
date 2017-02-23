@@ -232,6 +232,13 @@ class CozmoBot:
 		print("[Bot] Say finished")
 		return res.state == cozmo.action.ACTION_SUCCEEDED
 
+	def enableFreeWill(self, enable):
+		print("[Bot] Executing enableFreeWill(" + str(enable) + ")")
+		if enable:
+			self._robot.start_freeplay_behaviors()
+		else:
+			self._robot.stop_freeplay_behaviors()
+
 	def stop(self):
 		print("[Bot] Executing stop")
 		self._robot.stop_all_motors()

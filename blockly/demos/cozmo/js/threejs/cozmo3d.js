@@ -126,9 +126,6 @@ function Cozmo3d() {
   this._render = function () {
     that._id = requestAnimationFrame( that._render );
 
-    // that.cube.rotation.x += 0.01;
-    // that.cube.rotation.y += 0.01;
-
     if (that.anaglyph) {
       that._effect.render(that._scene, that._camera);
     } else {

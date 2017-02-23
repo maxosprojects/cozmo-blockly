@@ -151,3 +151,9 @@ Blockly.Python['cozmo_say'] = function(block) {
 	var code = 'bot.say(' + text + ')\n';
 	return code;
 };
+
+Blockly.Python['cozmo_free_will'] = function(block) {
+	var enable = block.getFieldValue('FREE_WILL');
+	var code = 'bot.enableFreeWill(' + enable + ')\n';
+	return code;
+};
