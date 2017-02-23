@@ -1,17 +1,10 @@
 # Cozmo Programming with Blockly
 
 ![Cozmo Programming with Blockly](https://github.com/maxosprojects/cozmo-blockly/raw/master/cozmo-blockly.png)
+![Cozmo Programming with Blockly 3D](https://github.com/maxosprojects/cozmo-blockly/raw/master/cozmo-blockly-3d.jpg)
 
 ## Features
 Most importantly, all programming constructs are available to teach/learn basics of programming.
-Among them are:
-- functions
-- loops
-- arithmetic
-- logic
-- conditions
-- if/then/else
-- etc
 
 With Cozmo you can do:
 - basic actions (drive, turn, speak), the list will be extended with time
@@ -20,6 +13,7 @@ With Cozmo you can do:
 - "cube seen" conditions
 - picking up cubes
 - placing cubes on the ground or on another cube
+- enable "free will"
 
 Improved security compared to Cozmo ScratchX extension:
 - everything runs on your computer without third-party servers or scripts
@@ -27,10 +21,11 @@ Improved security compared to Cozmo ScratchX extension:
 
 Some other features:
 - can be rendered in a mobile browser and supports touch interaction (tested in iOS 10.2)
-- view camera in the same browser tab (just another blockly tab) - can be potentially overlaid
+- 3D visualization of Cozmo and his environment - works in a desktop or mobile browser (tested in iOS 10.2)
+- 3D visualization supports Anaglyph rendering - just toggle it and put on the red-cyan glasses and you're there, with Cozmo
+- view camera in the same browser tab (just another blockly tab) - available only when program is running
 - blocks are highlighted when being executed
 - view your program translated into Python or XML AST
-- view Cozmo's camera (only when program is running)
 
 ## How to run
 1. Check out this repository with "git", or download it as a zip archive and unpack

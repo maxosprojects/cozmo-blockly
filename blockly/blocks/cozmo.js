@@ -339,3 +339,24 @@ Blockly.Blocks['cozmo_tapped_cube_number_boolean'] = {
     });
   }
 };
+
+Blockly.Blocks['cozmo_free_will'] = {
+  init: function() {
+    this.jsonInit({
+      "message0": "%1 free will",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "FREE_WILL",
+          "options": [
+            ["Enable", "True"],
+            ["Disable", "False"]
+          ]
+        }
+      ],
+      "colour": 60,
+      "previousStatement": null,
+      "nextStatement": null,
+    });
+  }
+};

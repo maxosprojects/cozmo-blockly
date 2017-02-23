@@ -48,6 +48,8 @@ Code.workspace = null;
 
 Code.camera = null;
 Code.highlighter = null;
+Code.cozmo3dws = null;
+Code.cozmo3d = null;
 
 /**
  * Angle increases clockwise (true) or counterclockwise (false).
@@ -227,7 +229,7 @@ Code.LANG = Code.getLang();
  * @private
  */
 // Code.TABS_ = ['blocks', 'javascript', 'php', 'python', 'dart', 'lua', 'xml'];
-Code.TABS_ = ['blocks', 'camera', 'python', 'xml'];
+Code.TABS_ = ['blocks', 'camera', '3d', 'python', 'xml'];
 
 Code.selected = 'blocks';
 
@@ -259,6 +261,7 @@ Code.tabClick = function(clickedName) {
 
   Code.stopCamera();
   Code.stopHighlighter();
+  Code.stop3d();
 
   // If blocks tab was open, hide workspace.
   if (document.getElementById('tab_blocks').className == 'tabon') {
@@ -319,6 +322,8 @@ Code.renderContent = function() {
     Code.startHighlighter();
   } else if (Code.selected == 'camera') {
     Code.startCamera();
+  } else if (Code.selected == '3d') {
+    Code.start3d();
   } else if (Code.selected == 'javascript') {
     var code = Blockly.JavaScript.workspaceToCode(Code.workspace);
     renderInnerContent(code, 'js');
@@ -693,18 +698,18 @@ Code.stopHighlighter = function() {
 }
 
 Code.startCamera = function() {
-    var canvas = document.getElementById('canvas_cam');
-    var context = canvas.getContext("2d");
+  var canvas = document.getElementById('canvas_cam');
+  var context = canvas.getContext("2d");
 
-    Code.camera = new cozmoWs();
+  Code.camera = new cozmoWs();
 
-    Code.camera.onMessage = function(msg) {
-      Code.drawImageBinary(msg.data, canvas, context);
-    };
+  Code.camera.onMessage = function(msg) {
+    Code.drawImageBinary(msg.data, canvas, context);
+  };
 
-    var loc = window.location;
-    var wsurl = 'ws://' + loc.host + '/camSub';
-    Code.camera.doConnect(wsurl, true);
+  var loc = window.location;
+  var wsurl = 'ws://' + loc.host + '/camSub';
+  Code.camera.doConnect(wsurl, true);
 }
 
 Code.stopCamera = function() {
@@ -712,6 +717,40 @@ Code.stopCamera = function() {
   if (Code.camera) {
     Code.camera.doDisconnect()
     Code.camera = null;
+  }
+}
+
+Code.start3d = function() {
+  if (!Code.cozmo3d) {
+    Code.cozmo3d = new Cozmo3d();
+    Code.cozmo3d.init();
+  }
+  Code.cozmo3d.start();
+
+  Code.cozmo3dws = new cozmoWs();
+  Code.cozmo3dws.onMessage = function(msg) {
+    Code.cozmo3d.onData(JSON.parse(msg.data));
+  };
+
+  var loc = window.location;
+  var wsurl = 'ws://' + loc.host + '/3dSub';
+  Code.cozmo3dws.doConnect(wsurl);
+}
+
+Code.stop3d = function() {
+  if (Code.cozmo3d) {
+    Code.cozmo3d.stop();
+  }
+  // Disconnect cozmo3dws WS.
+  if (Code.cozmo3dws) {
+    Code.cozmo3dws.doDisconnect()
+    Code.cozmo3dws = null;
+  }
+}
+
+Code.toggleAnaglyph = function() {
+  if (Code.cozmo3d) {
+    Code.cozmo3d.toggleAnaglyph();
   }
 }
 

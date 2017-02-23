@@ -46,7 +46,7 @@ class CozmoBot:
 	def __init__(self):
 		self._robot = None
 		self._origin = None
-		self._camPubThread = None
+		self._dataPubThread = None
 
 	def start(self, code):
 		def run(sdk_conn):
@@ -68,29 +68,33 @@ class CozmoBot:
 			import cozmo
 			exec(code, locals(), locals())
 
-		self._camPubThread = threading.Thread(target=self.feedCameraInThread)
-		self._camPubThread.daemon = True
-		self._camPubThread.start()
+		self._dataPubThread = threading.Thread(target=self.feedRobotDataInThread)
+		self._dataPubThread.daemon = True
+		self._dataPubThread.start()
 
 		cozmo.setup_basic_logging()
 		cozmo.robot.Robot.drive_off_charger_on_connect = False
 		cozmo.connect(run)
 		self._robot = None
 
-	def feedCameraInThread(self):
+	def feedRobotDataInThread(self):
 		import io
-
 		from ws4py.client.threadedclient import WebSocketClient
+		import json
 
-		client = WebSocketClient('ws://localhost:9090/camPub')
-		client.connect()
+		camClient = WebSocketClient('ws://localhost:9090/camPub')
+		camClient.connect()
 
-		print('Got camPub connection')
+		r3dClient = WebSocketClient('ws://localhost:9090/3dPub')
+		r3dClient.connect()
+
+		print('Starting data feed')
 		while True:
 			if self._robot is None:
 				print('No robot')
 				time.sleep(0.1)
 				continue
+			# Feed camera
 			image = self._robot.world.latest_image
 			if image is None:
 				print('No image')
@@ -102,7 +106,40 @@ class CozmoBot:
 			binaryImage = fobj.read()
 			if binaryImage is None:
 				continue
-			client.send(binaryImage, binary=True)
+			camClient.send(binaryImage, binary=True)
+			# Feed robot data
+			def getData(pose):
+				# Don't fail if one of the cubes has flat battery.
+				if not pose:
+					return {
+						'x': 0,
+						'y': 0,
+						'z': 0,
+						'rot': (0, 0, 0, 0)
+					}
+				pos = pose.position
+				rot = pose.rotation
+				return {
+						'x': pos.x,
+						'y': pos.y,
+						'z': pos.z,
+						'rot': rot.q0_q1_q2_q3
+					}
+
+			def getCubeData(num):
+				cube = self._robot.world.light_cubes.get(num)
+				return getData(cube.pose)
+
+			data = {
+				'cozmo': getData(self._robot.pose),
+				'cubes': [
+					getCubeData(1),
+					getCubeData(2),
+					getCubeData(3)
+				]
+			}
+			r3dClient.send(json.dumps(data))
+			# Sleep a while
 			time.sleep(0.1)
 
 	def resetCubes(self):
@@ -194,6 +231,13 @@ class CozmoBot:
 		res = self._robot.say_text(text).wait_for_completed()
 		print("[Bot] Say finished")
 		return res.state == cozmo.action.ACTION_SUCCEEDED
+
+	def enableFreeWill(self, enable):
+		print("[Bot] Executing enableFreeWill(" + str(enable) + ")")
+		if enable:
+			self._robot.start_freeplay_behaviors()
+		else:
+			self._robot.stop_freeplay_behaviors()
 
 	def stop(self):
 		print("[Bot] Executing stop")
