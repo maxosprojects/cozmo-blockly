@@ -748,6 +748,12 @@ Code.stop3d = function() {
   }
 }
 
+Code.toggleAnaglyph = function() {
+  if (Code.cozmo3d) {
+    Code.cozmo3d.toggleAnaglyph();
+  }
+}
+
 Code.sendXmlToUrl = function(urlToSendTo) {
   var xml = Blockly.Xml.workspaceToDom(Code.workspace);
   var text = Blockly.Xml.domToText(xml);

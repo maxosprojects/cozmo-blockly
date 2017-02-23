@@ -115,7 +115,7 @@ class CozmoBot:
 						'x': 0,
 						'y': 0,
 						'z': 0,
-						'angle': 0
+						'rot': (0, 0, 0, 0)
 					}
 				pos = pose.position
 				rot = pose.rotation
@@ -123,7 +123,7 @@ class CozmoBot:
 						'x': pos.x,
 						'y': pos.y,
 						'z': pos.z,
-						'angle': rot.angle_z.radians
+						'rot': rot.q0_q1_q2_q3
 					}
 
 			def getCubeData(num):
@@ -131,10 +131,12 @@ class CozmoBot:
 				return getData(cube.pose)
 
 			data = {
-				'robot': getData(self._robot.pose),
-				'cube1': getCubeData(1),
-				'cube2': getCubeData(2),
-				'cube3': getCubeData(3)
+				'cozmo': getData(self._robot.pose),
+				'cubes': [
+					getCubeData(1),
+					getCubeData(2),
+					getCubeData(3)
+				]
 			}
 			r3dClient.send(json.dumps(data))
 			# Sleep a while
