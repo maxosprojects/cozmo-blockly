@@ -1,7 +1,7 @@
 function Cozmo(scene) {
   var that = this;
 
-  var cozmoTexture = new THREE.ImageUtils.loadTexture( 'img/cozmo.png' );
+  var cozmoTexture = new THREE.ImageUtils.loadTexture( 'img/3d/cozmo.png' );
   var cozmoMaterial = new THREE.MeshBasicMaterial( { map: cozmoTexture, side: THREE.FrontSide } );
   // var cubeMaterial = new THREE.MeshLambertMaterial( { map: cubeTexture, side: THREE.FrontSide } );
 
@@ -30,14 +30,16 @@ function Cozmo(scene) {
 function Cube(scene) {
   var that = this;
 
-  var cubeMaterial = new THREE.MeshBasicMaterial( { color: 0x225522, side: THREE.FrontSide } );
+  var cubeTexture = new THREE.ImageUtils.loadTexture( 'img/3d/crate.jpg' );
+  var cubeMaterial = new THREE.MeshBasicMaterial( { map: cubeTexture, side: THREE.FrontSide } );
+  // var cubeMaterial = new THREE.MeshBasicMaterial( { color: 0x225522, side: THREE.FrontSide } );
   var cubeGeometry = new THREE.CubeGeometry( 44.3, 44.3, 44.3 );
   that._cube = new THREE.Mesh( cubeGeometry, cubeMaterial );
 
-  var geometry = new THREE.EdgesGeometry( that._cube.geometry );
-  var material = new THREE.LineBasicMaterial( { color: 0x00ff000, linewidth: 3 } );
-  var edges = new THREE.LineSegments( geometry, material );
-  that._cube.add( edges );
+  // var geometry = new THREE.EdgesGeometry( that._cube.geometry );
+  // var material = new THREE.LineBasicMaterial( { color: 0x00ff000, linewidth: 3 } );
+  // var edges = new THREE.LineSegments( geometry, material );
+  // that._cube.add( edges );
 
   scene.add(that._cube);
 
@@ -71,7 +73,7 @@ function Cozmo3d() {
     that._camera = new THREE.PerspectiveCamera( 60, width/height, 0.01, 3000 );
 
     that._camera.position.set(0,250,300);
-    that._camera.focalLength = 3;
+    // that._camera.focalLength = 3;
     that._camera.lookAt(that._scene.position);
     that._scene.add(that._camera);
 
@@ -87,7 +89,7 @@ function Cozmo3d() {
     that._scene.add(light);
 
     // FLOOR
-    var floorTexture = new THREE.ImageUtils.loadTexture( 'img/grasslight-thin.jpg' );
+    var floorTexture = new THREE.ImageUtils.loadTexture( 'img/3d/grasslight-thin.jpg' );
     floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping; 
     floorTexture.repeat.set( 1, 10 );
     var floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.BackSide } );
@@ -106,6 +108,12 @@ function Cozmo3d() {
     // COZMO
     that._cozmo = new Cozmo(that._scene);
 
+    // MINECRAFT
+    // var mineChar = new MinecraftChar("img/3d/spiderman.png");
+    // var mineChar = new MinecraftChar("img/3d/zombiehd.png");
+    // mineChar.position.z = 200;
+    // that._scene.add(mineChar);
+
     // CUBES
     for (var i = 0; i < 3; i++) {
       var cube = new Cube(that._scene);
@@ -117,6 +125,33 @@ function Cozmo3d() {
 
   this.start = function() {
     that._render();
+  
+    // Mock locations first to see the scene whithout any program running.
+    var data = {
+      "cozmo": {
+        "z": 0.4872395694255829,
+        "y": -83.60612487792969,
+        "x": 40.18196105957031,
+        "rot": [0.9496887922286987, 0, 0, 0.31319528818130493]
+      },
+      "cubes": [{
+        "z": 55.19646072387695,
+        "y": 42.23066711425781,
+        "x": 205.2679443359375,
+        "rot": [0.9169570803642273, -0.011252639815211296, 0.016658909618854523, 0.39847904443740845]
+      }, {
+        "z": 11.110040664672852,
+        "y": 4.5121307373046875,
+        "x": 225.24978637695312,
+        "rot": [0.8439759016036987, -0.016450760886073112, -0.00048563163727521896, -0.5361286401748657]
+      }, {
+        "z": 10.047748565673828,
+        "y": 60.61991882324219,
+        "x": 185.5138397216797,
+        "rot": [-0.35887035727500916, -0.012327473610639572, -0.02147647552192211, -0.9330589175224304]
+      }]
+    };
+    that.onData(data);
   };
   
   this.stop = function() {
@@ -140,7 +175,7 @@ function Cozmo3d() {
   };
 
   this.onData = function(data) {
-    // console.log("received cozmo position", data);
+    // console.log("received cozmo position", data, JSON.stringify(data));
     that._cozmo.update(data.cozmo);
 
     for (var i = 0; i < that._cubes.length; i++) {
