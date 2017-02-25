@@ -13,6 +13,7 @@ With Cozmo you can do:
 - "cube been seen" condition
 - "cube is visible" condition
 - "distance to cube" statement for math or logical operators
+- turning towards a cube
 - setting lift height
 - setting head angle
 - picking up cubes
