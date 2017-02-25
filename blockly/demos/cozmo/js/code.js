@@ -49,7 +49,7 @@ Code.workspace = null;
 Code.camera = null;
 Code.highlighter = null;
 Code.cozmo3dws = null;
-Code.cozmo3d = null;
+Code.cozmo3d = new Cozmo3d();
 
 /**
  * Angle increases clockwise (true) or counterclockwise (false).
@@ -342,6 +342,10 @@ Code.renderContent = function() {
   }
 };
 
+Code.setCubeModel = function(model, num) {
+  Code.cozmo3d.setCubeModel(model, num);
+};
+
 Code.initDialog = function() {
   var filesElem = $('#files'),
     filenameElem = $('#filename');
@@ -528,7 +532,12 @@ Code.init = function() {
   // and the infinite loop detection function.
   // Blockly.JavaScript.addReservedWords('code,timeouts,checkTimeout');
 
-  Code.loadBlocks('');
+  var defaultXml =
+      '<xml>' +
+      '  <block type="cozmo_on_start" deletable="false" x="20" y="20">' +
+      '  </block>' +
+      '</xml>';
+  Code.loadBlocks(defaultXml);
 
   if ('BlocklyStorage' in window) {
     // Hook a save function onto unload.
@@ -569,6 +578,18 @@ Code.init = function() {
 
   // Lazy-load the syntax-highlighting.
   window.setTimeout(Code.importPrettify, 1);
+
+  // Code.workspace.addChangeListener(Code.onWorkspaceChange);
+  Code.workspace.addChangeListener(Blockly.Events.disableOrphans);
+};
+
+Code.onWorkspaceChange = function() {
+  // var code = Blockly.JavaScript.workspaceToCode(Code.workspace);
+  // var xml = Blockly.Xml.workspaceToDom(Code.workspace);
+  // var text = Blockly.Xml.domToText(xml);
+  // console.log(text);
+  // var blocks = Code.workspace.getTopBlocks();
+  // console.log(blocks);
 };
 
 /**
@@ -643,6 +664,8 @@ Code.sendCodeToUrl = function(urlToSendTo) {
   if (NONSECURE) {
     code = Blockly.Python.workspaceToCode(Code.workspace);
   } else {
+    // Run code translation anyway to apply 3d model changes.
+    Blockly.Python.workspaceToCode(Code.workspace);
     var xml = Blockly.Xml.workspaceToDom(Code.workspace);
     code = Blockly.Xml.domToText(xml);
   }
@@ -721,10 +744,7 @@ Code.stopCamera = function() {
 }
 
 Code.start3d = function() {
-  if (!Code.cozmo3d) {
-    Code.cozmo3d = new Cozmo3d();
-    Code.cozmo3d.init();
-  }
+  Code.cozmo3d.init();
   Code.cozmo3d.start();
 
   Code.cozmo3dws = new cozmoWs();
@@ -738,9 +758,7 @@ Code.start3d = function() {
 }
 
 Code.stop3d = function() {
-  if (Code.cozmo3d) {
-    Code.cozmo3d.stop();
-  }
+  Code.cozmo3d.stop();
   // Disconnect cozmo3dws WS.
   if (Code.cozmo3dws) {
     Code.cozmo3dws.doDisconnect()
@@ -749,9 +767,7 @@ Code.stop3d = function() {
 }
 
 Code.toggleAnaglyph = function() {
-  if (Code.cozmo3d) {
-    Code.cozmo3d.toggleAnaglyph();
-  }
+  Code.cozmo3d.toggleAnaglyph();
 }
 
 Code.sendXmlToUrl = function(urlToSendTo) {

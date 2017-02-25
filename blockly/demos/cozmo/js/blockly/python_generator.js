@@ -44,6 +44,15 @@ Blockly.Python['cozmo_on_start'] = function(block) {
 	return code;
 };
 
+Blockly.Python['cozmo_set_cube_model'] = function(block) {
+	var model = block.getFieldValue('MODEL');
+  	var num = block.getFieldValue('CUBE_NUM');
+	if (typeof Code !== "undefined") {
+		Code.setCubeModel(model, num);
+	}
+	return '';
+};
+
 Blockly.Python['cozmo_play_animation'] = function(block) {
 	var animation = block.getFieldValue('ANIMATION');
 	var code = 'bot.playAnimation("' + animation + '")\n';
@@ -53,6 +62,18 @@ Blockly.Python['cozmo_play_animation'] = function(block) {
 Blockly.Python['cozmo_play_emotion'] = function(block) {
 	var emotion = block.getFieldValue('EMOTION');
 	var code = 'bot.playEmotion("' + emotion + '")\n';
+	return code;
+};
+
+Blockly.Python['cozmo_lift'] = function(block) {
+	var lift = Blockly.Python.valueToCode(block, 'LIFT', Blockly.Python.ORDER_ATOMIC);
+	var code = 'bot.lift(' + lift + ')\n';
+	return code;
+};
+
+Blockly.Python['cozmo_head'] = function(block) {
+	var head = Blockly.Python.valueToCode(block, 'HEAD', Blockly.Python.ORDER_ATOMIC);
+	var code = 'bot.head(' + head + ')\n';
 	return code;
 };
 
@@ -103,6 +124,18 @@ Blockly.Python['cozmo_cube_seen_number_boolean'] = function(block) {
   return [code, Blockly.Python.ORDER_ATOMIC];
 };
 
+Blockly.Python['cozmo_cube_visible_number_boolean'] = function(block) {
+  var num = block.getFieldValue('CUBE_NUM');
+  var code = "bot.getCubeIsVisible(cozmo.objects.LightCube" + num + "Id)";
+  return [code, Blockly.Python.ORDER_ATOMIC];
+};
+
+Blockly.Python['cozmo_cube_distance_to'] = function(block) {
+  var num = block.getFieldValue('CUBE_NUM');
+  var code = "bot.getCubeDistance(cozmo.objects.LightCube" + num + "Id)";
+  return [code, Blockly.Python.ORDER_ATOMIC];
+};
+
 Blockly.Python['cozmo_cube_pickup'] = function(block) {
   var num = block.getFieldValue('CUBE_NUM');
   var code = "bot.pickupCube(cozmo.objects.LightCube" + num + "Id)\n";
@@ -118,6 +151,12 @@ Blockly.Python['cozmo_cube_place_on_ground'] = function(block) {
 Blockly.Python['cozmo_cube_place_on_cube'] = function(block) {
   var num = block.getFieldValue('CUBE_NUM');
   var code = "bot.placeCubeOnCube(cozmo.objects.LightCube" + num + "Id)\n";
+  return code;
+};
+
+Blockly.Python['cozmo_cube_turn_toward'] = function(block) {
+  var num = block.getFieldValue('CUBE_NUM');
+  var code = "bot.turnTowardCube(cozmo.objects.LightCube" + num + "Id)\n";
   return code;
 };
 

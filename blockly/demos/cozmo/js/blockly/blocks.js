@@ -33,6 +33,7 @@ goog.require('Blockly.Blocks');
  * Common HSV hue for all blocks in this category.
  */
 Blockly.Blocks.cozmo.HUE = 210;
+Blockly.Blocks.cozmo.HUE2 = 118;
 
 Blockly.Blocks['cozmo_on_start'] = {
   init: function() {
@@ -40,8 +41,39 @@ Blockly.Blocks['cozmo_on_start'] = {
         .setAlign(Blockly.ALIGN_CENTRE)
         .appendField("on start");
     this.appendStatementInput("BODY");
-    this.setColour(60);
+    this.setColour(Blockly.Blocks.cozmo.HUE2);
     this.setTooltip('Executes the program on start');
+  }
+};
+
+Blockly.Blocks['cozmo_set_cube_model'] = {
+  init: function() {
+    this.jsonInit({
+      "message0": "Set %1 model on cube %2",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "MODEL",
+          "options": [
+            ["crate", "CRATE"],
+            ["zombie", "ZOMBIE"],
+            ["spiderman", "SPIDERMAN"]
+          ]
+        },
+        {
+          "type": "field_dropdown",
+          "name": "CUBE_NUM",
+          "options": [
+            ['#1', "1"],
+            ['#2', "2"],
+            ['#3', "3"]
+          ]
+        }
+      ],
+      "colour": Blockly.Blocks.cozmo.HUE2,
+      "previousStatement": null,
+      "nextStatement": null,
+    });
   }
 };
 
@@ -70,7 +102,7 @@ Blockly.Blocks['cozmo_play_animation'] = {
           ]
         }
       ],
-      "colour": 60,
+      "colour": Blockly.Blocks.cozmo.HUE2,
       "previousStatement": null,
       "nextStatement": null,
     });
@@ -96,10 +128,40 @@ Blockly.Blocks['cozmo_play_emotion'] = {
           ]
         }
       ],
-      "colour": 60,
+      "colour": Blockly.Blocks.cozmo.HUE2,
       "previousStatement": null,
       "nextStatement": null,
     });
+  }
+};
+
+Blockly.Blocks['cozmo_lift'] = {
+  init: function() {
+    this.appendValueInput("LIFT")
+        .setCheck("Number")
+        .appendField("lift height");
+    this.appendDummyInput()
+        .appendField("(0.0 to 1.0)");
+    this.setInputsInline(true);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(Blockly.Blocks.cozmo.HUE);
+    this.setTooltip('Set lift height. Range is 0.0 to 1.0');
+  }
+};
+
+Blockly.Blocks['cozmo_head'] = {
+  init: function() {
+    this.appendValueInput("HEAD")
+        .setCheck("Number")
+        .appendField("head angle");
+    this.appendDummyInput()
+        .appendField("(-25.00° to 44.5°)");
+    this.setInputsInline(true);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(Blockly.Blocks.cozmo.HUE);
+    this.setTooltip('Set head angle. Range is -25.00° to 44.5°');
   }
 };
 
@@ -224,7 +286,7 @@ Blockly.Blocks['cozmo_goto_origin'] = {
 Blockly.Blocks['cozmo_cube_seen_number_boolean'] = {
   init: function() {
     this.jsonInit({
-      "message0": "cube %1 seen",
+      "message0": "cube %1 been seen",
       "args0": [
         {
           "type": "field_dropdown",
@@ -237,7 +299,49 @@ Blockly.Blocks['cozmo_cube_seen_number_boolean'] = {
         }
       ],
       "output": "Boolean",
-      "colour": 60,
+      "colour": Blockly.Blocks.cozmo.HUE2,
+    });
+  }
+};
+
+Blockly.Blocks['cozmo_cube_visible_number_boolean'] = {
+  init: function() {
+    this.jsonInit({
+      "message0": "cube %1 is visible",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "CUBE_NUM",
+          "options": [
+            ['#1', "1"],
+            ['#2', "2"],
+            ['#3', "3"]
+          ]
+        }
+      ],
+      "output": "Boolean",
+      "colour": Blockly.Blocks.cozmo.HUE2,
+    });
+  }
+};
+
+Blockly.Blocks['cozmo_cube_distance_to'] = {
+  init: function() {
+    this.jsonInit({
+      "message0": "distance to cube %1 (cm)",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "CUBE_NUM",
+          "options": [
+            ['#1', "1"],
+            ['#2', "2"],
+            ['#3', "3"]
+          ]
+        }
+      ],
+      "output": "Number",
+      "colour": Blockly.Blocks.cozmo.HUE2,
     });
   }
 };
@@ -259,7 +363,7 @@ Blockly.Blocks['cozmo_cube_pickup'] = {
       ],
       "previousStatement": null,
       "nextStatement": null,
-      "colour": 60,
+      "colour": Blockly.Blocks.cozmo.HUE2,
     });
   }
 };
@@ -281,7 +385,7 @@ Blockly.Blocks['cozmo_cube_place_on_ground'] = {
       ],
       "previousStatement": null,
       "nextStatement": null,
-      "colour": 60,
+      "colour": Blockly.Blocks.cozmo.HUE2,
     });
   }
 };
@@ -303,7 +407,29 @@ Blockly.Blocks['cozmo_cube_place_on_cube'] = {
       ],
       "previousStatement": null,
       "nextStatement": null,
-      "colour": 60,
+      "colour": Blockly.Blocks.cozmo.HUE2,
+    });
+  }
+};
+
+Blockly.Blocks['cozmo_cube_turn_toward'] = {
+  init: function() {
+    this.jsonInit({
+      "message0": "Turn to cube %1",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "CUBE_NUM",
+          "options": [
+            ['#1', "1"],
+            ['#2', "2"],
+            ['#3', "3"]
+          ]
+        }
+      ],
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": Blockly.Blocks.cozmo.HUE2,
     });
   }
 };
@@ -314,7 +440,7 @@ Blockly.Blocks['cozmo_on_cube_tapped'] = {
         .setAlign(Blockly.ALIGN_CENTRE)
         .appendField("on cube tapped");
     this.appendStatementInput("BODY");
-    this.setColour(60);
+    this.setColour(Blockly.Blocks.cozmo.HUE2);
     this.setTooltip('Executes a block of code when a cube is tapped');
   }
 };
@@ -335,7 +461,7 @@ Blockly.Blocks['cozmo_tapped_cube_number_boolean'] = {
         }
       ],
       "output": "Boolean",
-      "colour": 60,
+      "colour": Blockly.Blocks.cozmo.HUE2,
     });
   }
 };
@@ -354,7 +480,7 @@ Blockly.Blocks['cozmo_free_will'] = {
           ]
         }
       ],
-      "colour": 60,
+      "colour": Blockly.Blocks.cozmo.HUE2,
       "previousStatement": null,
       "nextStatement": null,
     });

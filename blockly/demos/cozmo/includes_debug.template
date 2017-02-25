@@ -1,4 +1,3 @@
-  <script src="../../blocks/cozmo.js"></script>
   <script src="../../blocks/logic.js"></script>
   <script src="../../blocks/loops.js"></script>
   <script src="../../blocks/math.js"></script>
@@ -8,7 +7,6 @@
   <script src="../../blocks/variables.js"></script>
   <script src="../../blocks/procedures.js"></script>
   <script src="../../generators/python.js"></script>
-  <script src="../../generators/python/cozmo.js"></script>
   <script src="../../generators/python/logic.js"></script>
   <script src="../../generators/python/loops.js"></script>
   <script src="../../generators/python/math.js"></script>
