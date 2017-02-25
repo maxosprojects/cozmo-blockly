@@ -159,7 +159,6 @@ var MinecraftChar = function(url){
     mapUv(tGeometry, 4,  8, 12,  4,  0) // front
     mapUv(tGeometry, 5, 16, 12, 12,  0) // back
 
-
     this._model = model;
 
     return model.root;

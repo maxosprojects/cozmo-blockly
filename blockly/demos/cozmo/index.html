@@ -16,7 +16,6 @@
   <script src="js/threejs/AnaglyphEffectOld.js"></script>
   <script src="js/threejs/OrbitControls.js"></script>
   <script src="js/threejs/minecraft.js"></script>
-  <script src="js/threejs/cozmo3d.js"></script>
 
   <!-- Includes block -->
 {% raw includes %}
@@ -26,6 +25,9 @@
     var NONSECURE = {{ nonsecure }};
   </script>
 
+  <script src="js/threejs/cozmo3d.js"></script>
+  <script src="js/blockly/blocks.js"></script>
+  <script src="js/blockly/python_generator.js"></script>
   <script src="js/ws.js"></script>
   <script src="js/code.js"></script>
 </head>
@@ -402,7 +404,7 @@
     </category>
     <category name="{catFunctions}" colour="290" custom="PROCEDURE"></category>
     <sep></sep>
-    <category name="{catCozmo}" colour="20">
+    <category name="{catCozmo}" colour="96">
       <block type="cozmo_on_start">
       </block>
       <block type="cozmo_play_animation">
@@ -461,8 +463,16 @@
       <block type="cozmo_free_will">
       </block>
     </category>
-    <category name="{catCozmoCubes}" colour="20">
+    <category name="{catCozmoCubes}" colour="96">
       <block type="cozmo_cube_seen_number_boolean">
+      </block>
+      <block type="cozmo_cube_visible_number_boolean">
+      </block>
+      <block type="cozmo_cube_distance_to">
+      </block>
+      <block type="cozmo_cube_turn_toward">
+      </block>
+      <block type="cozmo_set_cube_model">
       </block>
       <block type="cozmo_cube_pickup">
       </block>
@@ -471,7 +481,7 @@
       <block type="cozmo_cube_place_on_cube">
       </block>
     </category>
-    <category name="{catCozmoEvents}" colour="20">
+    <category name="{catCozmoEvents}" colour="96">
       <block type="cozmo_on_cube_tapped">
       </block>
       <block type="cozmo_wait_for_tap">

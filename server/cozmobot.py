@@ -1,7 +1,8 @@
 import cozmo
-from cozmo.util import degrees, distance_mm, speed_mmps, Position
+from cozmo.util import degrees, radians, distance_mm, speed_mmps, Position
 import time
 import threading
+import math
 
 animations = {
 	"GREETING": cozmo.anim.Triggers.AcknowledgeFaceNamed,
@@ -128,7 +129,9 @@ class CozmoBot:
 
 			def getCubeData(num):
 				cube = self._robot.world.light_cubes.get(num)
-				return getData(cube.pose)
+				data = getData(cube.pose)
+				data['seen'] = self.getCubeSeen(num)
+				return data
 
 			data = {
 				'cozmo': getData(self._robot.pose),
@@ -181,10 +184,32 @@ class CozmoBot:
 		pos = cube.pose.position.x_y_z
 		return not (pos == (0.0, 0.0, 0.0))
 
+	def getCubeIsVisible(self, cube_num):
+		'''
+		Returns whether cube is visible (in the view).
+		'''
+		cube = self._robot.world.light_cubes[cube_num]
+		return cube.is_visible
+
+	def getCubeDistance(self, cube_num):
+		'''
+		Returns the distance to the cube if it has been seen since the program start, or 100000 otherwise.
+		'''
+		if not self.getCubeSeen(cube_num):
+			return 100000
+		cube = self._robot.world.light_cubes[cube_num]
+		pos = self._robot.pose.position - cube.pose.position
+		dist = math.sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z)
+		return dist
+
 	def pickupCube(self, cube_num):
 		'''
 		Now this is tricky because the action is quite unreliable.
 		'''
+		# Ignore if cube has not been observed yet.
+		if not self.getCubeSeen(cube_num):
+			print("[Bot] Ignoring pickupCube() as the cube has not been observed yet")
+			return False
 		cube = self._robot.world.light_cubes[cube_num]
 		# res = self._robot.pickup_object(cube).wait_for_completed()
 		# print('pickupCube res:', res)
@@ -196,6 +221,9 @@ class CozmoBot:
 		return res.state == cozmo.action.ACTION_SUCCEEDED
 
 	def placeCubeOnGround(self, cube_num):
+		if not self.getCubeSeen(cube_num):
+			print("[Bot] Ignoring placeCubeOnGround() as the cube has not been observed yet")
+			return False
 		cube = self._robot.world.light_cubes[cube_num]
 		res = self._robot.place_object_on_ground_here(cube).wait_for_completed()
 		return res.state == cozmo.action.ACTION_SUCCEEDED
@@ -204,23 +232,26 @@ class CozmoBot:
 		'''
 		Another unreliable action.
 		'''
+		if not self.getCubeSeen(other_cube_num):
+			print("[Bot] Ignoring placeCubeOnCube() as the cube has not been observed yet")
+			return False
 		print("[Bot] Executing placeCubeOnCube()")
 		cube = self._robot.world.light_cubes[other_cube_num]
 		# res.state = cozmo.action.ACTION_FAILED
 		# res.failure_reason = ("repeat", "")
 		res = None
+		# while res == None or (res.state == cozmo.action.ACTION_FAILED and res.failure_code in ["repeat", "aborted"]):
+		# 	res = self._robot.go_to_object(cube, distance_mm(100)).wait_for_completed()
+		# 	print(res)
+		# if res.state == cozmo.action.ACTION_SUCCEEDED:
+		# 	res = None
 		while res == None or (res.state == cozmo.action.ACTION_FAILED and res.failure_code in ["repeat", "aborted"]):
-			res = self._robot.go_to_object(cube, distance_mm(100)).wait_for_completed()
+			res = self._robot.place_on_object(cube).wait_for_completed()
 			print(res)
-		if res.state == cozmo.action.ACTION_SUCCEEDED:
-			res = None
-			while res == None or (res.state == cozmo.action.ACTION_FAILED and res.failure_code in ["repeat", "aborted"]):
-				res = self._robot.place_on_object(cube).wait_for_completed()
-				print(res)
-			print("[Bot] placeCubeOnCube() finished")
-			return res.state == cozmo.action.ACTION_SUCCEEDED
-		print("[Bot] placeCubeOnCube() failed", res)
-		return False
+		print("[Bot] placeCubeOnCube() finished")
+		return res.state == cozmo.action.ACTION_SUCCEEDED
+		# print("[Bot] placeCubeOnCube() failed", res)
+		# return False
 
 	def gotoOrigin(self):
 		res = self._robot.go_to_pose(self._origin).wait_for_completed()
@@ -253,6 +284,18 @@ class CozmoBot:
 	def turn(self, angle):
 		print("[Bot] Executing turn " + str(angle))
 		res = self._robot.turn_in_place(degrees(angle)).wait_for_completed()
+		print("[Bot] turn finished")
+		return res.state == cozmo.action.ACTION_SUCCEEDED
+
+	def turnTowardCube(self, cube_num):
+		if not self.getCubeSeen(cube_num):
+			print("[Bot] Ignoring turnTowardCube() as the cube has not been observed yet")
+			return False
+		print("[Bot] Executing turn toward cube")
+		cube = self._robot.world.light_cubes[cube_num]
+		pos = self._robot.pose.position - cube.pose.position
+		angle = radians(math.atan2(pos.y, pos.x) - math.pi) - self._robot.pose.rotation.angle_z
+		res = self._robot.turn_in_place(angle).wait_for_completed()
 		print("[Bot] turn finished")
 		return res.state == cozmo.action.ACTION_SUCCEEDED
 
