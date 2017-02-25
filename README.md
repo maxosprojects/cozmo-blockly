@@ -10,7 +10,11 @@ With Cozmo you can do:
 - basic actions (drive, turn, speak), the list will be extended with time
 - some animations
 - cube tap events
-- "cube seen" conditions
+- "cube been seen" condition
+- "cube is visible" condition
+- "distance to cube" statement for math or logical operators
+- setting lift height
+- setting head angle
 - picking up cubes
 - placing cubes on the ground or on another cube
 - enable "free will"
@@ -23,6 +27,8 @@ Some other features:
 - can be rendered in a mobile browser and supports touch interaction (tested in iOS 10.2)
 - 3D visualization of Cozmo and his environment - works in a desktop or mobile browser (tested in iOS 10.2)
 - 3D visualization supports Anaglyph rendering - just toggle it and put on the red-cyan glasses and you're there, with Cozmo
+- cubes in 3D visualization can be replaced with Minecraft mobs (and a couple of skins are available, see [examples](examples))
+- 3D visualization hides cubes that have not been observed since program start and makes cubes not visible at the moment semi-transparent
 - view camera in the same browser tab (just another blockly tab) - available only when program is running
 - blocks are highlighted when being executed
 - view your program translated into Python or XML AST

@@ -43,6 +43,7 @@ function Cube(model) {
   };
 
   this._model = 'CRATE';
+  this.setOpacity = null;
 
   if (model) {
     that._model = model;
@@ -50,17 +51,22 @@ function Cube(model) {
 
   if (that._model === 'CRATE') {
     var cubeTexture = new THREE.ImageUtils.loadTexture(models[model]);
-    var cubeMaterial = new THREE.MeshBasicMaterial( { map: cubeTexture, side: THREE.FrontSide } );
+    var cubeMaterial = new THREE.MeshBasicMaterial( { map: cubeTexture, side: THREE.FrontSide, transparent: true } );
     // var cubeMaterial = new THREE.MeshBasicMaterial( { color: 0x225522, side: THREE.FrontSide } );
     var cubeGeometry = new THREE.CubeGeometry( 44.3, 44.3, 44.3 );
     that._cube = new THREE.Mesh( cubeGeometry, cubeMaterial );
+    that.setOpacity = function(opacity) {
+      cubeMaterial.opacity = opacity;
+    }
 
     // var geometry = new THREE.EdgesGeometry( that._cube.geometry );
     // var material = new THREE.LineBasicMaterial( { color: 0x00ff000, linewidth: 3 } );
     // var edges = new THREE.LineSegments( geometry, material );
     // that._cube.add( edges );
   } else {
-    that._cube = new MinecraftChar(models[model]);
+    var char = new MinecraftChar(models[model]);
+    that._cube = char.getRoot();
+    that.setOpacity = char.setOpacity;
   }
 
   this.update = function(data) {
@@ -71,7 +77,11 @@ function Cube(model) {
       that._cube.position.y = data.z;
     }
     if (!data.seen) {
-      that._cube.position.y = -200;
+      that.setOpacity(0);
+    } else if (!data.visible) {
+      that.setOpacity(0.5);
+    } else {
+      that.setOpacity(1);
     }
     that._cube.position.z = -data.y + 22.15;
     var rot = data.rot;
@@ -186,17 +196,23 @@ function Cozmo3d() {
           "z": 55.19646072387695,
           "y": 42.23066711425781,
           "x": 205.2679443359375,
-          "rot": [0.9169570803642273, -0.011252639815211296, 0.016658909618854523, 0.39847904443740845]
+          "rot": [0.9169570803642273, -0.011252639815211296, 0.016658909618854523, 0.39847904443740845],
+          "seen": true,
+          "visible": true
         }, {
           "z": 11.110040664672852,
           "y": 4.5121307373046875,
           "x": 225.24978637695312,
-          "rot": [0.8439759016036987, -0.016450760886073112, -0.00048563163727521896, -0.5361286401748657]
+          "rot": [0.8439759016036987, -0.016450760886073112, -0.00048563163727521896, -0.5361286401748657],
+          "seen": false,
+          "visible": true
         }, {
           "z": 10.047748565673828,
           "y": 60.61991882324219,
           "x": 185.5138397216797,
-          "rot": [-0.35887035727500916, -0.012327473610639572, -0.02147647552192211, -0.9330589175224304]
+          "rot": [-0.35887035727500916, -0.012327473610639572, -0.02147647552192211, -0.9330589175224304],
+          "seen": true,
+          "visible": false
         }
       ]
     };
@@ -210,15 +226,6 @@ function Cozmo3d() {
       return;
     }
     cancelAnimationFrame(that._id);
-    // // Clean up all the models.
-    // for (var i = 0; i < 3; i++) {
-    //   var oldCube = that._cubes[i];
-    //   if (oldCube) {
-    //     oldCube.removeFromScene(that._scene);
-    //     that._cubes[i] = null;
-    //     that.models[i] = 'crate';
-    //   }
-    // }
   };
 
   this._render = function () {

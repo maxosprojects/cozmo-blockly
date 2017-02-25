@@ -65,6 +65,18 @@ Blockly.Python['cozmo_play_emotion'] = function(block) {
 	return code;
 };
 
+Blockly.Python['cozmo_lift'] = function(block) {
+	var lift = Blockly.Python.valueToCode(block, 'LIFT', Blockly.Python.ORDER_ATOMIC);
+	var code = 'bot.lift(' + lift + ')\n';
+	return code;
+};
+
+Blockly.Python['cozmo_head'] = function(block) {
+	var head = Blockly.Python.valueToCode(block, 'HEAD', Blockly.Python.ORDER_ATOMIC);
+	var code = 'bot.head(' + head + ')\n';
+	return code;
+};
+
 Blockly.Python['cozmo_delay'] = function(block) {
 	var delay = Blockly.Python.valueToCode(block, 'DELAY', Blockly.Python.ORDER_ATOMIC);
 	var code = 'bot.delay(' + delay + ')\n';

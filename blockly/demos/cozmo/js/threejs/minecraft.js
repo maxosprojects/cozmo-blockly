@@ -7,6 +7,7 @@ var MinecraftChar = function(url){
     this._tTexture  = tTexture
 
     var tMaterial   = new THREE.MeshBasicMaterial({
+        transparent : true,
         map : tTexture
     });
     var tMaterialt  = new THREE.MeshBasicMaterial({
@@ -161,7 +162,16 @@ var MinecraftChar = function(url){
 
     this._model = model;
 
-    return model.root;
+    this.getRoot = function() {
+        return model.root;
+    };
+
+    this.setOpacity = function(opacity) {
+        tMaterial.opacity = opacity;
+        tMaterialt.opacity = opacity;
+    }
+
+    return this;
 
     function mapUv(tGeometry, faceIdx, x1, y2, x2, y1){
         var tileUvW = 1/64;

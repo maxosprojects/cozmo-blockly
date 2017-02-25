@@ -135,6 +135,36 @@ Blockly.Blocks['cozmo_play_emotion'] = {
   }
 };
 
+Blockly.Blocks['cozmo_lift'] = {
+  init: function() {
+    this.appendValueInput("LIFT")
+        .setCheck("Number")
+        .appendField("lift height");
+    this.appendDummyInput()
+        .appendField("(0.0 to 1.0)");
+    this.setInputsInline(true);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(Blockly.Blocks.cozmo.HUE);
+    this.setTooltip('Set lift height. Range is 0.0 to 1.0');
+  }
+};
+
+Blockly.Blocks['cozmo_head'] = {
+  init: function() {
+    this.appendValueInput("HEAD")
+        .setCheck("Number")
+        .appendField("head angle");
+    this.appendDummyInput()
+        .appendField("(-25.00° to 44.5°)");
+    this.setInputsInline(true);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(Blockly.Blocks.cozmo.HUE);
+    this.setTooltip('Set head angle. Range is -25.00° to 44.5°');
+  }
+};
+
 Blockly.Blocks['cozmo_delay'] = {
   init: function() {
     this.appendValueInput("DELAY")
@@ -298,7 +328,7 @@ Blockly.Blocks['cozmo_cube_visible_number_boolean'] = {
 Blockly.Blocks['cozmo_cube_distance_to'] = {
   init: function() {
     this.jsonInit({
-      "message0": "distance to cube %1",
+      "message0": "distance to cube %1 (cm)",
       "args0": [
         {
           "type": "field_dropdown",

@@ -131,6 +131,7 @@ class CozmoBot:
 				cube = self._robot.world.light_cubes.get(num)
 				data = getData(cube.pose)
 				data['seen'] = self.getCubeSeen(num)
+				data['visible'] = self.getCubeIsVisible(num)
 				return data
 
 			data = {
@@ -199,7 +200,7 @@ class CozmoBot:
 			return 100000
 		cube = self._robot.world.light_cubes[cube_num]
 		pos = self._robot.pose.position - cube.pose.position
-		dist = math.sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z)
+		dist = math.sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z) / 10.0
 		return dist
 
 	def pickupCube(self, cube_num):
@@ -237,21 +238,17 @@ class CozmoBot:
 			return False
 		print("[Bot] Executing placeCubeOnCube()")
 		cube = self._robot.world.light_cubes[other_cube_num]
-		# res.state = cozmo.action.ACTION_FAILED
-		# res.failure_reason = ("repeat", "")
-		res = None
 		# while res == None or (res.state == cozmo.action.ACTION_FAILED and res.failure_code in ["repeat", "aborted"]):
 		# 	res = self._robot.go_to_object(cube, distance_mm(100)).wait_for_completed()
 		# 	print(res)
 		# if res.state == cozmo.action.ACTION_SUCCEEDED:
 		# 	res = None
+		res = None
 		while res == None or (res.state == cozmo.action.ACTION_FAILED and res.failure_code in ["repeat", "aborted"]):
 			res = self._robot.place_on_object(cube).wait_for_completed()
 			print(res)
 		print("[Bot] placeCubeOnCube() finished")
 		return res.state == cozmo.action.ACTION_SUCCEEDED
-		# print("[Bot] placeCubeOnCube() failed", res)
-		# return False
 
 	def gotoOrigin(self):
 		res = self._robot.go_to_pose(self._origin).wait_for_completed()
@@ -306,8 +303,8 @@ class CozmoBot:
 		return res.state == cozmo.action.ACTION_SUCCEEDED
 
 	def driveWheelsWithSpeed(self, lSpeed, rSpeed):
-		print("[Bot] Executing driveWheelsWithSpeed(" + str(lSpeed * 10) + ", " + str(rSpeed * 10) + ")")
-		self._robot.drive_wheels(lSpeed, rSpeed)
+		print("[Bot] Executing driveWheelsWithSpeed(" + str(lSpeed) + ", " + str(rSpeed) + ")")
+		self._robot.drive_wheels(lSpeed * 10, rSpeed * 10)
 
 	def waitForTap(self):
 		print("[Bot] Executing waitForTap()")
