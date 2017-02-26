@@ -15,7 +15,6 @@
   <script src="js/threejs/three.min.js"></script>
   <script src="js/threejs/AnaglyphEffectOld.js"></script>
   <script src="js/threejs/OrbitControls.js"></script>
-  <script src="js/threejs/minecraft.js"></script>
 
   <!-- Includes block -->
 {% raw includes %}
@@ -487,6 +486,38 @@
       <block type="cozmo_cube_turn_toward">
       </block>
       <block type="cozmo_set_cube_model">
+      </block>
+      <block type="cozmo_add_static_model">
+        <value name="X1">
+          <shadow type="math_number">
+            <field name="NUM">100</field>
+          </shadow>
+        </value>
+        <value name="Y1">
+          <shadow type="math_number">
+            <field name="NUM">100</field>
+          </shadow>
+        </value>
+        <value name="X2">
+          <shadow type="math_number">
+            <field name="NUM">200</field>
+          </shadow>
+        </value>
+        <value name="Y2">
+          <shadow type="math_number">
+            <field name="NUM">200</field>
+          </shadow>
+        </value>
+        <value name="DEPTH">
+          <shadow type="math_number">
+            <field name="NUM">15</field>
+          </shadow>
+        </value>
+        <value name="HEIGHT">
+          <shadow type="math_number">
+            <field name="NUM">30</field>
+          </shadow>
+        </value>
       </block>
       <block type="cozmo_cube_pickup">
       </block>

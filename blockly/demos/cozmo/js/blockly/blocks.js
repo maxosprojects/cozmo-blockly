@@ -77,6 +77,47 @@ Blockly.Blocks['cozmo_set_cube_model'] = {
   }
 };
 
+Blockly.Blocks['cozmo_add_static_model'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField('Add')
+        .appendField(new Blockly.FieldDropdown([
+                      ["brick_wall", "WALL_BRICK"],
+                      ["wood_wall", "WALL_WOOD"]
+                     ]),
+                     'MODEL');
+    this.appendValueInput("X1")
+        .setCheck("Number")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("x1");
+    this.appendValueInput("Y1")
+        .setCheck("Number")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("y1");
+    this.appendValueInput("X2")
+        .setCheck("Number")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("x2");
+    this.appendValueInput("Y2")
+        .setCheck("Number")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("y2");
+    this.appendValueInput("DEPTH")
+        .setCheck("Number")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("depth");
+    this.appendValueInput("HEIGHT")
+        .setCheck("Number")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("height");
+    // this.setInputsInline(true);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(Blockly.Blocks.cozmo.HUE);
+    this.setTooltip('Add a static object');
+  }
+};
+
 Blockly.Blocks['cozmo_play_animation'] = {
   init: function() {
     this.jsonInit({

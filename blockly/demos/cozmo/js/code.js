@@ -346,6 +346,10 @@ Code.setCubeModel = function(model, num) {
   Code.cozmo3d.setCubeModel(model, num);
 };
 
+Code.addStaticModel = function(model, x1, y1, x2, y2, depth, height) {
+  Code.cozmo3d.addStaticModel(model, x1, y1, x2, y2, depth, height);
+};
+
 Code.initDialog = function() {
   var filesElem = $('#files'),
     filenameElem = $('#filename');
@@ -661,6 +665,8 @@ Code.runJS = function() {
 Code.sendCodeToUrl = function(urlToSendTo) {
   Code.sendXmlToUrl('/saves/.last');
   var code;
+  // Static objects are to be populated from the program every time.
+  Code.cozmo3d.clearStatics();
   if (NONSECURE) {
     code = Blockly.Python.workspaceToCode(Code.workspace);
   } else {

@@ -53,6 +53,20 @@ Blockly.Python['cozmo_set_cube_model'] = function(block) {
 	return '';
 };
 
+Blockly.Python['cozmo_add_static_model'] = function(block) {
+	var model = block.getFieldValue('MODEL');
+  	var x1 = getInt(block, 'X1');
+  	var y1 = getInt(block, 'Y1');
+  	var x2 = getInt(block, 'X2');
+  	var y2 = getInt(block, 'Y2');
+  	var depth = getInt(block, 'DEPTH');
+  	var height = getInt(block, 'HEIGHT');
+	if (typeof Code !== "undefined") {
+		Code.addStaticModel(model, x1, y1, x2, y2, depth, height);
+	}
+	return '';
+};
+
 Blockly.Python['cozmo_play_animation'] = function(block) {
 	var animation = block.getFieldValue('ANIMATION');
 	var code = 'bot.playAnimation("' + animation + '")\n';
@@ -196,3 +210,7 @@ Blockly.Python['cozmo_free_will'] = function(block) {
 	var code = 'bot.enableFreeWill(' + enable + ')\n';
 	return code;
 };
+
+function getInt(block, fieldName) {
+	return parseInt(Blockly.Python.valueToCode(block, fieldName, Blockly.Python.ORDER_ATOMIC));
+}
