@@ -776,6 +776,10 @@ Code.toggleAnaglyph = function() {
   Code.cozmo3d.toggleAnaglyph();
 }
 
+Code.toggleGrid = function() {
+  Code.cozmo3d.toggleGrid();
+}
+
 Code.sendXmlToUrl = function(urlToSendTo) {
   var xml = Blockly.Xml.workspaceToDom(Code.workspace);
   var text = Blockly.Xml.domToText(xml);

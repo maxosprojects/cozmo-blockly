@@ -82,8 +82,8 @@ Blockly.Blocks['cozmo_add_static_model'] = {
     this.appendDummyInput()
         .appendField('Add')
         .appendField(new Blockly.FieldDropdown([
-                      ["brick_wall", "WALL_BRICK"],
-                      ["wood_wall", "WALL_WOOD"]
+                      ["wood_wall", "WALL_WOOD"],
+                      ["brick_wall", "WALL_BRICK"]
                      ]),
                      'MODEL');
     this.appendValueInput("X1")

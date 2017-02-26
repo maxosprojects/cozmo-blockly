@@ -54,17 +54,17 @@ class Static {
   constructor(scene, x1, y1, x2, y2, depth, height, texture) {
     this.scene = scene;
 
-    var width = Math.abs(x1 - x2);
+    var width = Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
     var centerX = (x1 + x2) / 2.0;
     var centerY = height / 2.0;
     var centerZ = (y1 + y2) / 2.0;
-    var angleY = Math.atan2(x1 - x2, y1 - y2);
+    var angleY = Math.atan2(x1 - x2, y1 - y2) + Math.PI / 2.0;
 
     var staticTexture = new THREE.ImageUtils.loadTexture(texture);
     staticTexture.wrapS = THREE.RepeatWrapping;
     staticTexture.wrapT = THREE.RepeatWrapping;
-    staticTexture.repeat.x = 200;
-    staticTexture.repeat.y = 200;
+    staticTexture.repeat.x = width / 32;
+    staticTexture.repeat.y = height / 32;
     var staticMaterial = new THREE.MeshBasicMaterial( { map: staticTexture, side: THREE.FrontSide } );
     var staticGeometry = new THREE.CubeGeometry( width, height, depth );
     this.mesh = new THREE.Mesh(staticGeometry, staticMaterial);
@@ -131,10 +131,10 @@ class Crate extends Dynamic {
     var cubeGeometry = new THREE.CubeGeometry( 44.3, 44.3, 44.3 );
     this.mesh = new THREE.Mesh( cubeGeometry, cubeMaterial );
 
-    // var geometry = new THREE.EdgesGeometry( that._cube.geometry );
-    // var material = new THREE.LineBasicMaterial( { color: 0x00ff000, linewidth: 3 } );
+    // var geometry = new THREE.EdgesGeometry( this.mesh.geometry );
+    // var material = new THREE.LineBasicMaterial( { color: 0x00ff000, linewidth: 5 } );
     // var edges = new THREE.LineSegments( geometry, material );
-    // that._cube.add( edges );
+    // this.mesh.add( edges );
 
     this.setOpacity = function(opacity) {
       cubeMaterial.opacity = opacity;
@@ -390,10 +390,14 @@ function Cozmo3d() {
   this._scene = null;
   this._camera = null;
   this._controls = null;
+  this._floorMaterial = null;
   this._cozmo = null;
   this._cubes = [];
   this._statics = [];
   this._anaglyph = false;
+  this._gridOn = false;
+  this._grid = null;
+  this._gridNumbers = [];
   this._models = {
     'cubes': ['CRATE', 'CRATE', 'CRATE'],
     'statics': []
@@ -415,7 +419,7 @@ function Cozmo3d() {
     that._camera.lookAt(that._scene.position);
     that._scene.add(that._camera);
 
-    that._renderer = new THREE.WebGLRenderer({canvas: canvas, antialias: false});
+    that._renderer = new THREE.WebGLRenderer({canvas: canvas, antialias: true});
     that._renderer.setSize(width, height);
     that._renderer.setPixelRatio( window.devicePixelRatio );
 
@@ -430,9 +434,9 @@ function Cozmo3d() {
     var floorTexture = new THREE.ImageUtils.loadTexture( 'img/3d/grasslight-thin.jpg' );
     floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping; 
     floorTexture.repeat.set( 1, 10 );
-    var floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.BackSide } );
+    that._floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.BackSide, transparent: true } );
     var floorGeometry = new THREE.PlaneGeometry(1000, 1000, 10, 10);
-    var floor = new THREE.Mesh(floorGeometry, floorMaterial);
+    var floor = new THREE.Mesh(floorGeometry, that._floorMaterial);
     // floor.position.y = -0.5;
     floor.rotation.x = Math.PI / 2;
     that._scene.add(floor);
@@ -478,9 +482,9 @@ function Cozmo3d() {
     // Mock locations first to see the scene whithout any program running.
     var data = {
       "cozmo": {
-        "z": 0.4872395694255829,
-        "y": -83.60612487792969,
-        "x": 40.18196105957031,
+        "z": 0,
+        "y": 0,
+        "x": 0,
         "rot": [0.9496887922286987, 0, 0, 0.31319528818130493]
       },
       "cubes": [{
@@ -522,6 +526,10 @@ function Cozmo3d() {
   this._render = function () {
     that._animationId = requestAnimationFrame( that._render );
 
+    for (var i = 0; i < that._gridNumbers.length; i++) {
+      that._gridNumbers[i].lookAt(that._camera.position);
+    }
+
     if (that.anaglyph) {
       that._effect.render(that._scene, that._camera);
     } else {
@@ -536,6 +544,63 @@ function Cozmo3d() {
       return;
     }
     that.anaglyph = !that.anaglyph;
+  };
+
+  this.toggleGrid = function() {
+    if (that._gridOn) {
+      that._scene.remove(that._grid);
+      that._floorMaterial.opacity = 1;
+    } else {
+      that._floorMaterial.opacity = 0;
+      if (!that._grid) {
+        that._grid = new THREE.GridHelper( 1000, 20, 0xeeeeee, 0x44ee77 );
+        that._grid.position.x = 1;
+        var fontLoader = new THREE.FontLoader();
+        var font = fontLoader.parse(font_gentilis_bold);
+        var textMaterial = new THREE.MeshBasicMaterial( { color: 0x44ee77, side: THREE.FrontSide } );
+        function makeAxis(text, x, z) {
+          var mesh = makeText(text);
+          mesh.position.x = x;
+          mesh.position.y = 10;
+          mesh.position.z = z;
+          that._gridNumbers.push(mesh);
+          that._grid.add(mesh);
+        }
+        function makeText(text) {
+            var textGeometry = new THREE.TextGeometry(text, {
+              font: font,
+              size: 30,
+              height: 1
+            });
+            textGeometry.computeBoundingBox();
+            var box = textGeometry.boundingBox;
+            var offset = (box.max.x - box.min.x) / 2.0;
+            textGeometry.applyMatrix(new THREE.Matrix4().makeTranslation( -offset, 0, 0 ));
+            return new THREE.Mesh(textGeometry, textMaterial);
+        }
+        function addNumbers(x, z) {
+          for (var i = -400; i < 500; i += 100) {
+            var mesh = makeText("" + i);
+            if (x) {
+              mesh.position.x = x;
+              mesh.position.z = i;
+            } else {
+              mesh.position.x = i;
+              mesh.position.z = z;
+            }
+            mesh.position.y = 10;
+            that._gridNumbers.push(mesh);
+            that._grid.add(mesh);
+          }
+        }
+        addNumbers(null, -500);
+        addNumbers(500, null);
+        makeAxis("X", -500, -500);
+        makeAxis("Y", 500, 500);
+      }
+      that._scene.add(that._grid);
+    }
+    that._gridOn = !that._gridOn;
   };
 
   this.onData = function(data) {

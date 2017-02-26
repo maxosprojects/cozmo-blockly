@@ -212,5 +212,5 @@ Blockly.Python['cozmo_free_will'] = function(block) {
 };
 
 function getInt(block, fieldName) {
-	return parseInt(Blockly.Python.valueToCode(block, fieldName, Blockly.Python.ORDER_ATOMIC));
+	return parseFloat(Blockly.Python.valueToCode(block, fieldName, Blockly.Python.ORDER_NONE));
 }

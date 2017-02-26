@@ -24,6 +24,7 @@
     var NONSECURE = {{ nonsecure }};
   </script>
 
+  <script src="js/threejs/fonts.js"></script>
   <script src="js/threejs/cozmo3d.js"></script>
   <script src="js/blockly/blocks.js"></script>
   <script src="js/blockly/python_generator.js"></script>
@@ -92,6 +93,9 @@
   <div id="content_3d" class="content">
     <div style="position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.5); padding: 5px;">
       <a href="#" style="color: #ccccff; text-decoration: none;" onclick="Code.toggleAnaglyph();return false;">Toggle Anaglyph</a>
+    </div>
+    <div style="position: absolute; top: 50px; left: 20px; background: rgba(0,0,0,0.5); padding: 5px;">
+      <a href="#" style="color: #ccccff; text-decoration: none;" onclick="Code.toggleGrid();return false;">Toggle Grid</a>
     </div>
     <canvas id="canvas_3d" style="width: 100%; height: 100%;"></canvas>
   </div>
