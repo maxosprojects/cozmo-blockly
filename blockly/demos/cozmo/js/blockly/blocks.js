@@ -118,6 +118,17 @@ Blockly.Blocks['cozmo_add_static_model'] = {
   }
 };
 
+Blockly.Blocks['cozmo_maze'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("Create maze");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(Blockly.Blocks.cozmo.HUE);
+    this.setTooltip('Creates maze.');
+  }
+};
+
 Blockly.Blocks['cozmo_play_animation'] = {
   init: function() {
     this.jsonInit({

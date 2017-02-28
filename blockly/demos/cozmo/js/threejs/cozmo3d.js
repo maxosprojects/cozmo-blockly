@@ -1,4 +1,6 @@
 
+var textureMap = {};
+
 class Dynamic {
   constructor(scene, offx, offy, offz) {
     this.scene = scene;
@@ -60,7 +62,7 @@ class Static {
     var centerZ = (y1 + y2) / 2.0;
     var angleY = Math.atan2(x1 - x2, y1 - y2) + Math.PI / 2.0;
 
-    var staticTexture = new THREE.ImageUtils.loadTexture(texture);
+    var staticTexture = loadTexture(texture);
     staticTexture.wrapS = THREE.RepeatWrapping;
     staticTexture.wrapT = THREE.RepeatWrapping;
     staticTexture.repeat.x = width / 32;
@@ -101,7 +103,7 @@ class Cozmo extends Dynamic {
   constructor(scene) {
     super(scene, 0, 42, 0);
 
-    var cozmoTexture = new THREE.ImageUtils.loadTexture( 'img/3d/cozmo.png' );
+    var cozmoTexture = loadTexture( 'img/3d/cozmo.png' );
     var cozmoMaterial = new THREE.MeshBasicMaterial( { map: cozmoTexture, side: THREE.FrontSide } );
     // var cubeMaterial = new THREE.MeshLambertMaterial( { map: cubeTexture, side: THREE.FrontSide } );
 
@@ -125,7 +127,7 @@ class Crate extends Dynamic {
   constructor(scene) {
     super(scene, 0, 22.15, 0);
 
-    var cubeTexture = new THREE.ImageUtils.loadTexture('img/3d/crate.jpg');
+    var cubeTexture = loadTexture('img/3d/crate.jpg');
     var cubeMaterial = new THREE.MeshBasicMaterial( { map: cubeTexture, side: THREE.FrontSide, transparent: true } );
     // var cubeMaterial = new THREE.MeshBasicMaterial( { color: 0x225522, side: THREE.FrontSide } );
     var cubeGeometry = new THREE.CubeGeometry( 44.3, 44.3, 44.3 );
@@ -166,7 +168,7 @@ class Spiderman extends Mob {
 }
 
 var MinecraftChar = function(url){
-    var tTexture    = THREE.ImageUtils.loadTexture( url );
+    var tTexture    = loadTexture( url );
     tTexture.magFilter  = THREE.NearestFilter;
     tTexture.minFilter  = THREE.NearestFilter;
     this._tTexture  = tTexture
@@ -431,7 +433,7 @@ function Cozmo3d() {
     that._scene.add(light);
 
     // FLOOR
-    var floorTexture = new THREE.ImageUtils.loadTexture( 'img/3d/grasslight-thin.jpg' );
+    var floorTexture = loadTexture( 'img/3d/grasslight-thin.jpg' );
     floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping; 
     floorTexture.repeat.set( 1, 10 );
     that._floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.BackSide, transparent: true } );
@@ -561,7 +563,7 @@ function Cozmo3d() {
         function makeAxis(text, x, z) {
           var mesh = makeText(text);
           mesh.position.x = x;
-          mesh.position.y = 10;
+          mesh.position.y = 50;
           mesh.position.z = z;
           that._gridNumbers.push(mesh);
           that._grid.add(mesh);
@@ -588,7 +590,7 @@ function Cozmo3d() {
               mesh.position.x = i;
               mesh.position.z = z;
             }
-            mesh.position.y = 10;
+            mesh.position.y = 50;
             that._gridNumbers.push(mesh);
             that._grid.add(mesh);
           }
@@ -631,7 +633,6 @@ function Cozmo3d() {
   };
 
   this.addStaticModel = function(model, x1, y1, x2, y2, depth, height) {
-    console.log('Adding static model', model);
     var obj = {
       "model": model,
       "x1": x1,
@@ -659,4 +660,13 @@ function Cozmo3d() {
     that._models.statics = []
     that._statics = [];
   };
+}
+
+function loadTexture(url) {
+  if (textureMap[url]) {
+    return textureMap[url];
+  }
+  var texture = THREE.ImageUtils.loadTexture(url);
+  textureMap[url] = texture;
+  return texture;
 }
