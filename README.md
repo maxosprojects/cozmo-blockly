@@ -75,3 +75,6 @@ You may encounter some caching issues. If so, restart `server.py`
 
 ## Issues
 Any issues? Report an issue above.
+
+## Used by
+[MEGAkid: Learn to Code the Cozmo Robot! Beginners: Ages 6-12](https://www.eventbrite.com/e/megakid-learn-to-code-the-cozmo-robot-beginners-ages-6-12-tickets-32429174534)
