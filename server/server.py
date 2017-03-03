@@ -208,7 +208,13 @@ class CozmoBlockly(tornado.web.Application):
 		])
 		cozmoBlockly = app
 
-		nodejs = Popen(['nodejs', '../nodejs/headless.js'])
+		if not args.nonsecure:
+			try:
+				nodejs = Popen(['node', '../nodejs/headless.js'])
+			except FileNotFoundError as e:
+				print("node.js wasn't found in your system.")
+				print("Secure mode (default) requires node.js. Please install node.js and follow README instructions.")
+				return
 
 		print('[Server] Starting server...')
 
