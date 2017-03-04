@@ -71,6 +71,12 @@ Blockly.FieldAngle.WRAP = 360;
 Blockly.Python.STATEMENT_PREFIX = 'highlighter.send(%1)\n';
 Blockly.Python.addReservedWords('highlighter', 'cozmo, robot, bot, tapped_cube');
 
+var defaultXml =
+    '<xml>' +
+    '  <block type="cozmo_on_start" deletable="false" x="20" y="20">' +
+    '  </block>' +
+    '</xml>';
+
 /**
  * Extracts a parameter from the URL.
  * If the parameter is absent default_value is returned.
@@ -536,11 +542,6 @@ Code.init = function() {
   // and the infinite loop detection function.
   // Blockly.JavaScript.addReservedWords('code,timeouts,checkTimeout');
 
-  var defaultXml =
-      '<xml>' +
-      '  <block type="cozmo_on_start" deletable="false" x="20" y="20">' +
-      '  </block>' +
-      '</xml>';
   Code.loadBlocks(defaultXml);
 
   if ('BlocklyStorage' in window) {
@@ -889,6 +890,7 @@ Code.discard = function() {
   if (count < 2 ||
       window.confirm(Blockly.Msg.DELETE_ALL_BLOCKS.replace('%1', count))) {
     Code.workspace.clear();
+    Code.loadBlocks(defaultXml);
     // if (window.location.hash) {
     //   window.location.hash = '';
     // }

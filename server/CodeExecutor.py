@@ -50,6 +50,7 @@ except NameError:
 	print("Block on_start() not defined")
 
 on_start()
+bot.resetCustomObjects()
 """
 
 		self._starter = Process(target=self._exec_code, args=(starter_code, ))

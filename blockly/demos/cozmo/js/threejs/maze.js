@@ -73,56 +73,64 @@ Block.prototype.connectedTo = function(other) {
   }
 };
 
-Block.prototype.draw = function() {
+Block.prototype.draw = function(drawCustomWallFunc) {
   if (!this.connectedTo(this.neighbor(0, -1))) {
-    this.drawTopWall();
+    this.drawTopWall(drawCustomWallFunc);
   }
 
   if (!this.connectedTo(this.neighbor(0, 1))) {
-    this.drawBottomWall();
+    this.drawBottomWall(drawCustomWallFunc);
   }
 
   if (this.occupied && !this.connectedTo(this.neighbor(-1, 0))) {
-    this.drawLeftWall();
+    this.drawLeftWall(drawCustomWallFunc);
   }
 
   if (!this.connectedTo(this.neighbor(1, 0))) {
-    this.drawRightWall();
+    this.drawRightWall(drawCustomWallFunc);
   }
 };
 
-Block.prototype.drawWall = function(x1, y1, x2, y2) {
+Block.prototype.drawWall = function(x1, y1, x2, y2, drawCustomWallFunc) {
   if (typeof Code !== "undefined") {
-    Code.addStaticModel('WALL_WOOD', x1 - 50, y1 - 50, x2 - 50, y2 - 50, 1, 3);
+    if (drawCustomWallFunc) {
+      drawCustomWallFunc(x1, y1, x2, y2);
+    } else {
+      Code.addStaticModel('WALL_WOOD', x1 - 50, y1 - 50, x2 - 50, y2 - 50, 1, 3);
+    }
   }
 };
 
-Block.prototype.drawTopWall = function() {
+Block.prototype.drawTopWall = function(drawCustomWallFunc) {
   this.drawWall(this.x * this.width,
                 this.y * this.height,
                 (this.x + 1) * this.width,
-                this.y * this.height);
+                this.y * this.height,
+                drawCustomWallFunc);
 };
 
-Block.prototype.drawBottomWall = function() {
+Block.prototype.drawBottomWall = function(drawCustomWallFunc) {
   this.drawWall(this.x * this.width,
                 (this.y + 1) * this.height,
                 (this.x + 1) * this.width,
-                (this.y + 1) * this.height);
+                (this.y + 1) * this.height,
+                drawCustomWallFunc);
 };
 
-Block.prototype.drawLeftWall = function() {
+Block.prototype.drawLeftWall = function(drawCustomWallFunc) {
   this.drawWall(this.x * this.width,
                 this.y * this.height,
                 this.x * this.width,
-                (this.y + 1) * this.height);
+                (this.y + 1) * this.height,
+                drawCustomWallFunc);
 };
 
-Block.prototype.drawRightWall = function() {
+Block.prototype.drawRightWall = function(drawCustomWallFunc) {
   this.drawWall((this.x + 1) * this.width,
                 this.y * this.height,
                 (this.x + 1) * this.width,
-                (this.y + 1) * this.height);
+                (this.y + 1) * this.height,
+                drawCustomWallFunc);
 };
 
 var MazeGenerator = function(width, height, hBlocks, vBlocks) {
@@ -200,10 +208,10 @@ MazeGenerator.prototype.chooseBlock = function() {
   };
 };
 
-MazeGenerator.prototype.renderMaze = function() {
+MazeGenerator.prototype.renderMaze = function(drawCustomWallFunc) {
   for (var x = 0; x < this.hBlocks; x++) {
     for (var y = 0; y < this.vBlocks; y++) {
-      this.blocks[x][y].draw();
+      this.blocks[x][y].draw(drawCustomWallFunc);
     }
   }
 };

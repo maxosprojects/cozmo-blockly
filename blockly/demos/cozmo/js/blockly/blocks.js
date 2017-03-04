@@ -126,6 +126,22 @@ Blockly.Blocks['cozmo_maze'] = {
     this.setNextStatement(true);
     this.setColour(Blockly.Blocks.cozmo.HUE);
     this.setTooltip('Creates maze.');
+
+    if (typeof MazeGenerator !== "undefined" && typeof Code !== "undefined") {
+      var staticObjects = [];
+      var maze = new MazeGenerator(100, 100, 5, 5);
+      maze.drawLoop();
+      maze.renderMaze(function(x1, y1, x2, y2) {
+          staticObjects.push({
+            x1: x1 - 50,
+            y1: y1 - 50,
+            x2: x2 - 50,
+            y2: y2 - 50
+          });
+        }
+      );
+      this.data = JSON.stringify(staticObjects);
+    }
   }
 };
 

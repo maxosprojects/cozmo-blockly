@@ -64,17 +64,21 @@ Blockly.Python['cozmo_add_static_model'] = function(block) {
   if (typeof Code !== "undefined") {
     Code.addStaticModel(model, x1, y1, x2, y2, depth, height);
   }
-  return '';
+  var code = 'bot.addStaticObject(' + x1 + ',' + y1 + ',' + x2 + ',' + y2 + ',' + depth + ',' + height + ')\n';
+  return code;
 };
 
 Blockly.Python['cozmo_maze'] = function(block) {
-  if (typeof MazeGenerator !== "undefined") {
-    var maze = new MazeGenerator(100, 100, 5, 5);
-    maze.drawLoop();
-    maze.renderMaze();
+  var code = [];
+  var maze = JSON.parse(block.data);
+  for (var i = 0; i < maze.length; i++) {
+    var obj = maze[i];
+    code.push('bot.addStaticObject(' + obj.x1 + ',' + obj.y1 + ',' + obj.x2 + ',' + obj.y2 + ', 1, 3)');
+    if (typeof Code !== "undefined") {
+      Code.addStaticModel('WALL_WOOD', obj.x1, obj.y1, obj.x2, obj.y2, 1, 3);
+    }
   }
-
-  return '';
+  return code.join('\n') + '\n';
 };
 
 Blockly.Python['cozmo_play_animation'] = function(block) {

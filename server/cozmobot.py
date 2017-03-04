@@ -58,6 +58,7 @@ class CozmoBot:
 			for key in self._robot.world.light_cubes:
 				self.cubes_to_numbers[self._robot.world.light_cubes.get(key).object_id] = key
 			self.resetCubes()
+			self.resetCustomObjects()
 
 			self._robot.camera.image_stream_enabled = True
 
@@ -156,6 +157,9 @@ class CozmoBot:
 			# Don't fail if one of the cubes has flat battery.
 			if cube.pose:
 				cube.pose._position = Position(0, 0, 0)
+
+	def resetCustomObjects(self):
+		self._robot.world.delete_all_custom_objects()
 
 	def playAnimation(self, animation):
 		self._robot.play_anim_trigger(animations[animation], in_parallel=False).wait_for_completed()
@@ -317,3 +321,13 @@ class CozmoBot:
 	def waitForTap(self):
 		print("[Bot] Executing waitForTap()")
 		return self._robot.world.wait_for(cozmo.objects.EvtObjectTapped, timeout=None).obj
+
+	def addStaticObject(self, x1, y1, x2, y2, depth, height):
+		print("[Bot] Executing addStaticObject()")
+		width = math.sqrt(math.pow(x1 - x2, 2) + math.pow(y1 - y2, 2))
+		centerX = (x1 + x2) / 2.0
+		centerY = (y1 + y2) / 2.0
+		centerZ = height / 2.0
+		angle = math.atan2(x1 - x2, y1 - y2) + math.pi / 2.0
+		pose = Pose(centerX, centerY, centerZ, angle_z=radians(angle))
+		self._robot.world.create_custom_fixed_object(self._origin.define_pose_relative_this(pose), width * 10, depth * 10, height * 10)
