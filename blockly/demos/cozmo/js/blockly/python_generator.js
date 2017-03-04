@@ -142,6 +142,13 @@ Blockly.Python['cozmo_drive_wheels_speed'] = function(block) {
   return code;
 };
 
+Blockly.Python['cozmo_drive_to'] = function(block) {
+  var x = getInt(block, 'X');
+  var y = getInt(block, 'Y');
+  var code = 'bot.driveTo(' + x + ', ' + y + ')\n';
+  return code;
+};
+
 Blockly.Python['cozmo_cube_seen_number_boolean'] = function(block) {
   var num = block.getFieldValue('CUBE_NUM');
   var code = "bot.getCubeSeen(cozmo.objects.LightCube" + num + "Id)";

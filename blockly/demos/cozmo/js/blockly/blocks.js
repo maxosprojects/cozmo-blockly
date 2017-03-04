@@ -335,6 +335,24 @@ Blockly.Blocks['cozmo_goto_origin'] = {
   }
 };
 
+Blockly.Blocks['cozmo_drive_to'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("Drive to X:");
+    this.appendValueInput("X")
+        .setCheck("Number")
+    this.appendDummyInput()
+        .appendField("Y:");
+    this.appendValueInput("Y")
+        .setCheck("Number")
+    this.setInputsInline(true);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setTooltip('Drives to the specified coordinates if possible (e.g. no obstacles/static objects prevent from accomplishing the task.');
+    this.setColour(Blockly.Blocks.cozmo.HUE);
+  }
+};
+
 Blockly.Blocks['cozmo_cube_seen_number_boolean'] = {
   init: function() {
     this.jsonInit({

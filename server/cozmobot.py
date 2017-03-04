@@ -1,5 +1,5 @@
 import cozmo
-from cozmo.util import degrees, radians, distance_mm, speed_mmps, Position
+from cozmo.util import degrees, radians, distance_mm, speed_mmps, Position, Pose, Rotation
 import time
 import threading
 import math
@@ -118,8 +118,9 @@ class CozmoBot:
 						'z': 0,
 						'rot': (0, 0, 0, 0)
 					}
-				pos = pose.position
-				rot = pose.rotation
+				relativePose = pose - self._origin
+				pos = relativePose.position
+				rot = relativePose.rotation
 				return {
 						'x': pos.x,
 						'y': pos.y,
@@ -305,6 +306,13 @@ class CozmoBot:
 	def driveWheelsWithSpeed(self, lSpeed, rSpeed):
 		print("[Bot] Executing driveWheelsWithSpeed(" + str(lSpeed) + ", " + str(rSpeed) + ")")
 		self._robot.drive_wheels(lSpeed * 10, rSpeed * 10)
+
+	def driveTo(self, x, y):
+		print("[Bot] Executing driveTo(" + str(x) + ", " + str(y) + ")")
+		pose = Pose(x * 10, y * 10, 0, angle_z=self._robot.pose.rotation.angle_z)
+		res = self._robot.go_to_pose(self._origin.define_pose_relative_this(pose)).wait_for_completed()
+		print("[Bot] driveTo finished")
+		return res.state == cozmo.action.ACTION_SUCCEEDED
 
 	def waitForTap(self):
 		print("[Bot] Executing waitForTap()")
