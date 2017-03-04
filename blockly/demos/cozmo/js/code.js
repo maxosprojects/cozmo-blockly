@@ -507,7 +507,7 @@ Code.init = function() {
     if (Code.workspace && Code.workspace.toolbox_.width) {
       document.getElementById('tab_blocks').style.minWidth =
           (Code.workspace.toolbox_.width - 38) + 'px';
-          // Account for the 19 pixel margin and on each side.
+          // Account for the 19 pixel margin on each side.
     }
   };
   window.addEventListener('resize', onresize, false);

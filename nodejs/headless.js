@@ -1,7 +1,8 @@
 // This program is to be used with NodeJS to translate Cozmo Blockly XML AST to Python code.
 
 global.DOMParser = require('xmldom').DOMParser;
-global.document = new DOMParser().parseFromString('<xml/>');;
+global.document = new DOMParser().parseFromString('<xml/>');
+global.document.body = {};
 
 require('../closure-library/closure/goog/bootstrap/nodejs');
 global.Blockly = require('../blockly/blockly_uncompressed.js');
@@ -9,7 +10,6 @@ global.Blockly = require('../blockly/blockly_uncompressed.js');
 require('../blockly/blocks_compressed.js');
 require('../blockly/python_compressed.js');
 
-// require('../blockly/blocks/cozmo.js');
 // require('../blockly/blocks/logic.js');
 // require('../blockly/blocks/loops.js');
 // require('../blockly/blocks/math.js');
@@ -19,7 +19,6 @@ require('../blockly/python_compressed.js');
 // require('../blockly/blocks/variables.js');
 // require('../blockly/blocks/procedures.js');
 // require('../blockly/generators/python.js');
-// require('../blockly/generators/python/cozmo.js');
 // require('../blockly/generators/python/logic.js');
 // require('../blockly/generators/python/loops.js');
 // require('../blockly/generators/python/math.js');
