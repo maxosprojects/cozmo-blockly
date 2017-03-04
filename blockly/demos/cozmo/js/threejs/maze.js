@@ -1,3 +1,4 @@
+
 var Block = function(maze, x, y) {
   this.x = x;
   this.y = y;
@@ -92,7 +93,7 @@ Block.prototype.draw = function() {
 
 Block.prototype.drawWall = function(x1, y1, x2, y2) {
   if (typeof Code !== "undefined") {
-    Code.addStaticModel('WALL_WOOD', x1 - 500, y1 - 500, x2 - 500, y2 - 500, 10, 30);
+    Code.addStaticModel('WALL_WOOD', x1 - 50, y1 - 50, x2 - 50, y2 - 50, 1, 3);
   }
 };
 

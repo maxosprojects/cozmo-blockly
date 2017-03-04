@@ -69,7 +69,7 @@ Blockly.Python['cozmo_add_static_model'] = function(block) {
 
 Blockly.Python['cozmo_maze'] = function(block) {
   if (typeof MazeGenerator !== "undefined") {
-    var maze = new MazeGenerator(1000, 1000, 5, 5);
+    var maze = new MazeGenerator(100, 100, 5, 5);
     maze.drawLoop();
     maze.renderMaze();
   }

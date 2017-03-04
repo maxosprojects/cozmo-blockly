@@ -1,5 +1,7 @@
 
 var textureMap = {};
+var cozmo2threejs = {};
+var threejs2cozmo = {};
 
 class Dynamic {
   constructor(scene, offx, offy, offz) {
@@ -10,11 +12,11 @@ class Dynamic {
   }
 
   update(data) {
-    this.mesh.position.x = data.x + this.offx;
-    this.mesh.position.y = data.z + this.offy;
-    this.mesh.position.z = -data.y + this.offz;
-    var rot = data.rot;
-    var quat = new THREE.Quaternion(-rot[2], -rot[0], -rot[1], rot[3])
+    var pose = cozmo2threejs.pose(data);
+    this.mesh.position.x = pose.x + this.offx;
+    this.mesh.position.y = pose.y + this.offy;
+    this.mesh.position.z = pose.z + this.offz;
+    var quat = new THREE.Quaternion(pose.rot[0], pose.rot[1], pose.rot[2], pose.rot[3])
     this.mesh.setRotationFromQuaternion(quat);
 
     if (data.seen === false) {
@@ -56,11 +58,22 @@ class Static {
   constructor(scene, x1, y1, x2, y2, depth, height, texture) {
     this.scene = scene;
 
-    var width = Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
-    var centerX = (x1 + x2) / 2.0;
+    var pos1 = cozmo2threejs.position({
+      x: x1,
+      y: y1,
+      z: 0
+    });
+    var pos2 = cozmo2threejs.position({
+      x: x2,
+      y: y2,
+      z: 0
+    });
+
+    var width = Math.sqrt(Math.pow(pos1.x - pos2.x, 2) + Math.pow(pos1.z - pos2.z, 2));
+    var centerX = (pos1.x + pos2.x) / 2.0;
     var centerY = height / 2.0;
-    var centerZ = (y1 + y2) / 2.0;
-    var angleY = Math.atan2(x1 - x2, y1 - y2) + Math.PI / 2.0;
+    var centerZ = (pos1.z + pos2.z) / 2.0;
+    var angleY = Math.atan2(pos1.x - pos2.x, pos1.z - pos2.z) + Math.PI / 2.0;
 
     var staticTexture = loadTexture(texture);
     staticTexture.wrapS = THREE.RepeatWrapping;
@@ -582,11 +595,13 @@ function Cozmo3d() {
         }
         function addNumbers(x, z) {
           for (var i = -400; i < 500; i += 100) {
-            var mesh = makeText("" + i);
+            var mesh;
             if (x) {
+              mesh = makeText("" + (-i / 10));
               mesh.position.x = x;
               mesh.position.z = i;
             } else {
+              mesh = makeText("" + i / 10);
               mesh.position.x = i;
               mesh.position.z = z;
             }
@@ -635,19 +650,19 @@ function Cozmo3d() {
   this.addStaticModel = function(model, x1, y1, x2, y2, depth, height) {
     var obj = {
       "model": model,
-      "x1": x1,
-      "y1": y1,
-      "x2": x2,
-      "y2": y2,
-      "depth": depth,
-      "height": height
+      "x1": x1 * 10,
+      "y1": y1 * 10,
+      "x2": x2 * 10,
+      "y2": y2 * 10,
+      "depth": depth * 10,
+      "height": height * 10
     };
     that._models.statics.push(obj);
     if (!that._initialized) {
       return;
     }
     var clazz = modelsMap[model];
-    var instance = new clazz(that._scene, x1, y1, x2, y2, depth, height);
+    var instance = new clazz(that._scene, obj.x1, obj.y1, obj.x2, obj.y2, obj.depth, obj.height);
     instance.addToScene();
     that._statics.push(instance);
   };
@@ -669,4 +684,48 @@ function loadTexture(url) {
   var texture = THREE.ImageUtils.loadTexture(url);
   textureMap[url] = texture;
   return texture;
+}
+
+
+///////////////// UTILS ////////////////////////
+
+cozmo2threejs.pose = function(pose) {
+  return convertPose(pose, cozmo2threejs.position, function(rot) {
+      return [-rot[2], -rot[0], -rot[1], rot[3]];
+    }
+  );
+}
+
+cozmo2threejs.position = function(position) {
+  return {
+    x: position.x,
+    y: position.z,
+    z: -position.y
+  }
+}
+
+threejs2cozmo.pose = function(pose) {
+  return convertPose(pose, threejs2cozmo.position, function(rot) {
+      return [-rot[1], -rot[2], -rot[0], rot[3]];
+    }
+  );
+}
+
+threejs2cozmo.position = function(position) {
+  return {
+    x: position.x,
+    y: -position.z,
+    z: position.y
+  };
+}
+
+function convertPose(pose, positionFunc, quaternionFunc) {
+  var position = positionFunc.call(this, pose);
+  var rot = quaternionFunc.call(this, pose.rot);
+  return {
+    x: position.x,
+    y: position.y,
+    z: position.z,
+    rot: rot
+  };
 }
