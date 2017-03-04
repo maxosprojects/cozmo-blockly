@@ -809,6 +809,7 @@ Code.loadXmlFromUrl = function(urlToLoadFrom) {
   })
   .done(function(data, textStatus, jqXHR) {
     console.log('Loading code: ', data);
+    Code.workspace.clear();
 
     try {
       var xml = Blockly.Xml.textToDom(data);

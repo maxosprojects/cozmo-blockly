@@ -3,6 +3,7 @@ from cozmo.util import degrees, radians, distance_mm, speed_mmps, Position, Pose
 import time
 import threading
 import math
+import quaternion
 
 animations = {
 	"GREETING": cozmo.anim.Triggers.AcknowledgeFaceNamed,
@@ -119,14 +120,13 @@ class CozmoBot:
 						'z': 0,
 						'rot': (0, 0, 0, 0)
 					}
-				relativePose = pose - self._origin
-				pos = relativePose.position
-				rot = relativePose.rotation
+				pos = pose.position - self._origin.position
+				rot = quaternion.div(pose.rotation.q0_q1_q2_q3, self._origin.rotation.q0_q1_q2_q3)
 				return {
 						'x': pos.x,
 						'y': pos.y,
 						'z': pos.z,
-						'rot': rot.q0_q1_q2_q3
+						'rot': rot
 					}
 
 			def getCubeData(num):
