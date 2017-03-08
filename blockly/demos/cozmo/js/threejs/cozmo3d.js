@@ -1,5 +1,6 @@
 
 var textureMap = {};
+var textureLoader = new THREE.TextureLoader();
 var cozmo2threejs = {};
 var threejs2cozmo = {};
 
@@ -55,7 +56,7 @@ class Dynamic {
 }
 
 class Static {
-  constructor(scene, x1, y1, x2, y2, depth, height, texture) {
+  constructor(scene, x1, y1, x2, y2, depth, height, textureUrl) {
     this.scene = scene;
 
     var pos1 = cozmo2threejs.position({
@@ -69,20 +70,53 @@ class Static {
       z: 0
     });
 
-    var width = Math.sqrt(Math.pow(pos1.x - pos2.x, 2) + Math.pow(pos1.z - pos2.z, 2));
     var centerX = (pos1.x + pos2.x) / 2.0;
     var centerY = height / 2.0;
     var centerZ = (pos1.z + pos2.z) / 2.0;
+
+    var width = Math.sqrt(Math.pow(pos1.x - pos2.x, 2) + Math.pow(pos1.z - pos2.z, 2));
     var angleY = Math.atan2(pos1.x - pos2.x, pos1.z - pos2.z) + Math.PI / 2.0;
 
-    var staticTexture = loadTexture(texture);
-    staticTexture.wrapS = THREE.RepeatWrapping;
-    staticTexture.wrapT = THREE.RepeatWrapping;
-    staticTexture.repeat.x = width / 32;
-    staticTexture.repeat.y = height / 32;
-    var staticMaterial = new THREE.MeshBasicMaterial( { map: staticTexture, side: THREE.FrontSide } );
-    var staticGeometry = new THREE.CubeGeometry( width, height, depth );
-    this.mesh = new THREE.Mesh(staticGeometry, staticMaterial);
+    // 'loadTexture' caches textures, so setting tiling on that texture applies that repeating to all sides.
+    // Also, cloning doesn't work without 'needsUpdate', which requires the texture to be fully loaded
+    // at the time of cloning.
+    // TODO: load texture once and clone on 'onLoad'. That would need some code rewriting, otherwise 'addToScene'
+    // wouldn't work.
+
+    // var texture = loadTexture(textureUrl);
+    // function cloneTexture() {
+    //   var newTxture = texture.clone();
+    //   newTxture.needsUpdate = true;
+    //   return newTxture;
+    // }
+    function cloneTexture() {
+      var texture = textureLoader.load(textureUrl);
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      return texture;
+    }
+    var staticTextureX = cloneTexture();
+    staticTextureX.repeat.x = width / 32;
+    staticTextureX.repeat.y = height / 32;
+    var staticTextureY = cloneTexture();
+    staticTextureY.repeat.x = width / 32;
+    staticTextureY.repeat.y = depth / 32;
+    var staticTextureZ = cloneTexture();
+    staticTextureZ.repeat.x = depth / 32;
+    staticTextureZ.repeat.y = height / 32;
+    var staticMaterialX = new THREE.MeshBasicMaterial( { map: staticTextureX, side: THREE.FrontSide } );
+    var staticMaterialY = new THREE.MeshBasicMaterial( { map: staticTextureY, side: THREE.FrontSide } );
+    var staticMaterialZ = new THREE.MeshBasicMaterial( { map: staticTextureZ, side: THREE.FrontSide } );
+    var staticMultimaterial = new THREE.MultiMaterial([
+      staticMaterialZ,
+      staticMaterialZ,
+      staticMaterialY,
+      staticMaterialY,
+      staticMaterialX,
+      staticMaterialX
+    ]);
+    var staticGeometry = new THREE.BoxGeometry( width, height, depth );
+    this.mesh = new THREE.Mesh(staticGeometry, staticMultimaterial);
 
     this.mesh.position.x = centerX;
     this.mesh.position.y = centerY;
@@ -120,8 +154,8 @@ class Cozmo extends Dynamic {
     var cozmoMaterial = new THREE.MeshBasicMaterial( { map: cozmoTexture, side: THREE.FrontSide } );
     // var cubeMaterial = new THREE.MeshLambertMaterial( { map: cubeTexture, side: THREE.FrontSide } );
 
-    var bodyGeometry = new THREE.CubeGeometry( 70, 30, 56 );
-    var headGeometry = new THREE.CubeGeometry( 36, 36, 39.4 );
+    var bodyGeometry = new THREE.BoxGeometry( 70, 30, 56 );
+    var headGeometry = new THREE.BoxGeometry( 36, 36, 39.4 );
 
     var bodyMesh = new THREE.Mesh(bodyGeometry, cozmoMaterial);
     bodyMesh.position.x = 10;
@@ -143,7 +177,7 @@ class Crate extends Dynamic {
     var cubeTexture = loadTexture('img/3d/crate.jpg');
     var cubeMaterial = new THREE.MeshBasicMaterial( { map: cubeTexture, side: THREE.FrontSide, transparent: true } );
     // var cubeMaterial = new THREE.MeshBasicMaterial( { color: 0x225522, side: THREE.FrontSide } );
-    var cubeGeometry = new THREE.CubeGeometry( 44.3, 44.3, 44.3 );
+    var cubeGeometry = new THREE.BoxGeometry( 44.3, 44.3, 44.3 );
     this.mesh = new THREE.Mesh( cubeGeometry, cubeMaterial );
 
     // var geometry = new THREE.EdgesGeometry( this.mesh.geometry );
@@ -381,7 +415,7 @@ var MinecraftChar = function(url){
     };
 
     function createCube(w, h, d, material) {
-        var geometry = new THREE.CubeGeometry(w, h, d);
+        var geometry = new THREE.BoxGeometry(w, h, d);
         // set the geometry.dynamic by default
         geometry.dynamic= true;
         return new THREE.Mesh(geometry, material)
@@ -427,9 +461,9 @@ function Cozmo3d() {
     var canvas = document.getElementById("canvas_3d");
     var width = $(canvas).width();
     var height = $(canvas).height();
-    that._camera = new THREE.PerspectiveCamera( 60, width/height, 0.01, 3000 );
+    that._camera = new THREE.PerspectiveCamera( 45, width/height, 0.01, 3000 );
 
-    that._camera.position.set(0,250,300);
+    that._camera.position.set(-500,450,500);
     // that._camera.focalLength = 3;
     that._camera.lookAt(that._scene.position);
     that._scene.add(that._camera);
@@ -439,7 +473,7 @@ function Cozmo3d() {
     that._renderer.setPixelRatio( window.devicePixelRatio );
 
     that._controls = new THREE.OrbitControls( that._camera, canvas );
-    that._controls.maxDistance = 1000;
+    that._controls.maxDistance = 1200;
 
     var light = new THREE.PointLight(0xffffff);
     light.position.set(-100,400,100);
@@ -457,7 +491,7 @@ function Cozmo3d() {
     that._scene.add(floor);
 
     // SKYBOX
-    var skyBoxGeometry = new THREE.CubeGeometry( 2000, 2000, 2000 );
+    var skyBoxGeometry = new THREE.BoxGeometry( 2000, 2000, 2000 );
     var skyBoxMaterial = new THREE.MeshBasicMaterial( { color: 0x9999ff, side: THREE.BackSide } );
     var skyBox = new THREE.Mesh( skyBoxGeometry, skyBoxMaterial );
     that._scene.add(skyBox);
@@ -681,7 +715,7 @@ function loadTexture(url) {
   if (textureMap[url]) {
     return textureMap[url];
   }
-  var texture = THREE.ImageUtils.loadTexture(url);
+  var texture = textureLoader.load(url);
   textureMap[url] = texture;
   return texture;
 }

@@ -74,7 +74,8 @@ Block.prototype.connectedTo = function(other) {
 };
 
 Block.prototype.draw = function(drawCustomWallFunc) {
-  if (!this.connectedTo(this.neighbor(0, -1))) {
+  // Draw top wall only for the border.
+  if (!this.connectedTo(this.neighbor(0, -1)) && this.y == 0) {
     this.drawTopWall(drawCustomWallFunc);
   }
 
@@ -82,7 +83,8 @@ Block.prototype.draw = function(drawCustomWallFunc) {
     this.drawBottomWall(drawCustomWallFunc);
   }
 
-  if (this.occupied && !this.connectedTo(this.neighbor(-1, 0))) {
+  // Draw left wall only for the border.
+  if (this.occupied && !this.connectedTo(this.neighbor(-1, 0)) && this.x == 0) {
     this.drawLeftWall(drawCustomWallFunc);
   }
 

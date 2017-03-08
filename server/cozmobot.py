@@ -187,15 +187,21 @@ class CozmoBot:
 		Returns whether cube has been seen since program start.
 		'''
 		cube = self._robot.world.light_cubes[cube_num]
-		pos = cube.pose.position.x_y_z
-		return not (pos == (0.0, 0.0, 0.0))
+		if cube.pose:
+			pos = cube.pose.position.x_y_z
+			return not (pos == (0.0, 0.0, 0.0))
+		else:
+			return False
 
 	def getCubeIsVisible(self, cube_num):
 		'''
 		Returns whether cube is visible (in the view).
 		'''
 		cube = self._robot.world.light_cubes[cube_num]
-		return cube.is_visible
+		if cube:
+			return cube.is_visible
+		else:
+			return False
 
 	def getCubeDistance(self, cube_num):
 		'''
@@ -324,10 +330,18 @@ class CozmoBot:
 
 	def addStaticObject(self, x1, y1, x2, y2, depth, height):
 		print("[Bot] Executing addStaticObject()")
-		width = math.sqrt(math.pow(x1 - x2, 2) + math.pow(y1 - y2, 2))
-		centerX = (x1 + x2) / 2.0
-		centerY = (y1 + y2) / 2.0
-		centerZ = height / 2.0
-		angle = math.atan2(x1 - x2, y1 - y2) + math.pi / 2.0
+		X1 = x1 * 10
+		Y1 = y1 * 10
+		X2 = x2 * 10
+		Y2 = y2 * 10
+		HEIGHT = height * 10
+
+		DEPTH = depth * 10
+		WIDTH = math.sqrt(math.pow(X1 - X2, 2) + math.pow(Y1 - Y2, 2))
+		centerX = (X1 + X2) / 2.0
+		centerY = (Y1 + Y2) / 2.0
+		centerZ = HEIGHT / 2.0
+		angle = math.atan2(X1 - X2, Y1 - Y2) + math.pi / 2.0
 		pose = Pose(centerX, centerY, centerZ, angle_z=radians(angle))
-		self._robot.world.create_custom_fixed_object(self._origin.define_pose_relative_this(pose), width * 10, depth * 10, height * 10)
+		print(radians(angle), pose, self._origin.define_pose_relative_this(pose), WIDTH, DEPTH, HEIGHT)
+		self._robot.world.create_custom_fixed_object(self._origin.define_pose_relative_this(pose), WIDTH, DEPTH, HEIGHT)
