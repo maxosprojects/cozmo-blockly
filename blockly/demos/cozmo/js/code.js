@@ -73,7 +73,7 @@ Blockly.Python.addReservedWords('highlighter', 'cozmo, robot, bot, tapped_cube')
 
 var defaultXml =
     '<xml>' +
-    '  <block type="cozmo_on_start" deletable="false" x="20" y="20">' +
+    '  <block type="cozmo_on_start" deletable="false" x="13" y="13">' +
     '  </block>' +
     '</xml>';
 
