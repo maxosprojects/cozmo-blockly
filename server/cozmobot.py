@@ -329,7 +329,7 @@ class CozmoBot:
 		return self._robot.world.wait_for(cozmo.objects.EvtObjectTapped, timeout=None).obj
 
 	def addStaticObject(self, x1, y1, x2, y2, depth, height):
-		print("[Bot] Executing addStaticObject()")
+		print("[Bot] Executing addStaticObject({},{},{},{},{},{})".format(x1, y1, x2, y2, depth, height))
 		X1 = x1 * 10
 		Y1 = y1 * 10
 		X2 = x2 * 10
@@ -341,7 +341,6 @@ class CozmoBot:
 		centerX = (X1 + X2) / 2.0
 		centerY = (Y1 + Y2) / 2.0
 		centerZ = HEIGHT / 2.0
-		angle = math.atan2(X1 - X2, Y1 - Y2) + math.pi / 2.0
+		angle = math.atan2(Y1 - Y2, X1 - X2)
 		pose = Pose(centerX, centerY, centerZ, angle_z=radians(angle))
-		print(radians(angle), pose, self._origin.define_pose_relative_this(pose), WIDTH, DEPTH, HEIGHT)
 		self._robot.world.create_custom_fixed_object(self._origin.define_pose_relative_this(pose), WIDTH, DEPTH, HEIGHT)
