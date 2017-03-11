@@ -168,7 +168,7 @@ class CozmoBlockly(tornado.web.Application):
 			self.args = args
 
 		def get(self, path):
-			path = '../' + path
+			path = '../cozmo-blockly/' + path
 			loader = tornado.template.Loader(path, whitespace='all')
 			file = 'includes.template'
 			if self.args.dev:
@@ -194,8 +194,10 @@ class CozmoBlockly(tornado.web.Application):
 		global cozmoBlockly, nodejs
 
 		app = CozmoBlockly([
-			(r'/(blockly/demos/cozmo/)', CozmoBlockly.HomeHandler, dict(args=args)),
+			(r'/cozmo/()', CozmoBlockly.HomeHandler, dict(args=args)),
+			(r'/cozmo/(.+)', tornado.web.StaticFileHandler if not args.dev else CozmoBlockly.NoCacheStaticFileHandler, dict(path='../cozmo-blockly')),
 			(r'/blockly/(.*)', tornado.web.StaticFileHandler if not args.dev else CozmoBlockly.NoCacheStaticFileHandler, dict(path='../blockly')),
+			(r'/closure-library/(.*)', tornado.web.StaticFileHandler if not args.dev else CozmoBlockly.NoCacheStaticFileHandler, dict(path='../closure-library')),
 			(r'/(saves)/(.*)', CozmoBlockly.SavesHandler),
 			(r'/robot/submit', CozmoBlockly.RobotSubmitHandler),
 			(r'/robot/terminate', CozmoBlockly.RobotTerminateHandler),

@@ -49,23 +49,6 @@ Blockly.Python['math_number'] = function(block) {
   return [code, order];
 };
 
-Blockly.Python['math_angle'] = function(block) {
-  // Numeric value.
-  var code = parseFloat(block.getFieldValue('NUM'));
-  var order;
-  if (code == Infinity) {
-    code = 'float("inf")';
-    order = Blockly.Python.ORDER_FUNCTION_CALL;
-  } else if (code == -Infinity) {
-    code = '-float("inf")';
-    order = Blockly.Python.ORDER_UNARY_SIGN;
-  } else {
-    order = code < 0 ? Blockly.Python.ORDER_UNARY_SIGN :
-            Blockly.Python.ORDER_ATOMIC;
-  }
-  return [code, order];
-};
-
 Blockly.Python['math_arithmetic'] = function(block) {
   // Basic arithmetic operators, and power.
   var OPERATORS = {

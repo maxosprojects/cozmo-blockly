@@ -203,7 +203,7 @@ class CozmoBot:
 		else:
 			return False
 
-	def getCubeDistance(self, cube_num):
+	def getDistanceToCube(self, cube_num):
 		'''
 		Returns the distance to the cube if it has been seen since the program start, or 100000 otherwise.
 		'''
@@ -211,6 +211,18 @@ class CozmoBot:
 			return 100000
 		cube = self._robot.world.light_cubes[cube_num]
 		pos = self._robot.pose.position - cube.pose.position
+		dist = math.sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z) / 10.0
+		return dist
+
+	def getDistanceBetweenCubes(self, cube1_num, cube2_num):
+		'''
+		Returns the distance between two cubes if both have been seen since the program start, or 100000 otherwise.
+		'''
+		if not self.getCubeSeen(cube1_num) or not self.getCubeSeen(cube2_num):
+			return 100000
+		cube1 = self._robot.world.light_cubes[cube1_num]
+		cube2 = self._robot.world.light_cubes[cube2_num]
+		pos = cube1.pose.position - cube2.pose.position
 		dist = math.sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z) / 10.0
 		return dist
 

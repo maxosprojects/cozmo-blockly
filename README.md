@@ -46,7 +46,7 @@ Some other features:
 	* it is highly recommended to install Node.js as described in [Security considerations](#security-considerations) section
 3. Go to `server` folder
 4. Start the server: `python3 server.py` (additionally, `-n <the future programmer's name>` can be supplied to set the default filename when saving/reloading programs - convenient on mobile devices)
-5. Point your browser to `http://localhost:9090/blockly/demos/cozmo/`
+5. Point your browser to `http://localhost:9090/cozmo/`
 6. Build your program and run with the red `play` button in the top-right corner
 
 If your program hangs, or you just want to stop it, click the stop button.
