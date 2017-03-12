@@ -1,13 +1,13 @@
 from multiprocessing import Process
 import signal, time
-from cozmobot import CozmoBot
 import urllib.request
 
 class CodeExecutor():
-	def __init__(self, nonsecure = False):
+	def __init__(self, nonsecure = False, nocozmo = False):
 		self._starter = None
 		self._task = None
 		self._nonsecure = nonsecure
+		self._nocozmo = nocozmo
 		if nonsecure:
 			print("WARNING: Code will be executed in non-secure manner - Python code is accepted from the network for execution!")
 
@@ -71,5 +71,9 @@ bot.resetCustomObjects()
 		signal.signal(signal.SIGINT, signal_handler)
 		signal.signal(signal.SIGTERM, signal_handler)
 
+		if self._nocozmo:
+			from cozmomock import CozmoBot
+		else:
+			from cozmobot import CozmoBot
 		bot = CozmoBot()
 		bot.start(code)

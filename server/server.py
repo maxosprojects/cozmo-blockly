@@ -225,7 +225,7 @@ class CozmoBlockly(tornado.web.Application):
 			print('[Server] Running in debug mode')
 		app.listen(9090)
 
-		app._executor = CodeExecutor(args.nonsecure)
+		app._executor = CodeExecutor(args.nonsecure, args.nocozmo)
 		app._lock = locks.Lock()
 		app._wsHighlighter = None
 		app._wsCamera = None
@@ -247,6 +247,8 @@ def main():
 						help='enable development mode (disables caching)')
 	parser.add_argument('--nonsecure', action="store_true",
 						help="run server in non-secure mode, which doesn't require nodejs but python code is accepted from the network for execution")
+	parser.add_argument('--nocozmo', action="store_true",
+						help="mock Cozmo")
 	args = parser.parse_args()
 
 	CozmoBlockly.start(args)

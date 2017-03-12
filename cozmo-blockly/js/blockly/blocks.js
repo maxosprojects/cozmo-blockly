@@ -152,7 +152,7 @@ Blockly.Blocks['cozmo_add_static_model'] = {
         .setCheck("Number")
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField("height");
-    // this.setInputsInline(true);
+    this.setInputsInline(true);
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setColour(Blockly.Blocks.cozmo.HUE);
