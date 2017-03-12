@@ -4,26 +4,24 @@ import time
 import threading
 import math
 import quaternion
-from cozmocommon import *
 import json
 
 class CozmoBot:
 	def __init__(self):
-		self._r3dClient = None
+		self._wsClient = None
 		# Empty object.
 		self._robot = type('', (), {})()
 		self._robot.pose = pose_z_angle(0, 0, 0, degrees(0))
 
 	def start(self, code):
-		highlighter = Highlighter()
-		highlighter.start()
-
 		from ws4py.client.threadedclient import WebSocketClient
 
-		self._r3dClient = WebSocketClient('ws://localhost:9090/3dPub')
-		self._r3dClient.connect()
+		self._wsClient = WebSocketClient('ws://localhost:9090/WsPub')
+		self._wsClient.connect()
 
 		bot = self
+		
+		import cozmo
 		exec(code, locals(), locals())
 
 	def _update3d(self):
@@ -59,7 +57,7 @@ class CozmoBot:
 				getCubeData()
 			]
 		}
-		self._r3dClient.send(json.dumps(data))
+		self._wsClient.send(json.dumps(data))
 
 	def resetCustomObjects(self):
 		pass
@@ -166,19 +164,32 @@ class CozmoBot:
 	def waitForTap(self):
 		return cozmo.objects.LightCube1Id
 
-	def addStaticObject(self, x1, y1, x2, y2, depth, height):
-		print("[Bot] Executing addStaticObject({},{},{},{},{},{})".format(x1, y1, x2, y2, depth, height))
-		# X1 = x1 * 10
-		# Y1 = y1 * 10
-		# X2 = x2 * 10
-		# Y2 = y2 * 10
-		# HEIGHT = height * 10
+	def addStaticObject(self, model, x1, y1, x2, y2, depth, height):
+		data = {
+			'addStaticObject': {
+				'model': model,
+				'x1': x1,
+				'y1': y1,
+				'x2': x2,
+				'y2': y2,
+				'depth': depth,
+				'height': height
+			}
+		}
+		self._wsClient.send(json.dumps(data))
 
-		# DEPTH = depth * 10
-		# WIDTH = math.sqrt(math.pow(X1 - X2, 2) + math.pow(Y1 - Y2, 2))
-		# centerX = (X1 + X2) / 2.0
-		# centerY = (Y1 + Y2) / 2.0
-		# centerZ = HEIGHT / 2.0
-		# angle = math.atan2(Y1 - Y2, X1 - X2)
-		# pose = Pose(centerX, centerY, centerZ, angle_z=radians(angle))
-		# self._robot.world.create_custom_fixed_object(self._origin.define_pose_relative_this(pose), WIDTH, DEPTH, HEIGHT)
+	def setCubeModel(self, model, num):
+		data = {
+			'setCubeModel': {
+				'model': model,
+				'cubeNum': num
+			}
+		}
+		self._wsClient.send(json.dumps(data))
+
+	def highlight(self, block):
+		data = {
+			'highlight': block
+		}
+		self._wsClient.send(json.dumps(data))
+

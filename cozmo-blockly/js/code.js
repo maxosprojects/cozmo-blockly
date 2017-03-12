@@ -47,8 +47,7 @@ Code.LANGUAGE_RTL = ['ar', 'fa', 'he', 'lki'];
 Code.workspace = null;
 
 Code.camera = null;
-Code.highlighter = null;
-Code.cozmo3dws = null;
+Code.cozmoWs = null;
 Code.cozmo3d = new Cozmo3d();
 
 /**
@@ -68,8 +67,8 @@ Blockly.FieldAngle.OFFSET = 0;
  */
 Blockly.FieldAngle.WRAP = 360;
 
-Blockly.Python.STATEMENT_PREFIX = 'highlighter.send(%1)\n';
-Blockly.Python.addReservedWords('highlighter', 'cozmo, robot, bot, tapped_cube');
+Blockly.Python.STATEMENT_PREFIX = 'bot.highlight(%1)\n';
+Blockly.Python.addReservedWords('cozmo, robot, bot, tapped_cube');
 
 var defaultXml =
     '<xml>' +
@@ -266,8 +265,7 @@ Code.tabClick = function(clickedName) {
   }
 
   Code.stopCamera();
-  Code.stopHighlighter();
-  Code.stop3d();
+  Code.cozmo3d.stop();
 
   // If blocks tab was open, hide workspace.
   if (document.getElementById('tab_blocks').className == 'tabon') {
@@ -284,8 +282,7 @@ Code.tabClick = function(clickedName) {
   Code.selected = clickedName;
   document.getElementById('tab_' + clickedName).className = 'tabon';
   // Show the selected pane.
-  document.getElementById('content_' + clickedName).style.visibility =
-      'visible';
+  document.getElementById('content_' + clickedName).style.visibility = 'visible';
   Code.renderContent();
   Blockly.svgResize(Code.workspace);
 };
@@ -325,11 +322,12 @@ Code.renderContent = function() {
     content.focus();
   } else if (Code.selected == 'blocks') {
     Code.workspace.setVisible(true);
-    Code.startHighlighter();
+    // Code.startHighlighter();
   } else if (Code.selected == 'camera') {
     Code.startCamera();
   } else if (Code.selected == '3d') {
-    Code.start3d();
+      Code.cozmo3d.init();
+      Code.cozmo3d.start();
   } else if (Code.selected == 'javascript') {
     var code = Blockly.JavaScript.workspaceToCode(Code.workspace);
     renderInnerContent(code, 'js');
@@ -346,14 +344,6 @@ Code.renderContent = function() {
     var code = Blockly.Lua.workspaceToCode(Code.workspace);
     renderInnerContent(code, 'lua');
   }
-};
-
-Code.setCubeModel = function(model, num) {
-  Code.cozmo3d.setCubeModel(model, num);
-};
-
-Code.addStaticModel = function(model, x1, y1, x2, y2, depth, height) {
-  Code.cozmo3d.addStaticModel(model, x1, y1, x2, y2, depth, height);
 };
 
 Code.initDialog = function() {
@@ -581,7 +571,7 @@ Code.init = function() {
   onresize();
   Blockly.svgResize(Code.workspace);
 
-  // Lazy-load the syntax-highlighting.
+  // Lazy-load syntax-highlighting.
   window.setTimeout(Code.importPrettify, 1);
 
   // Code.workspace.addChangeListener(Code.onWorkspaceChange);
@@ -664,20 +654,22 @@ Code.runJS = function() {
 };
 
 Code.sendCodeToUrl = function(urlToSendTo) {
-  Code.sendXmlToUrl('/saves/.last');
   var code;
+
+  Code.sendXmlToUrl('/saves/.last');
+
+  Code.cozmo3d.init();
+
   // Static objects are to be populated from the program every time.
   Code.cozmo3d.clearStatics();
   if (NONSECURE) {
     code = Blockly.Python.workspaceToCode(Code.workspace);
   } else {
-    // Run code translation anyway to apply 3d model changes.
-    Blockly.Python.workspaceToCode(Code.workspace);
     var xml = Blockly.Xml.workspaceToDom(Code.workspace);
     code = Blockly.Xml.domToText(xml);
   }
 
-  var onHighlighterConnected = function() {
+  var onWsConnected = function() {
     // Send code after highlighter websocket is connected.
     $.ajax({
       url: urlToSendTo,
@@ -693,39 +685,8 @@ Code.sendCodeToUrl = function(urlToSendTo) {
     });
   };
 
-  Code.startHighlighter(onHighlighterConnected);
+  Code.startWs(onWsConnected);
 };
-
-Code.startHighlighter = function(onConnectFunc) {
-  Code.stopHighlighter();
-
-  Code.highlighter = new cozmoWs();
-
-  Code.highlighter.onMessage = function(evt) {
-    if (document.getElementById('tab_blocks').className == 'tabon') {
-      Code.workspace.highlightBlock(evt.data);
-    }
-  };
-  Code.highlighter.onOpen = function(evt) {
-    if (onConnectFunc) {
-      onConnectFunc();
-    }
-  };
-  Code.highlighter.onClose = function(evt) {
-    Code.workspace.highlightBlock(null);
-  };
-
-  var loc = window.location;
-  var wsurl = 'ws://' + loc.host + '/highlightSub';
-  Code.highlighter.doConnect(wsurl);
-}
-
-Code.stopHighlighter = function() {
-  if (Code.highlighter) {
-    Code.highlighter.doDisconnect();
-    Code.highlighter = null;
-  }
-}
 
 Code.startCamera = function() {
   var canvas = document.getElementById('canvas_cam');
@@ -750,26 +711,36 @@ Code.stopCamera = function() {
   }
 }
 
-Code.start3d = function() {
-  Code.cozmo3d.init();
-  Code.cozmo3d.start();
-
-  Code.cozmo3dws = new cozmoWs();
-  Code.cozmo3dws.onMessage = function(msg) {
-    Code.cozmo3d.onData(JSON.parse(msg.data));
+Code.startWs = function(onConnectFunc) {
+  Code.stopWs();
+  Code.cozmoWs = new cozmoWs();
+  Code.cozmoWs.onMessage = function(msg) {
+    if (msg.data.highlight) {
+      if (document.getElementById('tab_blocks').className == 'tabon') {
+        Code.workspace.highlightBlock(msg.data.highlight);
+      }
+    } else {
+      Code.cozmo3d.onData(JSON.parse(msg.data));
+    }
+  };
+  Code.cozmoWs.onOpen = function(evt) {
+    if (onConnectFunc) {
+      onConnectFunc();
+    }
+  };
+  Code.cozmoWs.onClose = function(evt) {
+    Code.workspace.highlightBlock(null);
   };
 
   var loc = window.location;
-  var wsurl = 'ws://' + loc.host + '/3dSub';
-  Code.cozmo3dws.doConnect(wsurl);
+  var wsurl = 'ws://' + loc.host + '/WsSub';
+  Code.cozmoWs.doConnect(wsurl);
 }
 
-Code.stop3d = function() {
-  Code.cozmo3d.stop();
-  // Disconnect cozmo3dws WS.
-  if (Code.cozmo3dws) {
-    Code.cozmo3dws.doDisconnect()
-    Code.cozmo3dws = null;
+Code.stopWs = function() {
+  if (Code.cozmoWs) {
+    Code.cozmoWs.doDisconnect()
+    Code.cozmoWs = null;
   }
 }
 
@@ -864,13 +835,14 @@ Code.runRemotely = function() {
 }
 
 Code.stopRemoteExecution = function() {
+  // Disconnect WS.
+  Code.stopWs();
+
   $.ajax({
     url: '/robot/terminate',
     method: 'POST'
   })
   .done(function(data, textStatus, jqXHR) {
-      // Disconnect highlighter WS.
-    Code.stopHighlighter();
     console.log('terminated');
   })
   .fail(function(jqXHR, textStatus, errorThrown) {

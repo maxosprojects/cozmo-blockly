@@ -4,7 +4,8 @@ import time
 import threading
 import math
 import quaternion
-from cozmocommon import *
+import io
+import json
 
 animations = {
 	"GREETING": cozmo.anim.Triggers.AcknowledgeFaceNamed,
@@ -37,6 +38,8 @@ class CozmoBot:
 		self._robot = None
 		self._origin = None
 		self._dataPubThread = None
+		self._camClient = None
+		self._wsClient = None
 
 	def start(self, code):
 		def run(sdk_conn):
@@ -53,11 +56,15 @@ class CozmoBot:
 
 			bot = self
 
-			highlighter = Highlighter()
-			highlighter.start()
-
 			import cozmo
 			exec(code, locals(), locals())
+
+		from ws4py.client.threadedclient import WebSocketClient
+		self._camClient = WebSocketClient('ws://localhost:9090/camPub')
+		self._camClient.connect()
+
+		self._wsClient = WebSocketClient('ws://localhost:9090/WsPub')
+		self._wsClient.connect()
 
 		self._dataPubThread = threading.Thread(target=self.feedRobotDataInThread)
 		self._dataPubThread.daemon = True
@@ -69,16 +76,6 @@ class CozmoBot:
 		self._robot = None
 
 	def feedRobotDataInThread(self):
-		import io
-		from ws4py.client.threadedclient import WebSocketClient
-		import json
-
-		camClient = WebSocketClient('ws://localhost:9090/camPub')
-		camClient.connect()
-
-		r3dClient = WebSocketClient('ws://localhost:9090/3dPub')
-		r3dClient.connect()
-
 		print('Starting data feed')
 		while True:
 			if self._robot is None:
@@ -97,7 +94,7 @@ class CozmoBot:
 			binaryImage = fobj.read()
 			if binaryImage is None:
 				continue
-			camClient.send(binaryImage, binary=True)
+			self._camClient.send(binaryImage, binary=True)
 			# Feed robot data
 			def getData(pose):
 				# Don't fail if one of the cubes has flat battery.
@@ -132,7 +129,7 @@ class CozmoBot:
 					getCubeData(3)
 				]
 			}
-			r3dClient.send(json.dumps(data))
+			self._wsClient.send(json.dumps(data))
 			# Sleep a while
 			time.sleep(0.1)
 
@@ -328,8 +325,22 @@ class CozmoBot:
 		print("[Bot] Executing waitForTap()")
 		return self._robot.world.wait_for(cozmo.objects.EvtObjectTapped, timeout=None).obj
 
-	def addStaticObject(self, x1, y1, x2, y2, depth, height):
+	def addStaticObject(self, model, x1, y1, x2, y2, depth, height):
 		print("[Bot] Executing addStaticObject({},{},{},{},{},{})".format(x1, y1, x2, y2, depth, height))
+
+		data = {
+			'addStaticObject': {
+				'model': model,
+				'x1': x1,
+				'y1': y1,
+				'x2': x2,
+				'y2': y2,
+				'depth': depth,
+				'height': height
+			}
+		}
+		self._wsClient.send(json.dumps(data))
+
 		X1 = x1 * 10
 		Y1 = y1 * 10
 		X2 = x2 * 10
@@ -344,3 +355,19 @@ class CozmoBot:
 		angle = math.atan2(Y1 - Y2, X1 - X2)
 		pose = Pose(centerX, centerY, centerZ, angle_z=radians(angle))
 		self._robot.world.create_custom_fixed_object(self._origin.define_pose_relative_this(pose), WIDTH, DEPTH, HEIGHT)
+
+	def setCubeModel(self, model, num):
+		data = {
+			'setCubeModel': {
+				'model': model,
+				'cubeNum': num
+			}
+		}
+		self._wsClient.send(json.dumps(data))
+
+	def highlight(self, block):
+		data = {
+			'highlight': block
+		}
+		self._wsClient.send(json.dumps(data))
+

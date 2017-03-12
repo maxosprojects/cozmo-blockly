@@ -33,7 +33,7 @@ require('../cozmo-blockly/js/blockly/python_generator.js');
 
 require('../blockly/msg/messages.js');
 
-Blockly.Python.STATEMENT_PREFIX = 'highlighter.send(%1)\n';
+Blockly.Python.STATEMENT_PREFIX = 'bot.highlight(%1)\n';
 
 var express = require('express');
 var bodyParser = require('body-parser')

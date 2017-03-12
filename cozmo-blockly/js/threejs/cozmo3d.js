@@ -658,11 +658,22 @@ function Cozmo3d() {
     if (!that._initialized) {
       return;
     }
-    // console.log("received cozmo position", data, JSON.stringify(data));
-    that._cozmo.update(data.cozmo);
-
-    for (var i = 0; i < that._cubes.length; i++) {
-      that._cubes[i].update(data.cubes[i]);
+    if (data.cozmo) {
+      // console.log("received cozmo position", data, JSON.stringify(data));
+      that._cozmo.update(data.cozmo);
+    }
+    if (data.cubes) {
+      for (var i = 0; i < that._cubes.length; i++) {
+        that._cubes[i].update(data.cubes[i]);
+      }
+    }
+    if (data.addStaticObject) {
+      var static = data.addStaticObject;
+      that.addStaticModel(static.model, static.x1, static.y1, static.x2, static.y2, static.depth, static.height);
+    }
+    if (data.setCubeModel) {
+      var mod = data.setCubeModel;
+      that.setCubeModel(mod.model, mod.cubeNum);
     }
   };
 
@@ -682,6 +693,7 @@ function Cozmo3d() {
   };
 
   this.addStaticModel = function(model, x1, y1, x2, y2, depth, height) {
+    // console.log("adding static model", model, x1, y1, x2, y2, depth, height);
     var obj = {
       "model": model,
       "x1": x1 * 10,

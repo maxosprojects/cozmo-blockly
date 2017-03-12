@@ -40,7 +40,7 @@ Blockly.Python['math_angle'] = function(block) {
     order = Blockly.Python.ORDER_UNARY_SIGN;
   } else {
     order = code < 0 ? Blockly.Python.ORDER_UNARY_SIGN :
-            Blockly.Python.ORDER_ATOMIC;
+      Blockly.Python.ORDER_ATOMIC;
   }
   return [code, order];
 };
@@ -56,7 +56,7 @@ Blockly.Python['cozmo_on_start'] = function(block) {
   globals = globals.length ? '  global ' + globals.join(', ') + '\n' : '';
   var branch = Blockly.Python.statementToCode(block, 'BODY');
   branch = Blockly.Python.addLoopTrap(branch, block.id) ||
-          Blockly.Python.PASS;
+    Blockly.Python.PASS;
   var code = 'def on_start():\n' + globals + branch + '\n';
   return code;
 };
@@ -64,24 +64,18 @@ Blockly.Python['cozmo_on_start'] = function(block) {
 Blockly.Python['cozmo_set_cube_model'] = function(block) {
   var model = block.getFieldValue('MODEL');
   var num = block.getFieldValue('CUBE_NUM');
-  if (typeof Code !== "undefined") {
-    Code.setCubeModel(model, num);
-  }
-  return '';
+  return 'bot.setCubeModel("' + model + '",' + num + ')\n';
 };
 
 Blockly.Python['cozmo_add_static_model'] = function(block) {
   var model = block.getFieldValue('MODEL');
-  var x1 = getInt(block, 'X1');
-  var y1 = getInt(block, 'Y1');
-  var x2 = getInt(block, 'X2');
-  var y2 = getInt(block, 'Y2');
-  var depth = getInt(block, 'DEPTH');
-  var height = getInt(block, 'HEIGHT');
-  if (typeof Code !== "undefined") {
-    Code.addStaticModel(model, x1, y1, x2, y2, depth, height);
-  }
-  var code = 'bot.addStaticObject(' + x1 + ',' + y1 + ',' + x2 + ',' + y2 + ',' + depth + ',' + height + ')\n';
+  var x1 = getFloatOrVar(block, 'X1');
+  var y1 = getFloatOrVar(block, 'Y1');
+  var x2 = getFloatOrVar(block, 'X2');
+  var y2 = getFloatOrVar(block, 'Y2');
+  var depth = getFloatOrVar(block, 'DEPTH');
+  var height = getFloatOrVar(block, 'HEIGHT');
+  var code = 'bot.addStaticObject("' + model + '",' + x1 + ',' + y1 + ',' + x2 + ',' + y2 + ',' + depth + ',' + height + ')\n';
   return code;
 };
 
@@ -90,10 +84,7 @@ Blockly.Python['cozmo_maze'] = function(block) {
   var maze = JSON.parse(block.data);
   for (var i = 0; i < maze.length; i++) {
     var obj = maze[i];
-    code.push('bot.addStaticObject(' + obj.x1 + ',' + obj.y1 + ',' + obj.x2 + ',' + obj.y2 + ', 1, 3)');
-    if (typeof Code !== "undefined") {
-      Code.addStaticModel('WALL_WOOD', obj.x1, obj.y1, obj.x2, obj.y2, 1, 3);
-    }
+    code.push('bot.addStaticObject("WALL_WOOD",' + obj.x1 + ',' + obj.y1 + ',' + obj.x2 + ',' + obj.y2 + ', 1, 3)');
   }
   return code.join('\n') + '\n';
 };
@@ -164,8 +155,8 @@ Blockly.Python['cozmo_drive_wheels_speed'] = function(block) {
 };
 
 Blockly.Python['cozmo_drive_to'] = function(block) {
-  var x = getInt(block, 'X');
-  var y = getInt(block, 'Y');
+  var x = getFloatOrVar(block, 'X');
+  var y = getFloatOrVar(block, 'Y');
   var code = 'bot.driveTo(' + x + ', ' + y + ')\n';
   return code;
 };
@@ -230,11 +221,8 @@ Blockly.Python['cozmo_on_cube_tapped'] = function(block) {
   globals = globals.length ? '  global ' + globals.join(', ') + '\n' : '';
   var branch = Blockly.Python.statementToCode(block, 'BODY');
   branch = Blockly.Python.addLoopTrap(branch, block.id) ||
-          Blockly.Python.PASS;
-  var code = 'def on_cube_tapped(evt, *, obj, tap_count, tap_duration, tap_intensity, **kwargs):\n'
-              + globals
-              + Blockly.Python.INDENT + 'tapped_cube = obj\n'
-              + branch;
+    Blockly.Python.PASS;
+  var code = 'def on_cube_tapped(evt, *, obj, tap_count, tap_duration, tap_intensity, **kwargs):\n' + globals + Blockly.Python.INDENT + 'tapped_cube = obj\n' + branch;
   return code;
 };
 
@@ -261,6 +249,11 @@ Blockly.Python['cozmo_free_will'] = function(block) {
 // Utils
 ////////////////////////////////////
 
-function getInt(block, fieldName) {
-  return parseFloat(Blockly.Python.valueToCode(block, fieldName, Blockly.Python.ORDER_NONE));
+function getFloatOrVar(block, fieldName) {
+  var value = parseFloat(Blockly.Python.valueToCode(block, fieldName, Blockly.Python.ORDER_NONE));
+  if (isNaN(value)) {
+    return Blockly.Python.valueToCode(block, fieldName, Blockly.Python.ORDER_NONE);
+  } else {
+    return value;
+  }
 }

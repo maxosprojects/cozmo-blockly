@@ -35,32 +35,32 @@ def signal_handler(signal, frame):
 
 class CozmoBlockly(tornado.web.Application):
 
-	class WSHighlightSubHandler(tornado.websocket.WebSocketHandler):
+	class WS3dSubHandler(tornado.websocket.WebSocketHandler):
 		def open(self):
-			print('[Server] HighlighterSub client connected')
-			self.application._wsHighlighter = self
+			print('[Server] 3dSub client connected')
+			self.application._ws3d = self
 
 		def on_close(self):
-			print('[Server] HighlighterSub client disconnected')
+			print('[Server] 3dSub client disconnected')
 
 		def on_message(self, message):
-			print('[Server] HighlighterSub client message: ' + message)
+			print('[Server] 3dSub client message: ' + message)
 			# echo message back to client
 			self.write_message(message)
 
-	class WSHighlightPubHandler(tornado.websocket.WebSocketHandler):
+	class WS3dPubHandler(tornado.websocket.WebSocketHandler):
 		def open(self):
-			print('[Server] HighlighterPub client connected')
+			print('[Server] 3dPub client connected')
 
 		def on_message(self, message):
 			try:
-				if self.application._wsHighlighter:
-					self.application._wsHighlighter.write_message(message)
+				if self.application._ws3d:
+					self.application._ws3d.write_message(message)
 			except Exception:
 				pass
 
 		def on_close(self):
-			print('[Server] HighlighterPub client disconnected')
+			print('[Server] 3dPub client disconnected')
 
 	class WSCameraSubHandler(tornado.websocket.WebSocketHandler):
 		def open(self):
@@ -83,28 +83,6 @@ class CozmoBlockly(tornado.web.Application):
 
 		def on_close(self):
 			print('[Server] CameraPub client disconnected')
-
-	class WS3dSubHandler(tornado.websocket.WebSocketHandler):
-		def open(self):
-			print('[Server] 3dSub client connected')
-			self.application._ws3d = self
-
-		def on_close(self):
-			print('[Server] 3dSub client disconnected')
-
-	class WS3dPubHandler(tornado.websocket.WebSocketHandler):
-		def open(self):
-			print('[Server] 3dPub client connected')
-
-		def on_message(self, message):
-			try:
-				if self.application._ws3d:
-					self.application._ws3d.write_message(message, binary=False)
-			except Exception:
-				pass
-
-		def on_close(self):
-			print('[Server] 3dPub client disconnected')
 
 	class RobotSubmitHandler(tornado.web.RequestHandler):
 		@gen.coroutine
@@ -201,12 +179,10 @@ class CozmoBlockly(tornado.web.Application):
 			(r'/(saves)/(.*)', CozmoBlockly.SavesHandler),
 			(r'/robot/submit', CozmoBlockly.RobotSubmitHandler),
 			(r'/robot/terminate', CozmoBlockly.RobotTerminateHandler),
-			(r'/highlightSub', CozmoBlockly.WSHighlightSubHandler),
-			(r'/highlightPub', CozmoBlockly.WSHighlightPubHandler),
 			(r'/camSub', CozmoBlockly.WSCameraSubHandler),
 			(r'/camPub', CozmoBlockly.WSCameraPubHandler),
-			(r'/3dSub', CozmoBlockly.WS3dSubHandler),
-			(r'/3dPub', CozmoBlockly.WS3dPubHandler),
+			(r'/WsSub', CozmoBlockly.WS3dSubHandler),
+			(r'/WsPub', CozmoBlockly.WS3dPubHandler),
 		])
 		cozmoBlockly = app
 
@@ -227,7 +203,6 @@ class CozmoBlockly(tornado.web.Application):
 
 		app._executor = CodeExecutor(args.nonsecure, args.nocozmo)
 		app._lock = locks.Lock()
-		app._wsHighlighter = None
 		app._wsCamera = None
 		app._ws3d = None
 
