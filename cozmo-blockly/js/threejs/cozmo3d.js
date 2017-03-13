@@ -661,19 +661,30 @@ function Cozmo3d() {
     if (data.cozmo) {
       // console.log("received cozmo position", data, JSON.stringify(data));
       that._cozmo.update(data.cozmo);
-    }
-    if (data.cubes) {
+    } else if (data.cubes) {
       for (var i = 0; i < that._cubes.length; i++) {
         that._cubes[i].update(data.cubes[i]);
       }
-    }
-    if (data.addStaticObject) {
+    } else if (data.addStaticObject) {
       var static = data.addStaticObject;
       that.addStaticModel(static.model, static.x1, static.y1, static.x2, static.y2, static.depth, static.height);
-    }
-    if (data.setCubeModel) {
+    } else if (data.setCubeModel) {
       var mod = data.setCubeModel;
       that.setCubeModel(mod.model, mod.cubeNum);
+    } else if (data.aruco) {
+      if (data.aruco.length > 0 && data.aruco[0].id == 2) {
+        var cube = that._cubes[1];
+        var rot = data.aruco[0].rot;
+        // cube.mesh.position.x = pose.x + this.offx;
+        // cube.mesh.position.y = pose.y + this.offy;
+        // cube.mesh.position.z = pose.z + this.offz;
+        cube.mesh.rotation.x = rot[0];
+        cube.mesh.rotation.y = rot[1];
+        cube.mesh.rotation.z = rot[2];
+        cube.mesh.position.y = 100;
+
+        cube._setOpacity(1);
+      }
     }
   };
 

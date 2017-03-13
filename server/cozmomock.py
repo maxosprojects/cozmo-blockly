@@ -7,11 +7,13 @@ import quaternion
 import json
 
 class CozmoBot:
-	def __init__(self):
+	def __init__(self, aruco):
 		self._wsClient = None
+		self._dataPubThread = None
 		# Empty object.
 		self._robot = type('', (), {})()
 		self._robot.pose = pose_z_angle(0, 0, 0, degrees(0))
+		self._aruco = aruco
 
 	def start(self, code):
 		from ws4py.client.threadedclient import WebSocketClient
@@ -19,10 +21,25 @@ class CozmoBot:
 		self._wsClient = WebSocketClient('ws://localhost:9090/WsPub')
 		self._wsClient.connect()
 
+		if self._aruco:
+			self._dataPubThread = threading.Thread(target=self.feedRobotDataInThread)
+			self._dataPubThread.daemon = True
+			self._dataPubThread.start()
+
 		bot = self
-		
+
 		import cozmo
 		exec(code, locals(), locals())
+
+	def feedRobotDataInThread(self):
+		print('Starting data feed')
+		while True:
+			data = {
+				'aruco': self._aruco.getMarkers()
+			}
+			self._wsClient.send(json.dumps(data))
+			# Sleep a while
+			time.sleep(0.1)
 
 	def _update3d(self):
 		# Feed robot data
@@ -191,5 +208,5 @@ class CozmoBot:
 		data = {
 			'highlight': block
 		}
-		self._wsClient.send(json.dumps(data))
+		# self._wsClient.send(json.dumps(data))
 

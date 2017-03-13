@@ -201,7 +201,7 @@ class CozmoBlockly(tornado.web.Application):
 			print('[Server] Running in debug mode')
 		app.listen(9090)
 
-		app._executor = CodeExecutor(args.nonsecure, args.nocozmo)
+		app._executor = CodeExecutor(args.nonsecure, args.nocozmo, args.aruco)
 		app._lock = locks.Lock()
 		app._wsCamera = None
 		app._ws3d = None
@@ -224,6 +224,8 @@ def main():
 						help="run server in non-secure mode, which doesn't require nodejs but python code is accepted from the network for execution")
 	parser.add_argument('--nocozmo', action="store_true",
 						help="mock Cozmo")
+	parser.add_argument('--aruco', action="store_true",
+						help="enable Aruco markers detection")
 	args = parser.parse_args()
 
 	CozmoBlockly.start(args)

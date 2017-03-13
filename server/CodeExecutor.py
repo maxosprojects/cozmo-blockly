@@ -3,11 +3,12 @@ import signal, time
 import urllib.request
 
 class CodeExecutor():
-	def __init__(self, nonsecure = False, nocozmo = False):
+	def __init__(self, nonsecure=False, nocozmo=False, enableAruco=False):
 		self._starter = None
 		self._task = None
 		self._nonsecure = nonsecure
 		self._nocozmo = nocozmo
+		self._enableAruco = enableAruco
 		if nonsecure:
 			print("WARNING: Code will be executed in non-secure manner - Python code is accepted from the network for execution!")
 
@@ -75,5 +76,9 @@ bot.resetCustomObjects()
 			from cozmomock import CozmoBot
 		else:
 			from cozmobot import CozmoBot
-		bot = CozmoBot()
+		aruco = None
+		if self._enableAruco:
+			from aruco import Aruco
+			aruco = Aruco()
+		bot = CozmoBot(aruco)
 		bot.start(code)

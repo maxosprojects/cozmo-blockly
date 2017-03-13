@@ -34,12 +34,13 @@ emotions = {
 }
 
 class CozmoBot:
-	def __init__(self):
+	def __init__(self, aruco):
 		self._robot = None
 		self._origin = None
 		self._dataPubThread = None
 		self._camClient = None
 		self._wsClient = None
+		self._aruco = aruco
 
 	def start(self, code):
 		def run(sdk_conn):
