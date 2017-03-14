@@ -671,19 +671,28 @@ function Cozmo3d() {
     } else if (data.setCubeModel) {
       var mod = data.setCubeModel;
       that.setCubeModel(mod.model, mod.cubeNum);
-    } else if (data.aruco) {
-      if (data.aruco.length > 0 && data.aruco[0].id == 2) {
-        var cube = that._cubes[1];
-        var rot = data.aruco[0].rot;
-        // cube.mesh.position.x = pose.x + this.offx;
-        // cube.mesh.position.y = pose.y + this.offy;
-        // cube.mesh.position.z = pose.z + this.offz;
-        cube.mesh.rotation.x = rot[0];
-        cube.mesh.rotation.y = rot[1];
-        cube.mesh.rotation.z = rot[2];
-        cube.mesh.position.y = 100;
+    } else if (data.aruco && data.aruco.length > 0) {
+      for (var i = 0; i < data.aruco.length; i++) {
+        if (data.aruco[i].id == 2) {
+          var cube = that._cubes[1];
+          var pos = data.aruco[i].pos;
+          var rot = data.aruco[i].rot;
+          // cube.mesh.position.x = pose.x + this.offx;
+          // cube.mesh.position.y = pose.y + this.offy;
+          // cube.mesh.position.z = pose.z + this.offz;
 
-        cube._setOpacity(1);
+          // cube.mesh.rotation.x = rot[0];
+          // cube.mesh.rotation.y = rot[1];
+          // cube.mesh.rotation.z = rot[2];
+
+          var quat = new THREE.Quaternion(rot[0], rot[1], rot[2], rot[3])
+          cube.mesh.setRotationFromQuaternion(quat);
+          cube.mesh.position.x = pos[0];
+          cube.mesh.position.y = pos[2] + 100;
+          cube.mesh.position.z = pos[1];
+
+          cube._setOpacity(1);
+        }
       }
     }
   };

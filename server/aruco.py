@@ -1,6 +1,7 @@
 import cv2
 import time
 import numpy as np
+from rodrigues import Rodrigues
 
 # width = 640
 # height = 480
@@ -42,6 +43,7 @@ class Aruco(object):
 
 		self._aruco_lib = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_250)
 		self._aruco_params = cv2.aruco.DetectorParameters_create()
+		self._aruco_params.doCornerRefinement = True
 
 	def detectAruco(self, gray):
 		(corners, ids, _) = cv2.aruco.detectMarkers(gray, self._aruco_lib, parameters=self._aruco_params)
@@ -84,7 +86,9 @@ class Aruco(object):
 		ret = list()
 		positions, rotations = self.estimatePose(corners)
 		for i in range(len(ids)):
-			marker = ArucoMarker(int(ids[i][0]), positions[i][0].tolist(), rotations[i][0].tolist())
+			rot = rotations[i][0]
+			rod = Rodrigues(rot[0], rot[1], rot[2])
+			marker = ArucoMarker(int(ids[i][0]), (positions[i][0] * 100).tolist(), rod.toQuaternion())
 			ret.append(marker.toDict())
 
 		return ret
