@@ -5,10 +5,12 @@ import threading
 import math
 import quaternion
 import json
+import io
 
 class CozmoBot:
 	def __init__(self, aruco):
 		self._wsClient = None
+		self._camClient = None
 		self._dataPubThread = None
 		# Empty object.
 		self._robot = type('', (), {})()
@@ -21,7 +23,18 @@ class CozmoBot:
 		self._wsClient = WebSocketClient('ws://localhost:9090/WsPub')
 		self._wsClient.connect()
 
+		self._camClient = WebSocketClient('ws://localhost:9090/camPub')
+		self._camClient.connect()
+
 		if self._aruco:
+			width, height = self._aruco.cameraSize()
+			data = {
+				'cameraSize': {
+					'width': width,
+					'height': height
+				}
+			}
+			self._wsClient.send(json.dumps(data))
 			self._dataPubThread = threading.Thread(target=self.feedRobotDataInThread)
 			self._dataPubThread.daemon = True
 			self._dataPubThread.start()
@@ -34,11 +47,17 @@ class CozmoBot:
 	def feedRobotDataInThread(self):
 		print('Starting data feed')
 		while True:
+			markers, frameBuf = self._aruco.getData(True)
 			data = {
-				'aruco': self._aruco.getMarkers()
+				'aruco': markers
 			}
 			self._wsClient.send(json.dumps(data))
-			# Sleep a while
+
+			# Send Aruco image
+			if not frameBuf is None:
+				self._camClient.send(frameBuf, binary=True)
+
+			# Take a nap
 			time.sleep(0.1)
 
 	def _update3d(self):

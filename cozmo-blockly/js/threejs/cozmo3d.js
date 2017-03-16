@@ -673,10 +673,11 @@ function Cozmo3d() {
       that.setCubeModel(mod.model, mod.cubeNum);
     } else if (data.aruco && data.aruco.length > 0) {
       for (var i = 0; i < data.aruco.length; i++) {
-        if (data.aruco[i].id == 2) {
+        if (data.aruco[i].id == 5) {
           var cube = that._cubes[1];
           var pos = data.aruco[i].pos;
           var rot = data.aruco[i].rot;
+          tick(rot[0], rot[1], rot[2]);
           // cube.mesh.position.x = pose.x + this.offx;
           // cube.mesh.position.y = pose.y + this.offy;
           // cube.mesh.position.z = pose.z + this.offz;

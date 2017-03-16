@@ -47,6 +47,7 @@ Code.LANGUAGE_RTL = ['ar', 'fa', 'he', 'lki'];
 Code.workspace = null;
 
 Code.camera = null;
+Code.cameraSize = {width: 320, height: 240};
 Code.cozmoWs = null;
 Code.cozmo3d = new Cozmo3d();
 
@@ -690,6 +691,8 @@ Code.sendCodeToUrl = function(urlToSendTo) {
 
 Code.startCamera = function() {
   var canvas = document.getElementById('canvas_cam');
+  canvas.width = Code.cameraSize.width;
+  canvas.height = Code.cameraSize.height;
   var context = canvas.getContext("2d");
 
   Code.camera = new cozmoWs();
@@ -715,12 +718,16 @@ Code.startWs = function(onConnectFunc) {
   Code.stopWs();
   Code.cozmoWs = new cozmoWs();
   Code.cozmoWs.onMessage = function(msg) {
-    if (msg.data.highlight) {
+    var data = JSON.parse(msg.data);
+    if (data.highlight) {
       if (document.getElementById('tab_blocks').className == 'tabon') {
-        Code.workspace.highlightBlock(msg.data.highlight);
+        Code.workspace.highlightBlock(data.highlight);
       }
+    } else if (data.cameraSize) {
+      console.log('Received camera size', data.cameraSize);
+      Code.cameraSize = data.cameraSize;
     } else {
-      Code.cozmo3d.onData(JSON.parse(msg.data));
+      Code.cozmo3d.onData(data);
     }
   };
   Code.cozmoWs.onOpen = function(evt) {

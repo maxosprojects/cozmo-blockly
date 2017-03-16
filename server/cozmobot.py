@@ -131,7 +131,7 @@ class CozmoBot:
 				]
 			}
 			self._wsClient.send(json.dumps(data))
-			# Sleep a while
+			# Take a nap
 			time.sleep(0.1)
 
 	def resetCubes(self):

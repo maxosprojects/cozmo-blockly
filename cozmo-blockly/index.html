@@ -31,6 +31,20 @@
   <script src="js/ws.js"></script>
   <script src="js/code.js"></script>
   <script src="js/threejs/maze.js"></script>
+
+
+
+<script src="//d3js.org/d3.v4.js"></script>
+<style>
+.line {
+  fill: none;
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+</style>
+
+
+
 </head>
 <body>
 
@@ -90,6 +104,15 @@
   <div id="content_camera" class="content">
     <img id="img_cam" lazyload style="padding-right: 30px;" />
     <canvas id="canvas_cam" width="320" height="240" style="border:1px solid #000000;"></canvas>
+
+
+
+
+<svg width="960" height="500"></svg>
+
+
+
+
   </div>
   <div id="content_3d" class="content">
     <div style="position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.5); padding: 5px;">
@@ -562,6 +585,23 @@
       </block>
     </category>
   </xml>
+
+
+
+
+
+
+
+
+
+  <script src="js/d3.js"></script>
+
+
+
+
+
+
+
 
 </body>
 </html>
