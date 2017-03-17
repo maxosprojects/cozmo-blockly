@@ -677,7 +677,7 @@ function Cozmo3d() {
           var cube = that._cubes[1];
           var pos = data.aruco[i].pos;
           var rot = data.aruco[i].rot;
-          tick(rot[0], rot[1], rot[2]);
+          tick(rot[0], rot[1], rot[2], rot[3]);
           // cube.mesh.position.x = pose.x + this.offx;
           // cube.mesh.position.y = pose.y + this.offy;
           // cube.mesh.position.z = pose.z + this.offz;
@@ -689,8 +689,8 @@ function Cozmo3d() {
           var quat = new THREE.Quaternion(rot[0], rot[1], rot[2], rot[3])
           cube.mesh.setRotationFromQuaternion(quat);
           cube.mesh.position.x = pos[0];
-          cube.mesh.position.y = pos[2] + 100;
-          cube.mesh.position.z = pos[1];
+          cube.mesh.position.y = pos[1];
+          cube.mesh.position.z = pos[2];
 
           cube._setOpacity(1);
         }

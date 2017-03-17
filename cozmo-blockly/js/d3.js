@@ -1,9 +1,10 @@
 
 var n = 40,
     random = d3.randomNormal(0, .2),
-    d3X = d3.range(n).map(random),
-    d3Y = d3.range(n).map(random),
-    d3Z = d3.range(n).map(random);
+    d3W = d3.range(n).map(function(){return 0}),
+    d3X = d3.range(n).map(function(){return 0}),
+    d3Y = d3.range(n).map(function(){return 0}),
+    d3Z = d3.range(n).map(function(){return 0});
 var svg = d3.select("svg"),
     margin = {top: 20, right: 20, bottom: 20, left: 40},
     width = +svg.attr("width") - margin.left - margin.right,
@@ -34,30 +35,38 @@ g.append("g")
     .attr("clip-path", "url(#clip)")
   .append("path")
     // .datum(data)
-    .datum(d3X)
+    .datum(d3W)
     .attr("class", "line")
     .style("stroke", "#000");
 g.append("g")
     .attr("clip-path", "url(#clip)")
   .append("path")
     // .datum(data)
+    .datum(d3X)
+    .attr("class", "line")
+    .style("stroke", "#f00");
+g.append("g")
+    .attr("clip-path", "url(#clip)")
+  .append("path")
+    // .datum(data)
     .datum(d3Y)
     .attr("class", "line")
-    .style("stroke", "#500");
+    .style("stroke", "#0f0");
 g.append("g")
     .attr("clip-path", "url(#clip)")
   .append("path")
     // .datum(data)
     .datum(d3Z)
     .attr("class", "line")
-    .style("stroke", "#050");
+    .style("stroke", "#00f");
   // .transition()
   //   .duration(100)
   //   .ease(d3.easeLinear);
     // .on("start", tick);
-function tick(xx, yy, zz) {
+function tick(ww, xx, yy, zz) {
   // Push a new data point onto the back.
   // data.push(random());
+  d3W.push(ww);
   d3X.push(xx);
   d3Y.push(yy);
   d3Z.push(zz);
@@ -77,6 +86,7 @@ function tick(xx, yy, zz) {
   //   .transition();
       // .on("start", tick);
   // Pop the old data point off the front.
+  d3W.shift();
   d3X.shift();
   d3Y.shift();
   d3Z.shift();

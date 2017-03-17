@@ -3,7 +3,10 @@ import time
 import numpy as np
 from numpy.linalg import norm
 # from rodrigues import Rodrigues
-import quaternion
+import quaternion as myquat
+import transforms3d.quaternions as quaternions
+import transforms3d.utils as utils3d
+import transforms3d.affines as affines
 import json
 
 # width = 640
@@ -88,34 +91,28 @@ class Aruco(object):
 			if ids[i] <= 3:
 				table[i] = positions[i][0]
 
-		def normalize(matrix):
-			if len(matrix.shape) == 1:
-				l1norm = np.abs(matrix).sum()
-				ret = np.divide(matrix, l1norm)
-			else:
-				l1norm = norm(matrix, axis=1, ord=1)
-				ret = matrix / l1norm[:, None]
-			return ret
-
 		if len(table) == 3:
+			# Find 'normal' of the scene plane (table).
+			# The plane is described by 3 points - 3 markers on the table
 			vals = list(table.values())
 			p1 = vals[0]
 			p2 = vals[1]
 			p3 = vals[2]
-			v1 = np.subtract(p1, p2)
-			v2 = np.subtract(p1, p3)
-			normal = normalize(np.cross(v1, v2))
+			v1 = np.subtract(p2, p1)
+			v2 = np.subtract(p3, p1)
+			# normal = utils3d.normalized_vector(np.cross(v1, v2))
+			normal = np.cross(v1, v2)
 			if normal[0] < 0:
 				normal = -1 * normal
 
-			tempUp = [0.0, 1.0, 0.0]
-			right = normalize(np.cross(normal, tempUp))
-			up = normalize(np.cross(right, normal))
-			rM = np.array([
-				[right[0], normal[0], up[0]],
-				[right[1], normal[1], up[1]],
-				[right[2], normal[2], up[2]]])
-			self._sceneQuat = quaternion.fromRotationMatrix(rM)
+			# Find quaternion between desired 'normal' and the actual 'normal' of the plane
+			desiredUp = [0.0, 1.0, 0.0]
+			# Rotation vector
+			rotVect = np.cross(normal, desiredUp)
+			length = np.linalg.norm(normal)
+			w = length + np.dot(normal, desiredUp)
+			# Make quaternion
+			self._sceneQuat = utils3d.normalized_vector(np.insert(rotVect, 0, w))
 
 			minim = np.minimum(p1, p2)
 			minim = np.minimum(minim, p3)
@@ -130,23 +127,30 @@ class Aruco(object):
 			# corners.append(corners[0])
 			# rotations = np.append(rotations, [rotations[0]], axis=0)
 
+			self._sceneTransform = affines.compose(self._scenePos, quaternions.quat2mat(self._sceneQuat), [1.0, 1.0, 1.0])
+
 		if self._sceneQuat is None:
-			self._sceneQuat = [1, 0, 0, 0]
-		if self._scenePos is None:
-			self._scenePos = [0, 0, 0]
+			if withFrame:
+				return list(), self._prepareFrame(frame, ids, corners, rotations, positions)
+			else:
+				return list(), None
 
 		ret = list()
 		for i in range(len(ids)):
+			id = int(ids[i][0])
 			rot = rotations[i][0]
-			# rod = Rodrigues(rot[0], rot[1], rot[2])
 			rotM, _ = cv2.Rodrigues(rot)
+			quat = quaternions.mat2quat(rotM)
+			quat = myquat.div(quat, self._sceneQuat)
+			pos = positions[i][0]
+			# Translate pos
+			pos = np.dot(self._sceneTransform, np.append(pos, 1))
+			marker = ArucoMarker(id, (pos * 1000).tolist(), list(quat))
+			# rod = Rodrigues(rot[0], rot[1], rot[2])
 			# marker = ArucoMarker(int(ids[i][0]), (positions[i][0] * 1000).tolist(), rod.toQuaternion())
-			quat = quaternion.fromRotationMatrix(rotM)
-			quat = quaternion.div(quat, self._sceneQuat)
-			marker = ArucoMarker(int(ids[i][0]), (np.subtract(positions[i][0], self._scenePos) * 1000).tolist(), quat)
 			ret.append(marker.toDict())
 		
-		marker = ArucoMarker(5, (self._scenePos * 1000).tolist(), self._sceneQuat.tolist())
+		marker = ArucoMarker(10, (self._scenePos * 1000).tolist(), list(self._sceneQuat))
 		ret.append(marker.toDict())
 
 		if withFrame:
