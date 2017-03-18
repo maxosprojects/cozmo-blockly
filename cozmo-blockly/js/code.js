@@ -659,7 +659,12 @@ Code.sendCodeToUrl = function(urlToSendTo) {
 
   Code.sendXmlToUrl('/saves/.last');
 
+  Code.cozmo3d.stop();
+  Code.cozmo3d.deinit();
   Code.cozmo3d.init();
+  if (Code.selected == '3d') {
+      Code.cozmo3d.start();
+  }
 
   // Static objects are to be populated from the program every time.
   Code.cozmo3d.clearStatics();

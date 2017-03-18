@@ -457,6 +457,7 @@ function Cozmo3d() {
     'cubes': ['CRATE', 'CRATE', 'CRATE'],
     'statics': []
   };
+  this._lastCameraPos = [-500,450,500];
 
   this.init = function() {
     if (that._initialized) {
@@ -469,7 +470,7 @@ function Cozmo3d() {
     var height = $(canvas).height();
     that._camera = new THREE.PerspectiveCamera( 45, width/height, 0.01, 3000 );
 
-    that._camera.position.set(-500,450,500);
+    that._camera.position.set(this._lastCameraPos[0], this._lastCameraPos[1], this._lastCameraPos[2]);
     // that._camera.focalLength = 3;
     that._camera.lookAt(that._scene.position);
     that._scene.add(that._camera);
@@ -527,6 +528,41 @@ function Cozmo3d() {
     that._effect = new THREE.AnaglyphEffect( that._renderer, width || 2, height || 2 );
 
     that._initialized = true;
+  };
+
+  this.deinit = function() {
+    if (!that._initialized) {
+      return;
+    }
+
+    that._scene = null;
+    that._lastCameraPos = that._camera.position.toArray();
+    that._camera = null;
+
+    that._renderer.dispose();
+    that._renderer = null;
+
+    that._controls.dispose();
+    that._controls = null;
+
+    that._floorMaterial.dispose();
+    that._floorMaterial = null;
+
+    that._cozmo = null;
+    that._cubes = [];
+    that._statics = [];
+
+    that._effect = null;
+
+    for (var key in textureMap) {
+      if (textureMap.hasOwnProperty(key)) {
+        var texture = textureMap[key];
+        texture.dispose();
+      }
+    }
+    textureMap = {};
+
+    that._initialized = false;
   };
 
   this.start = function() {
@@ -784,7 +820,7 @@ function loadTexture(url) {
   if (textureMap[url]) {
     return textureMap[url];
   }
-  var texture = textureLoader.load(url);
+  var texture = textureLoader.load(url + "?" + new Date().getTime());
   textureMap[url] = texture;
   return texture;
 }
