@@ -1,11 +1,6 @@
 
 import math
-
-class Vec(object):
-	def __init__(self, x=0, y=0, z=0):
-		self.x = x
-		self.y = y
-		self.z = z
+from vector import Vector
 
 class Rodrigues(object):
 	def __init__(self, x, y, z):
@@ -18,13 +13,13 @@ class Rodrigues(object):
 		
 		if mx == 0:
 			self.theta = 0;
-			self.unitAxisRotation = Vec(1,0,0)
+			self.unitAxisRotation = Vector(1,0,0)
 		else:
 			x /= mx
 			y /= mx
 			z /= mx
 			self.theta = math.sqrt(x*x + y*y + z*z)
-			self.unitAxisRotation = Vec(x/self.theta, y/self.theta, z/self.theta)
+			self.unitAxisRotation = Vector(x/self.theta, y/self.theta, z/self.theta)
 			self.theta *= mx
 
 	def toQuaternion(self):

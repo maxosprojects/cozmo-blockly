@@ -3,6 +3,7 @@ var textureMap = {};
 var textureLoader = new THREE.TextureLoader();
 var cozmo2threejs = {};
 var threejs2cozmo = {};
+var aruco2threejs = {};
 
 class Dynamic {
   constructor(scene, offx, offy, offz) {
@@ -52,6 +53,10 @@ class Dynamic {
 
   set setOpacity(func) {
     this._setOpacity = func;
+  }
+
+  get setOpacity() {
+    return this._setOpacity;
   }
 }
 
@@ -152,7 +157,8 @@ class Cozmo extends Dynamic {
 
     var cozmoTexture = loadTexture( 'img/3d/cozmo.png' );
     var cozmoMaterial = new THREE.MeshBasicMaterial( { map: cozmoTexture, side: THREE.FrontSide } );
-    // var cubeMaterial = new THREE.MeshLambertMaterial( { map: cubeTexture, side: THREE.FrontSide } );
+    // Transparency with current texture isn't working well
+    // var cozmoMaterial = new THREE.MeshBasicMaterial( { map: cozmoTexture, side: THREE.FrontSide, transparent: true } );
 
     var bodyGeometry = new THREE.BoxGeometry( 70, 30, 56 );
     var headGeometry = new THREE.BoxGeometry( 36, 36, 39.4 );
@@ -560,8 +566,40 @@ function Cozmo3d() {
         }
       ]
     };
-    that.onData(data);
 
+    // Override for testing
+    // data = {
+    //   "cozmo": {
+    //     "x": 5000,
+    //     "y": 5000,
+    //     "z": 5000,
+    //     "rot": [1, 0, 0, 0]
+    //   },
+    //   "cubes": [{
+    //       "x": 200,
+    //       "y": 20,
+    //       "z": 50,
+    //       "rot": [0.537, 0, 0, 0.843],
+    //       "seen": false,
+    //       "visible": false
+    //     }, {
+    //       "x": 200,
+    //       "y": -20,
+    //       "z": 5,
+    //       "rot": [0.643, 0, 0, 0.766],
+    //       "seen": false,
+    //       "visible": false
+    //     }, {
+    //       "x": 195,
+    //       "y": 40,
+    //       "z": 5,
+    //       "rot": [0.643, 0, 0, 0.766],
+    //       "seen": false,
+    //       "visible": false
+    //     }
+    //   ]
+    // };
+    that.onData(data);
     that._render();
   };
   
@@ -658,10 +696,8 @@ function Cozmo3d() {
     if (!that._initialized) {
       return;
     }
-    if (data.cozmo) {
-      // console.log("received cozmo position", data, JSON.stringify(data));
+    if (data.cozmo || data.cubes) {
       that._cozmo.update(data.cozmo);
-    } else if (data.cubes) {
       for (var i = 0; i < that._cubes.length; i++) {
         that._cubes[i].update(data.cubes[i]);
       }
@@ -673,18 +709,18 @@ function Cozmo3d() {
       that.setCubeModel(mod.model, mod.cubeNum);
     } else if (data.aruco && data.aruco.length > 0) {
       for (var i = 0; i < data.aruco.length; i++) {
-        if (data.aruco[i].id == 5) {
-          var cube = that._cubes[1];
-          var pos = data.aruco[i].pos;
-          var rot = data.aruco[i].rot;
-          tick(rot[0], rot[1], rot[2], rot[3]);
-          // cube.mesh.position.x = pose.x + this.offx;
-          // cube.mesh.position.y = pose.y + this.offy;
-          // cube.mesh.position.z = pose.z + this.offz;
-
-          // cube.mesh.rotation.x = rot[0];
-          // cube.mesh.rotation.y = rot[1];
-          // cube.mesh.rotation.z = rot[2];
+        var id = data.aruco[i].id;
+        if (id == 5 || id == 10) {
+          var cube;
+          var r0 = data.aruco[i].rot;
+          var pos = aruco2threejs.position(data.aruco[i].pos);
+          var rot = aruco2threejs.rotation(data.aruco[i].rot);
+          if (id == 5) {
+            cube = that._cubes[1];
+            tick(r0[0], r0[1], r0[2], r0[3]);
+          } else if (id == 10) {
+            cube = that._cubes[2];
+          }
 
           var quat = new THREE.Quaternion(rot[0], rot[1], rot[2], rot[3])
           cube.mesh.setRotationFromQuaternion(quat);
@@ -692,7 +728,7 @@ function Cozmo3d() {
           cube.mesh.position.y = pos[1];
           cube.mesh.position.z = pos[2];
 
-          cube._setOpacity(1);
+          cube.setOpacity(1);
         }
       }
     }
@@ -756,11 +792,9 @@ function loadTexture(url) {
 
 ///////////////// UTILS ////////////////////////
 
+// Cozmo2ThreeJs
 cozmo2threejs.pose = function(pose) {
-  return convertPose(pose, cozmo2threejs.position, function(rot) {
-      return [-rot[2], -rot[0], -rot[1], rot[3]];
-    }
-  );
+  return convertPose(pose, cozmo2threejs.position, cozmo2threejs.rotation);
 }
 
 cozmo2threejs.position = function(position) {
@@ -771,11 +805,13 @@ cozmo2threejs.position = function(position) {
   }
 }
 
+cozmo2threejs.rotation = function(rot) {
+  return [-rot[2], -rot[0], -rot[1], rot[3]];
+}
+
+// ThreeJs2Cozmo
 threejs2cozmo.pose = function(pose) {
-  return convertPose(pose, threejs2cozmo.position, function(rot) {
-      return [-rot[1], -rot[2], -rot[0], rot[3]];
-    }
-  );
+  return convertPose(pose, threejs2cozmo.position, threejs2cozmo.rotation);
 }
 
 threejs2cozmo.position = function(position) {
@@ -784,6 +820,10 @@ threejs2cozmo.position = function(position) {
     y: -position.z,
     z: position.y
   };
+}
+
+threejs2cozmo.rotation = function(rot) {
+  return [-rot[1], -rot[2], -rot[0], rot[3]];
 }
 
 function convertPose(pose, positionFunc, quaternionFunc) {
@@ -795,4 +835,13 @@ function convertPose(pose, positionFunc, quaternionFunc) {
     z: position.z,
     rot: rot
   };
+}
+
+// Aruco2ThreeJs
+aruco2threejs.position = function(position) {
+  return [position[0], position[2], -position[1]];
+}
+
+aruco2threejs.rotation = function(rot) {
+  return [-rot[2], -rot[0], -rot[1], rot[3]];
 }

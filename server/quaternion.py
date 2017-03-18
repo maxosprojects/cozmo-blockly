@@ -1,5 +1,7 @@
 import numpy as np
-from math import sqrt
+import math
+
+EPS = 0.000001
 
 def nonNegative(quat):
    # quat = np.array(quat)
@@ -21,10 +23,6 @@ def mul(q1, q2):
 
 def inv(quat):
    return [quat[0], quat[1], quat[2], -quat[3]]
-
-# def normalize(array):
-#    quat = np.array(array)
-#    return (quat / np.sqrt(np.dot(quat, quat))
 
 def negate(quat):
    return [-x for x in quat]
@@ -53,3 +51,27 @@ def fromRotationMatrix(M):
       np.negative(q, q)
    return q
 
+def fromUnitVectors(vFrom, vTo):
+   r = np.dot(vFrom, vTo) + 1.0
+
+   if r < EPS:
+      r = 0.0
+      if abs(vFrom[0]) > abs(vFrom[2]):
+         v = [-vFrom[1], vFrom[0], 0]
+      else:
+         v = [0, -vFrom[2], vFrom[1]]
+   else:
+      v = np.cross(vFrom, vTo)
+
+   return normalize([r, v[0], v[1], v[2]])
+
+def normalize(q):
+      leng = length(q)
+
+      if leng == 0:
+         return [1.0, 0.0, 0.0, 0.0]
+      else:
+         return list(np.array(q) / leng)
+
+def length(q):
+   return math.sqrt(np.dot(q, q))

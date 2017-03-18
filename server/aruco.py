@@ -2,19 +2,14 @@ import cv2
 import time
 import numpy as np
 from numpy.linalg import norm
-# from rodrigues import Rodrigues
+from rodrigues import Rodrigues
 import quaternion as myquat
 import transforms3d.quaternions as quaternions
 import transforms3d.utils as utils3d
 import transforms3d.affines as affines
 import json
-
-# width = 640
-# height = 480
-width = 1280
-height = 960
-
-markerSize = 0.03
+import math
+import vector
 
 with open('camera.json', 'r') as cameraJson:
     data=cameraJson.read().replace('\n', '')
@@ -37,11 +32,18 @@ class ArucoMarker(object):
 
 class Aruco(object):
 	def __init__(self):
+		# width = 640
+		# height = 480
+		self._width = 1280
+		self._height = 720
+
+		self._markerSize = 0.03
+
 		print('Initializing Aruco')
 		self._cap = cv2.VideoCapture(0)
 		# Set resolution.
-		self._cap.set(3, width)
-		self._cap.set(4, height)
+		self._cap.set(3, self._width)
+		self._cap.set(4, self._height)
 
 		# Try to access camera.
 		i = 0
@@ -52,6 +54,10 @@ class Aruco(object):
 			time.sleep(0.1)
 		if not grabbed:
 			raise Exception("Cannot access camera for Aruco markers detection")
+
+		print("Actual camera size:", frame.shape)
+		self._height = frame.shape[0]
+		self._width = frame.shape[1]
 
 		self._aruco_lib = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_250)
 		self._aruco_params = cv2.aruco.DetectorParameters_create()
@@ -64,7 +70,7 @@ class Aruco(object):
 		return ids, corners
 
 	def estimatePose(self, corners):
-		rvecs, tvecs = cv2.aruco.estimatePoseSingleMarkers(corners, markerSize, cameraMatrix, None)
+		rvecs, tvecs = cv2.aruco.estimatePoseSingleMarkers(corners, self._markerSize, cameraMatrix, None)
 		return tvecs, rvecs
 
 	def getData(self, withFrame=False):
@@ -73,7 +79,10 @@ class Aruco(object):
 		'markerDataList' is a list of dictionaries representing markers and obrained from ArucoMarker.toDict().
 		If 'withFrame' is True then current resized frame is returned as a bytearray, None otherwise.
 		"""
-		grabbed, frame = self._cap.read()
+		grabbed, frm = self._cap.read()
+
+		# frame = cv2.undistort(frm, cameraMatrix, distCoeffs)
+		frame = frm
 
 		gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 		(ids, corners) = self.detectAruco(gray)
@@ -102,17 +111,24 @@ class Aruco(object):
 			v2 = np.subtract(p3, p1)
 			# normal = utils3d.normalized_vector(np.cross(v1, v2))
 			normal = np.cross(v1, v2)
-			if normal[0] < 0:
+			if normal[2] > 0:
 				normal = -1 * normal
 
-			# Find quaternion between desired 'normal' and the actual 'normal' of the plane
-			desiredUp = [0.0, 1.0, 0.0]
-			# Rotation vector
-			rotVect = np.cross(normal, desiredUp)
-			length = np.linalg.norm(normal)
-			w = length + np.dot(normal, desiredUp)
-			# Make quaternion
-			self._sceneQuat = utils3d.normalized_vector(np.insert(rotVect, 0, w))
+			# # Find quaternion between desired 'normal' and the actual 'normal' of the plane
+			# desiredUp = [0.0, 0.0, 1.0]
+			# # Rotation vector
+			# rotVect = np.cross(normal, desiredUp)
+			# length = np.linalg.norm(normal)
+			# w = length + np.dot(normal, desiredUp)
+			# # Make quaternion
+			# self._sceneQuat = utils3d.normalized_vector(np.insert(rotVect, 0, w))
+			# # self._sceneQuat = np.insert(rotVect, 0, w)
+			# # Normalize
+			# # self._sceneQuat = self._sceneQuat / math.sqrt(np.dot(self._sceneQuat, self._sceneQuat))
+
+			desiredUp = [0.0, 0.0, 1.0]
+			self._sceneQuat = myquat.fromUnitVectors(vector.normalize(normal), desiredUp)
+			# print(vector.normalize(normal))
 
 			minim = np.minimum(p1, p2)
 			minim = np.minimum(minim, p3)
@@ -128,6 +144,7 @@ class Aruco(object):
 			# rotations = np.append(rotations, [rotations[0]], axis=0)
 
 			self._sceneTransform = affines.compose(self._scenePos, quaternions.quat2mat(self._sceneQuat), [1.0, 1.0, 1.0])
+			# self._sceneTransform = affines.compose(self._scenePos, quaternions.quat2mat([1.0, 0, 0, 0]), [1.0, 1.0, 1.0])
 
 		if self._sceneQuat is None:
 			if withFrame:
@@ -138,16 +155,17 @@ class Aruco(object):
 		ret = list()
 		for i in range(len(ids)):
 			id = int(ids[i][0])
+			# Translate rotation
 			rot = rotations[i][0]
 			rotM, _ = cv2.Rodrigues(rot)
 			quat = quaternions.mat2quat(rotM)
 			quat = myquat.div(quat, self._sceneQuat)
+			# Translate position
 			pos = positions[i][0]
-			# Translate pos
 			pos = np.dot(self._sceneTransform, np.append(pos, 1))
 			marker = ArucoMarker(id, (pos * 1000).tolist(), list(quat))
 			# rod = Rodrigues(rot[0], rot[1], rot[2])
-			# marker = ArucoMarker(int(ids[i][0]), (positions[i][0] * 1000).tolist(), rod.toQuaternion())
+			# marker = ArucoMarker(id, (pos * 1000).tolist(), rod.toQuaternion())
 			ret.append(marker.toDict())
 		
 		marker = ArucoMarker(10, (self._scenePos * 1000).tolist(), list(self._sceneQuat))
@@ -163,7 +181,7 @@ class Aruco(object):
 		if not ids is None:
 			displayim = cv2.aruco.drawDetectedMarkers(displayim, corners, ids)
 			for i in range(len(ids)):
-				displayim = cv2.aruco.drawAxis(displayim, cameraMatrix, None, rotations[i], positions[i], markerSize)
+				displayim = cv2.aruco.drawAxis(displayim, cameraMatrix, None, rotations[i], positions[i], self._markerSize)
 		displayim = cv2.resize(displayim, None, fx=0.5, fy=0.5, interpolation = cv2.INTER_CUBIC)
 		ret, buf = cv2.imencode('.jpeg', displayim)
 		if not ret:
@@ -171,5 +189,5 @@ class Aruco(object):
 		return buf.tobytes()
 
 	def cameraSize(self):
-		return width / 2, height / 2
+		return self._width / 2, self._height / 2
 
