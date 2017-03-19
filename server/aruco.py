@@ -104,47 +104,28 @@ class Aruco(object):
 			# Find 'normal' of the scene plane (table).
 			# The plane is described by 3 points - 3 markers on the table
 			vals = list(table.values())
-			p1 = vals[0]
-			p2 = vals[1]
-			p3 = vals[2]
-			v1 = np.subtract(p2, p1)
-			v2 = np.subtract(p3, p1)
+			p1 = np.array(vals[0])
+			p2 = np.array(vals[1])
+			p3 = np.array(vals[2])
+			v1 = p2 - p1
+			v2 = p3 - p1
 			# normal = utils3d.normalized_vector(np.cross(v1, v2))
 			normal = np.cross(v1, v2)
 			if normal[2] > 0:
 				normal = -1 * normal
 
-			# # Find quaternion between desired 'normal' and the actual 'normal' of the plane
-			# desiredUp = [0.0, 0.0, 1.0]
-			# # Rotation vector
-			# rotVect = np.cross(normal, desiredUp)
-			# length = np.linalg.norm(normal)
-			# w = length + np.dot(normal, desiredUp)
-			# # Make quaternion
-			# self._sceneQuat = utils3d.normalized_vector(np.insert(rotVect, 0, w))
-			# # self._sceneQuat = np.insert(rotVect, 0, w)
-			# # Normalize
-			# # self._sceneQuat = self._sceneQuat / math.sqrt(np.dot(self._sceneQuat, self._sceneQuat))
-
+			# Find quaternion between desired 'normal' and the actual 'normal' of the plane
 			desiredUp = [0.0, 0.0, 1.0]
 			self._sceneQuat = myquat.fromUnitVectors(vector.normalize(normal), desiredUp)
-			# print(vector.normalize(normal))
 
-			minim = np.minimum(p1, p2)
-			minim = np.minimum(minim, p3)
-			maxim = np.maximum(p1, p2)
-			maxim = np.maximum(maxim, p3)
-			pos = np.add(minim, maxim)
-			pos = np.divide(pos, 2)
-			self._scenePos = pos
-			# positions = np.append(positions, [[pos]], axis=0)
+			# Find center of the scene - center of mass of the triangle
+			self._scenePos = (p1 + p2 + p3) / (-3.0)
 
-			# ids = np.append(ids, [[10]], axis=0)
-			# corners.append(corners[0])
-			# rotations = np.append(rotations, [rotations[0]], axis=0)
-
-			self._sceneTransform = affines.compose(self._scenePos, quaternions.quat2mat(self._sceneQuat), [1.0, 1.0, 1.0])
-			# self._sceneTransform = affines.compose(self._scenePos, quaternions.quat2mat([1.0, 0, 0, 0]), [1.0, 1.0, 1.0])
+			# Combined transformation matrix imposes rotation first followed by translation. Here we want translation first
+			# and only then - rotation.
+			# self._sceneTransform = affines.compose(self._scenePos, quaternions.quat2mat(self._sceneQuat), [1.0, 1.0, 1.0])
+			self._sceneTranslate = affines.compose(self._scenePos, quaternions.quat2mat([1.0, 0, 0, 0]), [1.0, 1.0, 1.0])
+			self._sceneRotate = affines.compose([0, 0, 0], quaternions.quat2mat(self._sceneQuat), [1.0, 1.0, 1.0])
 
 		if self._sceneQuat is None:
 			if withFrame:
@@ -162,14 +143,16 @@ class Aruco(object):
 			quat = myquat.div(quat, self._sceneQuat)
 			# Translate position
 			pos = positions[i][0]
-			pos = np.dot(self._sceneTransform, np.append(pos, 1))
-			marker = ArucoMarker(id, (pos * 1000).tolist(), list(quat))
-			# rod = Rodrigues(rot[0], rot[1], rot[2])
-			# marker = ArucoMarker(id, (pos * 1000).tolist(), rod.toQuaternion())
+			# pos = np.dot(self._sceneTransform, np.append(pos, 1))
+			pos = np.append(pos, 1)
+			pos = np.dot(self._sceneTranslate, pos)
+			pos = np.dot(self._sceneRotate, pos)
+			marker = ArucoMarker(id, (pos[:3] * 1000).tolist(), list(quat))
 			ret.append(marker.toDict())
-		
-		marker = ArucoMarker(10, (self._scenePos * 1000).tolist(), list(self._sceneQuat))
-		ret.append(marker.toDict())
+
+		# Add scene center as a marker
+		# marker = ArucoMarker(10, (self._scenePos * 1000).tolist(), list(self._sceneQuat))
+		# ret.append(marker.toDict())
 
 		if withFrame:
 			return ret, self._prepareFrame(frame, ids, corners, rotations, positions)

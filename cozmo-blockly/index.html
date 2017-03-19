@@ -32,18 +32,15 @@
   <script src="js/code.js"></script>
   <script src="js/threejs/maze.js"></script>
 
-
-
-<script src="//d3js.org/d3.v4.js"></script>
-<style>
-.line {
-  fill: none;
-  stroke: #000;
-  stroke-width: 1.5px;
-}
-</style>
-
-
+  <!-- D3 -->
+  <script src="//d3js.org/d3.v4.js"></script>
+  <style>
+    .line {
+      fill: none;
+      stroke: #000;
+      stroke-width: 1.5px;
+    }
+  </style>
 
 </head>
 <body>
@@ -105,13 +102,8 @@
     <img id="img_cam" lazyload style="padding-right: 30px;" />
     <canvas id="canvas_cam" width="320" height="240" style="border:1px solid #000000;"></canvas>
 
-
-
-
-<svg width="960" height="500"></svg>
-
-
-
+    <!-- D3 -->
+    <svg width="960" height="500"></svg>
 
   </div>
   <div id="content_3d" class="content">
@@ -120,6 +112,14 @@
     </div>
     <div style="position: absolute; top: 50px; left: 20px; background: rgba(0,0,0,0.5); padding: 5px;">
       <a href="#" style="color: #ccccff; text-decoration: none;" onclick="Code.toggleGrid();return false;">Toggle Grid</a>
+    </div>
+    <div style="position: absolute; top: 80px; left: 20px; background: rgba(0,0,0,0.5); padding: 5px;">
+      <a href="#" style="color: #ccccff; text-decoration: none;" onclick="Code.togglePerspective();return false;">Perspective/Orthographic</a>
+    </div>
+    <div style="position: absolute; top: 110px; left: 20px; background: rgba(0,0,0,0.5); padding: 5px;">
+      <a href="#" style="color: #ccccff; text-decoration: none;" onclick="Code.cameraTo('x');return false;">X</a>&nbsp;
+      <a href="#" style="color: #ccccff; text-decoration: none;" onclick="Code.cameraTo('y');return false;">Y</a>&nbsp;
+      <a href="#" style="color: #ccccff; text-decoration: none;" onclick="Code.cameraTo('z');return false;">Z</a>
     </div>
     <canvas id="canvas_3d" style="width: 100%; height: 100%;"></canvas>
   </div>
@@ -587,21 +587,8 @@
   </xml>
 
 
-
-
-
-
-
-
-
+  <!-- D3 -->
   <script src="js/d3.js"></script>
-
-
-
-
-
-
-
 
 </body>
 </html>

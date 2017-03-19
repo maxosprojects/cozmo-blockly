@@ -446,6 +446,7 @@ function Cozmo3d() {
   this._dirty = false;
   this._scene = null;
   this._camera = null;
+  this._cameraOrthographic = null;
   this._controls = null;
   this._floorMaterial = null;
   this._cozmo = null;
@@ -453,6 +454,7 @@ function Cozmo3d() {
   this._statics = [];
   this._anaglyph = false;
   this._gridOn = false;
+  this._perspective = true;
   this._grid = null;
   this._gridNumbers = [];
   this._models = {
@@ -471,17 +473,22 @@ function Cozmo3d() {
     var width = $(canvas).width();
     var height = $(canvas).height();
     that._camera = new THREE.PerspectiveCamera( 45, width/height, 0.01, 3000 );
+    that._cameraOrthographic = new THREE.OrthographicCamera( width / -2, width / 2, height / 2, height / -2, 0.1, 4000 );
 
     that._camera.position.set(this._lastCameraPos[0], this._lastCameraPos[1], this._lastCameraPos[2]);
+    that._cameraOrthographic.position.set(this._lastCameraPos[0], this._lastCameraPos[1], this._lastCameraPos[2]);
     // that._camera.focalLength = 3;
     that._camera.lookAt(that._scene.position);
+    that._cameraOrthographic.lookAt(that._scene.position);
     that._scene.add(that._camera);
+    that._scene.add(that._cameraOrthographic);
 
     that._renderer = new THREE.WebGLRenderer({canvas: canvas, antialias: true});
     that._renderer.setSize(width, height);
     that._renderer.setPixelRatio( window.devicePixelRatio );
 
     that._controls = new THREE.OrbitControls( that._camera, canvas );
+    that._controlsOrthographic = new THREE.OrbitControls( that._cameraOrthographic, canvas );
     that._controls.maxDistance = 1200;
 
     var light = new THREE.PointLight(0xffffff);
@@ -500,7 +507,7 @@ function Cozmo3d() {
     that._scene.add(floor);
 
     // SKYBOX
-    var skyBoxGeometry = new THREE.BoxGeometry( 2000, 2000, 2000 );
+    var skyBoxGeometry = new THREE.BoxGeometry( 3000, 3000, 3000 );
     var skyBoxMaterial = new THREE.MeshBasicMaterial( { color: 0x9999ff, side: THREE.BackSide } );
     var skyBox = new THREE.Mesh( skyBoxGeometry, skyBoxMaterial );
     that._scene.add(skyBox);
@@ -548,6 +555,7 @@ function Cozmo3d() {
     that._scene = null;
     that._lastCameraPos = that._camera.position.toArray();
     that._camera = null;
+    that._cameraOrthographic = null;
 
     that._renderer.dispose();
     that._renderer = null;
@@ -581,44 +589,11 @@ function Cozmo3d() {
     }
   
     // Mock locations first to see the scene whithout any program running.
-    var data = {
-      "cozmo": {
-        "x": 0,
-        "y": 0,
-        "z": 0,
-        "rot": [1, 0, 0, 0]
-      },
-      "cubes": [{
-          "x": 200,
-          "y": 20,
-          "z": 50,
-          "rot": [0.537, 0, 0, 0.843],
-          "seen": true,
-          "visible": true
-        }, {
-          "x": 200,
-          "y": -20,
-          "z": 5,
-          "rot": [0.643, 0, 0, 0.766],
-          "seen": true,
-          "visible": true
-        }, {
-          "x": 195,
-          "y": 40,
-          "z": 5,
-          "rot": [0.643, 0, 0, 0.766],
-          "seen": true,
-          "visible": true
-        }
-      ]
-    };
-
-    // Override for testing
-    // data = {
+    // var data = {
     //   "cozmo": {
-    //     "x": 5000,
-    //     "y": 5000,
-    //     "z": 5000,
+    //     "x": 0,
+    //     "y": 0,
+    //     "z": 0,
     //     "rot": [1, 0, 0, 0]
     //   },
     //   "cubes": [{
@@ -626,25 +601,59 @@ function Cozmo3d() {
     //       "y": 20,
     //       "z": 50,
     //       "rot": [0.537, 0, 0, 0.843],
-    //       "seen": false,
-    //       "visible": false
+    //       "seen": true,
+    //       "visible": true
     //     }, {
     //       "x": 200,
     //       "y": -20,
     //       "z": 5,
     //       "rot": [0.643, 0, 0, 0.766],
-    //       "seen": false,
-    //       "visible": false
+    //       "seen": true,
+    //       "visible": true
     //     }, {
     //       "x": 195,
     //       "y": 40,
     //       "z": 5,
     //       "rot": [0.643, 0, 0, 0.766],
-    //       "seen": false,
-    //       "visible": false
+    //       "seen": true,
+    //       "visible": true
     //     }
     //   ]
     // };
+
+    // Override for testing
+    var data = {
+      "cozmo": {
+        "x": 5000,
+        "y": 5000,
+        "z": 5000,
+        "rot": [1, 0, 0, 0]
+      },
+      "cubes": [{
+          "x": 200,
+          "y": 20,
+          "z": 50,
+          "rot": [0.537, 0, 0, 0.843],
+          "seen": false,
+          "visible": false
+        }, {
+          "x": 200,
+          "y": -20,
+          "z": 5,
+          "rot": [0.643, 0, 0, 0.766],
+          "seen": false,
+          "visible": false
+        }, {
+          "x": 195,
+          "y": 40,
+          "z": 5,
+          "rot": [0.643, 0, 0, 0.766],
+          "seen": false,
+          "visible": false
+        }
+      ]
+    };
+    that._setGrid();
     that.onData(data);
     that._render();
   };
@@ -671,10 +680,11 @@ function Cozmo3d() {
         that._gridNumbers[i].lookAt(that._camera.position);
       }
 
-      if (that.anaglyph) {
-        that._effect.render(that._scene, that._camera);
+      var camera = that._perspective ? that._camera : that._cameraOrthographic;
+      if (that._anaglyph) {
+        that._effect.render(that._scene, camera);
       } else {
-        that._renderer.render(that._scene, that._camera);
+        that._renderer.render(that._scene, camera);
       }
 
       that._dirty = false;
@@ -687,12 +697,52 @@ function Cozmo3d() {
     if (!that._initialized) {
       return;
     }
-    that.anaglyph = !that.anaglyph;
+    that._anaglyph = !that._anaglyph;
+    that._dirty = true;
+    that._renderOnce();
   };
 
   this.toggleGrid = function() {
-    if (that._gridOn) {
-      that._scene.remove(that._grid);
+    that._gridOn = !that._gridOn;
+    that._setGrid();
+    that._dirty = true;
+    that._renderOnce();
+  };
+
+  this.togglePerspective = function() {
+    if (!that._initialized) {
+      return;
+    }
+    that._perspective = !that._perspective;
+    that._dirty = true;
+    that._renderOnce();
+  };
+
+  this.cameraTo = function(axis) {
+    if (!that._initialized) {
+      return;
+    }
+    var pos;
+    if (axis === 'x') {
+      pos = [1500, 0, 0];
+    } else if (axis === 'y') {
+      pos = [0, 0, 1500];
+    } else {
+      pos = [0, 1500, 0];
+    }
+    that._camera.position.set(pos[0], pos[1], pos[2]);
+    that._cameraOrthographic.position.set(pos[0], pos[1], pos[2]);
+    that._camera.lookAt(that._scene.position);
+    that._cameraOrthographic.lookAt(that._scene.position);
+    that._dirty = true;
+    that._renderOnce();
+  };
+
+  this._setGrid = function() {
+    if (!that._gridOn) {
+      if (that._grid) {
+        that._scene.remove(that._grid);
+      }
       that._floorMaterial.opacity = 1;
     } else {
       that._floorMaterial.opacity = 0;
@@ -746,7 +796,6 @@ function Cozmo3d() {
       }
       that._scene.add(that._grid);
     }
-    that._gridOn = !that._gridOn;
   };
 
   this.onData = function(data) {

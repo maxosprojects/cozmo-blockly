@@ -764,6 +764,14 @@ Code.toggleGrid = function() {
   Code.cozmo3d.toggleGrid();
 }
 
+Code.togglePerspective = function() {
+  Code.cozmo3d.togglePerspective();
+}
+
+Code.cameraTo = function(axis) {
+  Code.cozmo3d.cameraTo(axis);
+}
+
 Code.sendXmlToUrl = function(urlToSendTo) {
   var xml = Blockly.Xml.workspaceToDom(Code.workspace);
   var text = Blockly.Xml.domToText(xml);
