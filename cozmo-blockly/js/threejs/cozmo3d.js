@@ -1,6 +1,7 @@
 
 var textureMap = {};
-var textureLoader = new THREE.TextureLoader();
+var loadingManager = new THREE.LoadingManager();
+var textureLoader = new THREE.TextureLoader(loadingManager);
 var cozmo2threejs = {};
 var threejs2cozmo = {};
 var aruco2threejs = {};
@@ -442,6 +443,7 @@ function Cozmo3d() {
 
   this._initialized = false;
   this._animationId = null;
+  this._dirty = false;
   this._scene = null;
   this._camera = null;
   this._controls = null;
@@ -527,6 +529,11 @@ function Cozmo3d() {
 
     that._effect = new THREE.AnaglyphEffect( that._renderer, width || 2, height || 2 );
 
+    loadingManager.onLoad = function() {
+      that._renderOnce();
+    }
+    that._controls.addEventListener('change', loadingManager.onLoad);
+
     that._initialized = true;
   };
 
@@ -534,6 +541,9 @@ function Cozmo3d() {
     if (!that._initialized) {
       return;
     }
+
+    that._controls.removeEventListener('change', loadingManager.onLoad);
+    loadingManager.onLoad = function() {};
 
     that._scene = null;
     that._lastCameraPos = that._camera.position.toArray();
@@ -646,20 +656,31 @@ function Cozmo3d() {
     cancelAnimationFrame(that._animationId);
   };
 
+  this._renderOnce = function () {
+    if (!that._initialized) {
+      return;
+    }
+    that._dirty = true;
+  };
+
   this._render = function () {
-    that._animationId = requestAnimationFrame( that._render );
+    that._controls.update()
 
-    for (var i = 0; i < that._gridNumbers.length; i++) {
-      that._gridNumbers[i].lookAt(that._camera.position);
+    if (that._dirty) {
+      for (var i = 0; i < that._gridNumbers.length; i++) {
+        that._gridNumbers[i].lookAt(that._camera.position);
+      }
+
+      if (that.anaglyph) {
+        that._effect.render(that._scene, that._camera);
+      } else {
+        that._renderer.render(that._scene, that._camera);
+      }
+
+      that._dirty = false;
     }
 
-    if (that.anaglyph) {
-      that._effect.render(that._scene, that._camera);
-    } else {
-      that._renderer.render(that._scene, that._camera);
-    }
-
-    that._controls.update();
+    that._animationId = requestAnimationFrame(that._render);
   };
 
   this.toggleAnaglyph = function() {
@@ -768,6 +789,7 @@ function Cozmo3d() {
         }
       }
     }
+    that._renderOnce();
   };
 
   this.setCubeModel = function(model, num) {
