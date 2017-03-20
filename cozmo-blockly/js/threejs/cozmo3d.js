@@ -170,9 +170,14 @@ class Cozmo extends Dynamic {
     bodyMesh.updateMatrix();
     headGeometry.merge(bodyMesh.geometry, bodyMesh.matrix);
     this.mesh = new THREE.Mesh(headGeometry, cozmoMaterial);
+    var mesh = this.mesh;
 
     this.setOpacity = function(opacity) {
-      cozmoMaterial.opacity = opacity;
+      if (opacity == 0) {
+        mesh.visible = false;
+      } else {
+        mesh.visible = true;
+      }
     }
   }
 }
@@ -193,7 +198,12 @@ class Crate extends Dynamic {
     // this.mesh.add( edges );
 
     this.setOpacity = function(opacity) {
-      cubeMaterial.opacity = opacity;
+      if (opacity == 0) {
+        this.mesh.visible = false;
+      } else {
+        this.mesh.visible = true;
+        cubeMaterial.opacity = opacity;
+      }
     }
   }
 }
@@ -388,8 +398,13 @@ var MinecraftChar = function(url){
     };
 
     this.setOpacity = function(opacity) {
+      if (opacity == 0) {
+        model.root.visible = false;
+      } else {
+        model.root.visible = true;
         tMaterial.opacity = opacity;
         tMaterialt.opacity = opacity;
+      }
     }
 
     return this;
@@ -448,7 +463,7 @@ function Cozmo3d() {
   this._camera = null;
   this._cameraOrthographic = null;
   this._controls = null;
-  this._floorMaterial = null;
+  this._floor = null;
   this._cozmo = null;
   this._cubes = [];
   this._statics = [];
@@ -472,11 +487,12 @@ function Cozmo3d() {
     var canvas = document.getElementById("canvas_3d");
     var width = $(canvas).width();
     var height = $(canvas).height();
-    that._camera = new THREE.PerspectiveCamera( 45, width/height, 0.01, 3000 );
+    that._camera = new THREE.PerspectiveCamera( 45, width/height, 0.1, 4000 );
     that._cameraOrthographic = new THREE.OrthographicCamera( width / -2, width / 2, height / 2, height / -2, 0.1, 4000 );
 
-    that._camera.position.set(this._lastCameraPos[0], this._lastCameraPos[1], this._lastCameraPos[2]);
-    that._cameraOrthographic.position.set(this._lastCameraPos[0], this._lastCameraPos[1], this._lastCameraPos[2]);
+    var pos = this._lastCameraPos;
+    that._camera.position.set(pos[0], pos[1], pos[2]);
+    that._cameraOrthographic.position.set(pos[0], pos[1], pos[2]);
     // that._camera.focalLength = 3;
     that._camera.lookAt(that._scene.position);
     that._cameraOrthographic.lookAt(that._scene.position);
@@ -487,10 +503,6 @@ function Cozmo3d() {
     that._renderer.setSize(width, height);
     that._renderer.setPixelRatio( window.devicePixelRatio );
 
-    that._controls = new THREE.OrbitControls( that._camera, canvas );
-    that._controlsOrthographic = new THREE.OrbitControls( that._cameraOrthographic, canvas );
-    that._controls.maxDistance = 1200;
-
     var light = new THREE.PointLight(0xffffff);
     light.position.set(-100,400,100);
     that._scene.add(light);
@@ -499,12 +511,12 @@ function Cozmo3d() {
     var floorTexture = loadTexture( 'img/3d/grasslight-thin.jpg' );
     floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping; 
     floorTexture.repeat.set( 1, 10 );
-    that._floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.BackSide, transparent: true } );
+    var floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.BackSide } );
     var floorGeometry = new THREE.PlaneGeometry(1000, 1000, 10, 10);
-    var floor = new THREE.Mesh(floorGeometry, that._floorMaterial);
+    that._floor = new THREE.Mesh(floorGeometry, floorMaterial);
     // floor.position.y = -0.5;
-    floor.rotation.x = Math.PI / 2;
-    that._scene.add(floor);
+    that._floor.rotation.x = Math.PI / 2;
+    that._scene.add(that._floor);
 
     // SKYBOX
     var skyBoxGeometry = new THREE.BoxGeometry( 3000, 3000, 3000 );
@@ -539,7 +551,8 @@ function Cozmo3d() {
     loadingManager.onLoad = function() {
       that._renderOnce();
     }
-    that._controls.addEventListener('change', loadingManager.onLoad);
+
+    that._setControls();
 
     that._initialized = true;
   };
@@ -549,22 +562,20 @@ function Cozmo3d() {
       return;
     }
 
-    that._controls.removeEventListener('change', loadingManager.onLoad);
+    that._unsetControls();
+
     loadingManager.onLoad = function() {};
 
     that._scene = null;
-    that._lastCameraPos = that._camera.position.toArray();
+    var camera = that._perspective ? that._camera : that._cameraOrthographic;
+    that._lastCameraPos = camera.position.toArray();
     that._camera = null;
     that._cameraOrthographic = null;
 
     that._renderer.dispose();
     that._renderer = null;
 
-    that._controls.dispose();
-    that._controls = null;
-
-    that._floorMaterial.dispose();
-    that._floorMaterial = null;
+    that._floor = null;
 
     that._cozmo = null;
     that._cubes = [];
@@ -581,6 +592,26 @@ function Cozmo3d() {
     textureMap = {};
 
     that._initialized = false;
+  };
+
+  this._setControls = function() {
+    var camera = that._perspective ? that._camera : that._cameraOrthographic;
+    var canvas = document.getElementById("canvas_3d");
+    that._controls = new THREE.OrbitControls( camera, canvas );
+    that._controls.minDistance = 10;
+    that._controls.maxDistance = 1200;
+    that._controls.minZoom = 0.7;
+    that._controls.maxZoom = 10;
+    that._controls.customEventListener = function() {
+      that._renderOnce();
+    };
+    that._controls.addEventListener('change', that._controls.customEventListener);
+  };
+
+  this._unsetControls = function() {
+    that._controls.removeEventListener('change', that._controls.customEventListener);
+    that._controls.dispose();
+    that._controls = null;
   };
 
   this.start = function() {
@@ -624,10 +655,11 @@ function Cozmo3d() {
     // Override for testing
     var data = {
       "cozmo": {
-        "x": 5000,
-        "y": 5000,
-        "z": 5000,
-        "rot": [1, 0, 0, 0]
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "rot": [1, 0, 0, 0],
+        "seen": false
       },
       "cubes": [{
           "x": 200,
@@ -676,11 +708,12 @@ function Cozmo3d() {
     that._controls.update()
 
     if (that._dirty) {
+      var camera = that._perspective ? that._camera : that._cameraOrthographic;
+
       for (var i = 0; i < that._gridNumbers.length; i++) {
-        that._gridNumbers[i].lookAt(that._camera.position);
+        that._gridNumbers[i].lookAt(camera.position);
       }
 
-      var camera = that._perspective ? that._camera : that._cameraOrthographic;
       if (that._anaglyph) {
         that._effect.render(that._scene, camera);
       } else {
@@ -698,14 +731,12 @@ function Cozmo3d() {
       return;
     }
     that._anaglyph = !that._anaglyph;
-    that._dirty = true;
     that._renderOnce();
   };
 
   this.toggleGrid = function() {
     that._gridOn = !that._gridOn;
     that._setGrid();
-    that._dirty = true;
     that._renderOnce();
   };
 
@@ -713,8 +744,22 @@ function Cozmo3d() {
     if (!that._initialized) {
       return;
     }
+    var camFrom;
+    var camTo;
+    if (that._perspective) {
+      camFrom = that._camera;
+      camTo = that._cameraOrthographic;
+    } else {
+      camFrom = that._cameraOrthographic;
+      camTo = that._camera;
+    }
+    var pos = camFrom.position;
+    camTo.position.set(pos.x, pos.y, pos.z);
+    camTo.lookAt(that._scene.position);
+
     that._perspective = !that._perspective;
-    that._dirty = true;
+    that._unsetControls();
+    that._setControls();
     that._renderOnce();
   };
 
@@ -731,10 +776,9 @@ function Cozmo3d() {
       pos = [0, 1500, 0];
     }
     that._camera.position.set(pos[0], pos[1], pos[2]);
-    that._cameraOrthographic.position.set(pos[0], pos[1], pos[2]);
     that._camera.lookAt(that._scene.position);
+    that._cameraOrthographic.position.set(pos[0], pos[1], pos[2]);
     that._cameraOrthographic.lookAt(that._scene.position);
-    that._dirty = true;
     that._renderOnce();
   };
 
@@ -743,9 +787,9 @@ function Cozmo3d() {
       if (that._grid) {
         that._scene.remove(that._grid);
       }
-      that._floorMaterial.opacity = 1;
+      that._floor.visible = true;
     } else {
-      that._floorMaterial.opacity = 0;
+      that._floor.visible = false;
       if (!that._grid) {
         that._grid = new THREE.GridHelper( 1000, 20, 0xeeeeee, 0x44ee77 );
         that._grid.position.x = 1;
