@@ -4,15 +4,18 @@ import math
 EPS = 0.000001
 
 def nonNegative(quat):
+   '''Cozmo version'''
    # quat = np.array(quat)
    # if abs(np.sum(quat**2) - 1.0) > 1e-6:
    #    raise ValueError('Quaternion must be normalized so sum(quat**2) == 1; use "normalize"')
    return (quat if quat[3] > 0 else negate(quat))
 
 def div(quat1, quat2):
+   '''Cozmo version'''
    return mul(quat1, inv(quat2))
 
 def mul(q1, q2):
+   '''Cozmo version'''
    # mult = np.zeros(4)
    mult = [0] * 4
    mult[0] = -q1[1]*q2[1] - q1[2]*q2[2] - q1[3]*q2[3] + q1[0]*q2[0]
@@ -22,10 +25,15 @@ def mul(q1, q2):
    return nonNegative(mult)
 
 def inv(quat):
+   '''Cozmo version'''
    return [quat[0], quat[1], quat[2], -quat[3]]
 
 def negate(quat):
    return [-x for x in quat]
+
+def toWlast(quat):
+   '''Converts quaternion to W-last notation'''
+   return [quat[1], quat[2], quat[3], quat[0]]
 
 def fromRotationMatrix(M):
    m00 = M[0, 0]
@@ -75,3 +83,9 @@ def normalize(q):
 
 def length(q):
    return math.sqrt(np.dot(q, q))
+
+def invWfirst(qin):
+   '''Non-Cozmo version with W going first'''
+   q = np.array(qin)
+   q[0] = -q[0]
+   return q
