@@ -994,5 +994,5 @@ aruco2threejs.position = function(position) {
 }
 
 aruco2threejs.rotation = function(rot) {
-  return [rot[0], rot[1], rot[2], rot[3]];
+  return [rot[1], rot[3], rot[2], rot[0]];
 }

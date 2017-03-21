@@ -109,7 +109,6 @@ class Aruco(object):
 			p3 = np.array(vals[2])
 			v1 = p2 - p1
 			v2 = p3 - p1
-			# normal = utils3d.normalized_vector(np.cross(v1, v2))
 			normal = np.cross(v1, v2)
 			if normal[2] > 0:
 				normal = -1 * normal
@@ -117,17 +116,13 @@ class Aruco(object):
 			# Find quaternion between desired 'normal' and the actual 'normal' of the plane
 			desiredUp = [0.0, 0.0, 1.0]
 			self._sceneQuat = myquat.fromUnitVectors(vector.normalize(normal), desiredUp)
-			self._markerQuatWlast = myquat.toWlast(myquat.div(self._sceneQuat, [0, 0, 0.707, 0.707]))
-			# self._markerQuatWlast = myquat.toWlast(self._sceneQuat)
 
 			# Find center of the scene - center of mass of the triangle
 			self._scenePos = (p1 + p2 + p3) / (-3.0)
 
 			# Combined transformation matrix imposes rotation first followed by translation. Here we want translation first
 			# and only then - rotation.
-			# self._sceneTransform = affines.compose(self._scenePos, quaternions.quat2mat(self._sceneQuat), [1.0, 1.0, 1.0])
-			self._sceneTranslate = affines.compose(self._scenePos, quaternions.quat2mat([1.0, 0, 0, 0]), [1.0, 1.0, 1.0])
-			self._sceneRotate = affines.compose([0, 0, 0], quaternions.quat2mat(self._sceneQuat), [1.0, 1.0, 1.0])
+			self._sceneRotate = quaternions.quat2mat(self._sceneQuat)
 
 		if self._sceneQuat is None:
 			if withFrame:
@@ -138,28 +133,19 @@ class Aruco(object):
 		ret = list()
 		for i in range(len(ids)):
 			id = int(ids[i][0])
-			# Translate rotation
+			# Find object quaternion
 			rot = rotations[i][0]
 			rotM, _ = cv2.Rodrigues(rot)
-			quat = quaternions.mat2quat(rotM)
-			quat = myquat.toWlast(quat)
-			# quat = myquat.div(quat, self._sceneQuat)
-			quat = myquat.div(quat, self._markerQuatWlast)
-			# quat = myquat.mul(quat, [0.707, 0, 0, 0.707])
-			quat = [-quat[1], -quat[2], -quat[0], quat[3]]
-			# quat = quaternions.qmult(quat, self._sceneQuat)
+			resRotM = np.dot(self._sceneRotate, rotM)
+			quat = quaternions.mat2quat(resRotM)
+			# Adjust here when image isn't undistorted. That depends on camera pose
+			# quat = quaternions.qmult(quat, [-0.994, 0.094, -0.024, -0.058])
 			# Translate position
 			pos = positions[i][0]
-			# pos = np.dot(self._sceneTransform, np.append(pos, 1))
-			pos = np.append(pos, 1)
-			pos = np.dot(self._sceneTranslate, pos)
+			pos = pos + self._scenePos
 			pos = np.dot(self._sceneRotate, pos)
 			marker = ArucoMarker(id, (pos[:3] * 1000).tolist(), list(quat))
 			ret.append(marker.toDict())
-
-		# Add scene center as a marker
-		marker = ArucoMarker(10, (self._scenePos * 1000).tolist(), list(self._markerQuatWlast))
-		ret.append(marker.toDict())
 
 		if withFrame:
 			return ret, self._prepareFrame(frame, ids, corners, rotations, positions)
