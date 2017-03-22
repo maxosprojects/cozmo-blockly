@@ -372,3 +372,9 @@ class CozmoBot:
 		}
 		self._wsClient.send(json.dumps(data))
 
+	def addCharacter(self, character):
+		data = {
+			'character': character
+		}
+		self._wsClient.send(json.dumps(data))
+

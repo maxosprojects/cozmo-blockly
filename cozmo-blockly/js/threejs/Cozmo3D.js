@@ -22,6 +22,7 @@ function Cozmo3d() {
   this._cozmo = null;
   this._cubes = [];
   this._statics = [];
+  this._characters = [];
   this._anaglyph = false;
   this._gridOn = false;
   this._perspective = true;
@@ -29,7 +30,8 @@ function Cozmo3d() {
   this._gridNumbers = [];
   this._models = {
     'cubes': ['CRATE', 'CRATE', 'CRATE'],
-    'statics': []
+    'statics': [],
+    'characters': []
   };
   this._lastCameraPos = [-500,450,500];
 
@@ -57,10 +59,31 @@ function Cozmo3d() {
     that._renderer = new THREE.WebGLRenderer({canvas: canvas, antialias: true});
     that._renderer.setSize(width, height);
     that._renderer.setPixelRatio( window.devicePixelRatio );
+    
+    that._renderer.setClearColor( 0x9999ff, 1 );
 
-    var light = new THREE.PointLight(0xffffff);
+    var light = new THREE.PointLight(0xffffff, 1, 100000);
     light.position.set(-100,400,100);
     that._scene.add(light);
+
+    var lights = [];
+    lights[ 0 ] = new THREE.PointLight( 0xffffff, 1, 0 );
+    lights[ 1 ] = new THREE.PointLight( 0xffffff, 1, 0 );
+    lights[ 2 ] = new THREE.PointLight( 0xffffff, 1, 0 );
+
+    lights[ 0 ].position.set( 0, 200, 0 );
+    lights[ 1 ].position.set( 100, 200, 100 );
+    lights[ 2 ].position.set( - 100, - 200, - 100 );
+
+    that._scene.add( lights[ 0 ] );
+    that._scene.add( lights[ 1 ] );
+    that._scene.add( lights[ 2 ] );
+
+    // that._scene.fog = new THREE.Fog( 0xffffff, 1, 5000 );
+    // that._scene.fog.color.setHSL( 0.6, 0, 1 );
+
+    // var ambientLight = new THREE.AmbientLight( 0xffffff );
+    // that._scene.add( ambientLight );
 
     // FLOOR
     var floorTexture = CozmoBlockly.loadTexture( 'img/3d/grasslight-thin.jpg' );
@@ -74,10 +97,10 @@ function Cozmo3d() {
     that._scene.add(that._floor);
 
     // SKYBOX
-    var skyBoxGeometry = new THREE.BoxGeometry( 3000, 3000, 3000 );
-    var skyBoxMaterial = new THREE.MeshBasicMaterial( { color: 0x9999ff, side: THREE.BackSide } );
-    var skyBox = new THREE.Mesh( skyBoxGeometry, skyBoxMaterial );
-    that._scene.add(skyBox);
+    // var skyBoxGeometry = new THREE.BoxGeometry( 3000, 3000, 3000 );
+    // var skyBoxMaterial = new THREE.MeshBasicMaterial( { color: 0x9999ff, side: THREE.BackSide } );
+    // var skyBox = new THREE.Mesh( skyBoxGeometry, skyBoxMaterial );
+    // that._scene.add(skyBox);
 
     // COZMO
     that._cozmo = new CozmoBlockly.Cozmo(that._scene);
@@ -101,6 +124,13 @@ function Cozmo3d() {
       that._statics.push(instance);
     }
 
+    // CHARACTERS
+    for (var i = 0; i < that._models.characters.length; i++) {
+      var instance = new CozmoBlockly.Character(that._scene, that._models.characters[i]);
+      instance.addToScene();
+      that._characters.push(instance);
+    }
+
     that._effect = new THREE.AnaglyphEffect( that._renderer, width || 2, height || 2 );
 
     CozmoBlockly.loadingManager.onLoad = function() {
@@ -108,6 +138,11 @@ function Cozmo3d() {
     }
 
     that._setControls();
+
+    // var objectLoader = new THREE.ObjectLoader();
+    // objectLoader.load("models/r2d2/r2-d2.json", function (obj) {
+    //   that._scene.add(obj);
+    // });
 
     that._initialized = true;
   };
@@ -436,6 +471,8 @@ function Cozmo3d() {
           cube.setOpacity(1);
         }
       }
+    } else if (data.character && data.character.length > 0) {
+      that.addCharacterModel(data.character);
     }
     that._renderOnce();
   };
@@ -483,5 +520,25 @@ function Cozmo3d() {
     }
     that._models.statics = []
     that._statics = [];
+  };
+
+  this.addCharacterModel = function(character) {
+    console.log("adding character model", character);
+    that._models.characters.push(character);
+    if (!that._initialized) {
+      return;
+    }
+    var instance = new CozmoBlockly.Character(that._scene, character);
+    instance.addToScene();
+    that._characters.push(instance);
+  };
+
+  this.clearCharacters = function() {
+    for (var i = 0; i < that._characters.length; i++) {
+      var instance = that._characters[i];
+      instance.removeFromScene();
+    }
+    that._models.characters = []
+    that._characters = [];
   };
 }

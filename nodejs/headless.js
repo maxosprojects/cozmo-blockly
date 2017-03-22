@@ -28,8 +28,10 @@ require('../blockly/python_compressed.js');
 // require('../blockly/generators/python/variables.js');
 // require('../blockly/generators/python/procedures.js');
 
-require('../cozmo-blockly/js/blockly/blocks.js');
-require('../cozmo-blockly/js/blockly/python_generator.js');
+require('../cozmo-blockly/js/blockly/common-blocks.js');
+require('../cozmo-blockly/js/blockly/common-python-generator.js');
+require('../cozmo-blockly/js/blockly/cozmo-blocks.js');
+require('../cozmo-blockly/js/blockly/cozmo-python-generator.js');
 
 require('../blockly/msg/messages.js');
 
