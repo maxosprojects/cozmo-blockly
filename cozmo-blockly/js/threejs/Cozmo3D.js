@@ -60,24 +60,26 @@ function Cozmo3d() {
     that._renderer.setSize(width, height);
     that._renderer.setPixelRatio( window.devicePixelRatio );
     
+    // that._renderer.sortObjects = false;
+
     that._renderer.setClearColor( 0x9999ff, 1 );
 
-    var light = new THREE.PointLight(0xffffff, 1, 100000);
+    var light = new THREE.PointLight(0xffffff, 1, 10000);
     light.position.set(-100,400,100);
     that._scene.add(light);
 
     var lights = [];
-    lights[ 0 ] = new THREE.PointLight( 0xffffff, 1, 0 );
-    lights[ 1 ] = new THREE.PointLight( 0xffffff, 1, 0 );
-    lights[ 2 ] = new THREE.PointLight( 0xffffff, 1, 0 );
+    lights[0] = new THREE.PointLight( 0xffffff, 1, 0 );
+    lights[1] = new THREE.PointLight( 0xffffff, 1, 0 );
+    lights[2] = new THREE.PointLight( 0xffffff, 1, 0 );
 
-    lights[ 0 ].position.set( 0, 200, 0 );
-    lights[ 1 ].position.set( 100, 200, 100 );
-    lights[ 2 ].position.set( - 100, - 200, - 100 );
+    lights[0].position.set( 0, 200, 0 );
+    lights[1].position.set( 100, 200, 100 );
+    lights[2].position.set( - 100, - 200, - 100 );
 
-    that._scene.add( lights[ 0 ] );
-    that._scene.add( lights[ 1 ] );
-    that._scene.add( lights[ 2 ] );
+    that._scene.add( lights[0] );
+    that._scene.add( lights[1] );
+    that._scene.add( lights[2] );
 
     // that._scene.fog = new THREE.Fog( 0xffffff, 1, 5000 );
     // that._scene.fog.color.setHSL( 0.6, 0, 1 );
@@ -128,7 +130,7 @@ function Cozmo3d() {
     for (var i = 0; i < that._models.characters.length; i++) {
       var instance = new CozmoBlockly.Character(that._scene, that._models.characters[i]);
       instance.addToScene();
-      that._characters.push(instance);
+      that._characters[character.id] = instance;
     }
 
     that._effect = new THREE.AnaglyphEffect( that._renderer, width || 2, height || 2 );
@@ -170,6 +172,12 @@ function Cozmo3d() {
     that._cozmo = null;
     that._cubes = [];
     that._statics = [];
+    that._characters = {};
+    that._models = {
+      'cubes': ['CRATE', 'CRATE', 'CRATE'],
+      'statics': [],
+      'characters': []
+    };
 
     that._effect = null;
 
@@ -447,31 +455,13 @@ function Cozmo3d() {
     } else if (data.setCubeModel) {
       var mod = data.setCubeModel;
       that.setCubeModel(mod.model, mod.cubeNum);
-    } else if (data.aruco && data.aruco.length > 0) {
+    } else if (data.aruco) {
       for (var i = 0; i < data.aruco.length; i++) {
-        var id = data.aruco[i].id;
-        if (id == 5 || id == 10) {
-          var cube;
-          var r0 = data.aruco[i].rot;
-          var pos = CozmoBlockly.aruco2threejs.position(data.aruco[i].pos);
-          var rot = CozmoBlockly.aruco2threejs.rotation(data.aruco[i].rot);
-          if (id == 5) {
-            cube = that._cubes[1];
-            tick(r0[0], r0[1], r0[2], r0[3]);
-          } else if (id == 10) {
-            cube = that._cubes[2];
-          }
-
-          var quat = new THREE.Quaternion(rot[0], rot[1], rot[2], rot[3])
-          cube.mesh.setRotationFromQuaternion(quat);
-          cube.mesh.position.x = pos[0];
-          cube.mesh.position.y = pos[1];
-          cube.mesh.position.z = pos[2];
-
-          cube.setOpacity(1);
-        }
+        var markerData = data.aruco[i];
+        var character = that._characters[markerData.id];
+        character.update(markerData);
       }
-    } else if (data.character && data.character.length > 0) {
+    } else if (data.character && data.character.elements.length > 0) {
       that.addCharacterModel(data.character);
     }
     that._renderOnce();
@@ -523,22 +513,24 @@ function Cozmo3d() {
   };
 
   this.addCharacterModel = function(character) {
-    console.log("adding character model", character);
+    // console.log("adding character model", character);
     that._models.characters.push(character);
     if (!that._initialized) {
       return;
     }
     var instance = new CozmoBlockly.Character(that._scene, character);
     instance.addToScene();
-    that._characters.push(instance);
+    that._characters[character.id] = instance;
   };
 
   this.clearCharacters = function() {
-    for (var i = 0; i < that._characters.length; i++) {
-      var instance = that._characters[i];
-      instance.removeFromScene();
+    for (var key in that._characters) {
+      if (that._characters.hasOwnProperty(key)) {
+        var instance = that._characters[key];
+        instance.removeFromScene();
+      }
     }
     that._models.characters = []
-    that._characters = [];
+    that._characters = {};
   };
 }

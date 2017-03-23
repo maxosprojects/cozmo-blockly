@@ -374,7 +374,6 @@ class CozmoBot:
 
 	def addCharacter(self, character):
 		data = {
-			'character': character
+			'character': self._aruco.addCharacter(character)
 		}
 		self._wsClient.send(json.dumps(data))
-

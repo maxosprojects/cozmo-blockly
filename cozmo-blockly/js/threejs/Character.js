@@ -1,16 +1,25 @@
 
 CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
-  constructor(scene, elements) {
+  constructor(scene, character) {
     super(scene, 0, 0, 0);
 
-    var material = new THREE.MeshLambertMaterial( { color: 0x0074D9, side: THREE.FrontSide, transparent: true } );
-
+    this.convertPose = CozmoBlockly.aruco2threejs.pose;
+    this.id = character.id;
+    var materials = [];
     var root = new THREE.Object3D();
+    var elements = character.elements;
+
     for (var i = 0; i < elements.length; i++) {
       var elem = elements[i];
-      var mesh = createCuboid(elem.width, elem.height, elem.depth, material);
+      var colorStr = elem.color.replace('#', '');
+      var color = parseInt(colorStr, 16);
+      var material = new THREE.MeshLambertMaterial( { color: color, side: THREE.FrontSide, transparent: true } );
+      var size = elem.size;
+      var mesh = createCuboid(size.width, size.height, size.depth, material);
+      materials.push(material);
       root.add(mesh);
-      translate(mesh, elem.mx, elem.mz, elem.my);
+      var moveby = elem.moveby
+      translate(mesh, moveby.mx, moveby.mz, moveby.my);
     }
 
     this.mesh = root;
@@ -20,7 +29,10 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
         this.mesh.visible = false;
       } else {
         this.mesh.visible = true;
-        material.opacity = opacity;
+        for (var i = 0; i < materials.length; i++) {
+          var material = materials[i];
+          material.opacity = opacity;
+        }
       }
     }
   }

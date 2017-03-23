@@ -27,7 +27,9 @@ class ArucoMarker(object):
 		return {
 			'id': self.id,
 			'pos': self.position,
-			'rot': self.rotation
+			'rot': self.rotation,
+			'seen': True,
+			'visible': True
 		}
 
 class Aruco(object):
@@ -36,8 +38,9 @@ class Aruco(object):
 		# height = 480
 		self._width = 1280
 		self._height = 720
-
 		self._markerSize = 0.03
+		self._characters = set()
+		self._seen = set()
 
 		print('Initializing Aruco')
 		self._cap = cv2.VideoCapture(0)
@@ -131,8 +134,14 @@ class Aruco(object):
 				return list(), None
 
 		ret = list()
+		visible = set()
 		for i in range(len(ids)):
 			id = int(ids[i][0])
+			# Skip markers that were not added in blockly program
+			if not id in self._characters:
+				continue
+			self._seen.add(id)
+			visible.add(id)
 			# Find object quaternion
 			rot = rotations[i][0]
 			rotM, _ = cv2.Rodrigues(rot)
@@ -146,6 +155,16 @@ class Aruco(object):
 			pos = np.dot(self._sceneRotate, pos)
 			marker = ArucoMarker(id, (pos[:3] * 1000).tolist(), list(quat))
 			ret.append(marker.toDict())
+
+		# Notify about markers that have not been seen
+		notSeen = self._characters.difference(self._seen)
+		for id in notSeen:
+			ret.append({'id': id, 'pos': {'x': 0, 'y': 0, 'z': 0}, 'rot': [0, 0, 0, 0], 'seen': False, 'visible': False})
+
+		# Notify about markers that are not visible in this frame
+		notVisible = self._characters.difference(notSeen, visible)
+		for id in notVisible:
+			ret.append({'id': id, 'pos': {'x': 0, 'y': 0, 'z': 0}, 'rot': [0, 0, 0, 0], 'seen': True, 'visible': False})
 
 		if withFrame:
 			return ret, self._prepareFrame(frame, ids, corners, rotations, positions)
@@ -167,3 +186,20 @@ class Aruco(object):
 	def cameraSize(self):
 		return self._width / 2, self._height / 2
 
+	def addCharacter(self, character):
+		if character["id"] < 5 or character["id"] > 40:
+			character["elements"] = []
+			return character
+
+		for i in range(len(character["elements"])):
+			element = character["elements"][i]
+			element["size"]['width'] *= 10
+			element["size"]['depth'] *= 10
+			element["size"]['height'] *= 10
+			element["moveby"]['mx'] *= 10
+			element["moveby"]['my'] *= 10
+			element["moveby"]['mz'] *= 10
+
+		self._characters.add(character["id"])
+
+		return character

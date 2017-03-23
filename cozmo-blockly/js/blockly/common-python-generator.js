@@ -33,3 +33,24 @@ function getFloatOrVar(block, fieldName) {
     return value;
   }
 }
+
+function getIntOrVar(block, fieldName) {
+  var value = parseInt(Blockly.Python.valueToCode(block, fieldName, Blockly.Python.ORDER_NONE));
+  if (isNaN(value)) {
+    return Blockly.Python.valueToCode(block, fieldName, Blockly.Python.ORDER_NONE);
+  } else {
+    return value;
+  }
+}
+
+function hasParent(block, parentType) {
+  if (block === null) {
+    return false;
+  } else {
+    if (block.type === parentType) {
+      return true;
+    } else {
+      return hasParent(block.getParent(), parentType);
+    }
+  }
+}
