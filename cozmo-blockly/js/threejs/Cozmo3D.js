@@ -315,9 +315,11 @@ function Cozmo3d() {
   this._render = function () {
     that._controls.update()
     if (that._calibrator.isDirty()) {
-      var euler = that._calibrator.getEuler();
+      var euler = that._calibrator.getRadians();
+      var degrees = that._calibrator.getDegrees();
       that._ground.setRotationFromEuler(euler);
       that._camera.up = new THREE.Vector3(0, 1, 0).applyEuler(euler);
+      Code.adjustGround(-degrees.x, degrees.z, degrees.y);
       that._dirty = true;
       // console.log('rotating ground');
     }

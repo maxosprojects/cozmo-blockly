@@ -659,6 +659,17 @@ Code.sendCodeToUrl = function(urlToSendTo) {
 
   Code.sendXmlToUrl('/saves/.last');
 
+  // Clear all 'aruco_adjust_angles' blocks
+  var blocks = Code.workspace.getAllBlocks();
+  for (var i = 0; i < blocks.length; i++) {
+    var block = blocks[i];
+    if (block.type === 'aruco_adjust_angles') {
+      block._x = undefined;
+      block._y = undefined;
+      block._z = undefined;
+    }
+  }
+
   Code.cozmo3d.stop();
   Code.cozmo3d.deinit();
   Code.cozmo3d.init();
@@ -770,6 +781,31 @@ Code.togglePerspective = function() {
 
 Code.cameraTo = function(axis) {
   Code.cozmo3d.cameraTo(axis);
+}
+
+/**
+ * Finds any 'aruco_adjust_angles' blocks in the workspace and
+ * sets their values to the provided
+ */
+Code.adjustGround = function(x, y, z) {
+  var blocks = Code.workspace.getAllBlocks();
+  for (var i = 0; i < blocks.length; i++) {
+    var block = blocks[i];
+    if (block.type === 'aruco_adjust_angles') {
+      if (block._x === undefined || block._y === undefined || block._z === undefined) {
+        block._x = parseFloat(block.getFieldValue('X'));
+        block._y = parseFloat(block.getFieldValue('Y'));
+        block._z = parseFloat(block.getFieldValue('Z'));
+        block.setFieldValue(x + block._x, 'X');
+        block.setFieldValue(y + block._y, 'Y');
+        block.setFieldValue(z + block._z, 'Z');
+      } else {
+        block.setFieldValue(x + block._x, 'X');
+        block.setFieldValue(y + block._y, 'Y');
+        block.setFieldValue(z + block._z, 'Z');
+      }
+    }
+  }
 }
 
 Code.sendXmlToUrl = function(urlToSendTo) {

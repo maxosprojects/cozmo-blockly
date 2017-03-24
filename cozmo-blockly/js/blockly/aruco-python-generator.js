@@ -12,7 +12,7 @@ Blockly.Python['aruco_adjust_angles'] = function(block) {
   var x = block.getFieldValue('X');
   var y = block.getFieldValue('Y');
   var z = block.getFieldValue('Z');
-  var code = 'bot.adjustCharacterAngles(' + x + ', ' + y + ', ' + z + ')\n';
+  var code = 'bot.adjustGroundAngles(' + x + ', ' + y + ', ' + z + ')\n';
   return code;
 };
 

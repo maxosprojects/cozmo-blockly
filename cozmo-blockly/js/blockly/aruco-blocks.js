@@ -24,7 +24,7 @@ var cubes = {
 Blockly.Blocks['aruco_adjust_angles'] = {
   init: function() {
     this.appendDummyInput()
-        .appendField("adjust characters' angles, x:");
+        .appendField("adjust ground angles, x:");
     this.appendDummyInput()
         .appendField(new Blockly.FieldNumber(0), "X");
     this.appendDummyInput()
@@ -39,7 +39,7 @@ Blockly.Blocks['aruco_adjust_angles'] = {
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setColour(Blockly.Blocks.cozmo.HUE2);
-    this.setTooltip("Adjusts characters' angles to account for camera lens imperfections");
+    this.setTooltip("Adjusts ground angles to account for camera lens imperfections");
   }
 };
 

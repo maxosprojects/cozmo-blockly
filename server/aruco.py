@@ -41,7 +41,7 @@ class Aruco(object):
 		self._markerSize = 0.03
 		self._characters = set()
 		self._seen = set()
-		self._adjustQuat = [0, 0, 0, 0]
+		self._adjustQuat = None
 
 		print('Initializing Aruco')
 		self._cap = cv2.VideoCapture(0)
@@ -130,12 +130,14 @@ class Aruco(object):
 		# This is too accurate for an uncalibrated camera, but is less flaky
 		# and with some additional calibration coming from the blockly
 		# program is best
-		table = {}
-		for i in range(len(ids)):
-			if ids[i] <= 4:
-				table[i] = positions[i][0]
 
-		if len(table) == 4:
+		if self._sceneQuat is None:
+			table = {}
+			for i in range(len(ids)):
+				if ids[i] <= 4:
+					table[i] = positions[i][0]
+
+		if self._sceneQuat is None and len(table) == 4 and not self._adjustQuat is None:
 			# Find 'normal' of the scene plane (table).
 			# The plane is described by 4 points - 4 markers on the table
 			vals = list(table.values())
@@ -163,6 +165,7 @@ class Aruco(object):
 			q1 = myquat.fromUnitVectors(vector.normalize(normal1), desiredUp)
 			q2 = myquat.fromUnitVectors(vector.normalize(normal2), desiredUp)
 			self._sceneQuat = myquat.slerp(q1, q2, 0.5)
+			self._sceneQuat = quaternions.qmult(self._sceneQuat, self._adjustQuat)
 
 			# Find center of the scene - center of mass of the triangle
 			self._scenePos = (p1 + p2 + p3 + p4) / (-4.0)
@@ -189,16 +192,8 @@ class Aruco(object):
 			# Find object quaternion
 			rot = rotations[i][0]
 			rotM, _ = cv2.Rodrigues(rot)
-			if id == 10:
-				quat = quaternions.mat2quat(rotM)
-			elif id == 6:
-				quat = self._sceneQuat
-			else:
-				resRotM = np.dot(self._sceneRotate, rotM)
-				quat = quaternions.mat2quat(resRotM)
-			# Adjust here when image isn't undistorted. That depends on camera pose
-			# quat = quaternions.qmult(quat, [-0.994, 0.094, -0.024, -0.058])
-			# quat = quaternions.qmult(quat, self._adjustQuat)
+			resRotM = np.dot(self._sceneRotate, rotM)
+			quat = quaternions.mat2quat(resRotM)
 			# Translate position
 			pos = positions[i][0]
 			pos = pos + self._scenePos
@@ -255,6 +250,6 @@ class Aruco(object):
 
 		return character
 
-	def adjustCharacterAngles(self, x, y, z):
+	def adjustGroundAngles(self, x, y, z):
 		deg2rad = math.pi / 180.0
 		self._adjustQuat = myquat.fromEuler(x * deg2rad, y * deg2rad, z * deg2rad)

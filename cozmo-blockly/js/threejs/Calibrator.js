@@ -10,29 +10,25 @@ THREE.Calibrator = function ( domElement ) {
 	this.quaternion = new THREE.Quaternion();
 
 	var scope = this;
-	var EPS = 0.000001;
 	var increment = 0.01;
+	var rad2deg = 180.0 / Math.PI;
 
 	//
 	// public methods
 	//
 
-	// this.getQuaternion = function () {
-	// 	if (scope.dirty) {
-	// 		scope.quaternion = new THREE.Quaternion().setFromEuler(scope.euler);
-	// 		scope.dirty = false;
-	// 	}
-	// 	// console.log( 'getQuaternion' );
-	// 	return scope.quaternion;
-	// };
-
-	this.adjustQuaternion = function(quat) {
-		quat.multiply(scope.getQuaternion()).normalize();
-	}
-
-	this.getEuler = function () {
+	this.getRadians = function () {
 		scope.dirty = false;
 		return scope.euler;
+	};
+
+	this.getDegrees = function () {
+		var radians = scope.getRadians();
+		return {
+			x: radians.x * rad2deg,
+			y: radians.y * rad2deg,
+			z: radians.z * rad2deg
+		}
 	};
 
 	this.isDirty = function() {

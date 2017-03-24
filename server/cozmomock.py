@@ -235,5 +235,5 @@ class CozmoBot:
 		}
 		self._wsClient.send(json.dumps(data))
 
-	def adjustCharacterAngles(self, x, y, z):
-		self._aruco.adjustCharacterAngles(x, y, z)
+	def adjustGroundAngles(self, x, y, z):
+		self._aruco.adjustGroundAngles(x, y, z)
