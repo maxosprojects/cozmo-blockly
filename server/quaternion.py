@@ -31,6 +31,22 @@ def inv(quat):
 def negate(quat):
    return [-x for x in quat]
 
+def fromEuler(x, y, z):
+    z = z/2.0
+    y = y/2.0
+    x = x/2.0
+    cz = math.cos(z)
+    sz = math.sin(z)
+    cy = math.cos(y)
+    sy = math.sin(y)
+    cx = math.cos(x)
+    sx = math.sin(x)
+    return np.array([
+             cx*cy*cz - sx*sy*sz,
+             cx*sy*sz + cy*cz*sx,
+             cx*cz*sy - sx*cy*sz,
+             cx*cy*sz + sx*cz*sy])
+
 def toWlast(quat):
    '''Converts quaternion to W-last notation'''
    return [quat[1], quat[2], quat[3], quat[0]]
@@ -74,18 +90,78 @@ def fromUnitVectors(vFrom, vTo):
    return normalize([r, v[0], v[1], v[2]])
 
 def normalize(q):
-      leng = length(q)
+  leng = length(q)
 
-      if leng == 0:
-         return [1.0, 0.0, 0.0, 0.0]
-      else:
-         return list(np.array(q) / leng)
+  if leng == 0:
+    return [1.0, 0.0, 0.0, 0.0]
+  else:
+    return list(np.array(q) / leng)
 
 def length(q):
-   return math.sqrt(np.dot(q, q))
+  return math.sqrt(np.dot(q, q))
 
 def invWfirst(qin):
-   '''Non-Cozmo version with W going first'''
-   q = np.array(qin)
-   q[0] = -q[0]
-   return q
+  '''Non-Cozmo version with W going first'''
+  q = np.array(qin)
+  q[0] = -q[0]
+  return q
+
+def slerp( a, b, t ):
+
+  qa = np.array(a)
+  qb = np.array(b)
+
+  res = np.array([0, 0, 0, 0])
+
+  if t == 0:
+    return qa;
+  if t == 1:
+    return np.array(qb)
+
+  x = qa[1]
+  y = qa[2]
+  z = qa[3]
+  w = qa[0]
+
+  # http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/slerp/
+
+  cosHalfTheta = w * qb[0] + x * qb[1] + y * qb[2] + z * qb[3]
+
+  if cosHalfTheta < 0:
+    res[0] = -qb[0]
+    res[1] = -qb[1]
+    res[2] = -qb[2]
+    res[3] = -qb[3]
+
+    cosHalfTheta = -cosHalfTheta;
+  else:
+    res = np.array(qb)
+
+  if cosHalfTheta >= 1.0:
+    res[0] = w
+    res[1] = x
+    res[2] = y
+    res[3] = z
+
+    return res
+
+  sinHalfTheta = math.sqrt( 1.0 - cosHalfTheta * cosHalfTheta )
+
+  if abs( sinHalfTheta ) < 0.001:
+    res[0] = 0.5 * ( w + qa[0] )
+    res[1] = 0.5 * ( x + qa[1] )
+    res[2] = 0.5 * ( y + qa[2] )
+    res[3] = 0.5 * ( z + qa[3] )
+
+    return res
+
+  halfTheta = math.atan2( sinHalfTheta, cosHalfTheta )
+  ratioA = math.sin( ( 1 - t ) * halfTheta ) / sinHalfTheta
+  ratioB = math.sin( t * halfTheta ) / sinHalfTheta
+
+  res[0] = ( w * ratioA + qa[0] * ratioB )
+  res[1] = ( x * ratioA + qa[1] * ratioB )
+  res[2] = ( y * ratioA + qa[2] * ratioB )
+  res[3] = ( z * ratioA + qa[3] * ratioB )
+
+  return res

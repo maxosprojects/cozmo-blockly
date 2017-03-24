@@ -8,6 +8,14 @@ goog.provide('Blockly.Python.aruco');
 
 goog.require('Blockly.Python');
 
+Blockly.Python['aruco_adjust_angles'] = function(block) {
+  var x = block.getFieldValue('X');
+  var y = block.getFieldValue('Y');
+  var z = block.getFieldValue('Z');
+  var code = 'bot.adjustCharacterAngles(' + x + ', ' + y + ', ' + z + ')\n';
+  return code;
+};
+
 Blockly.Python['aruco_character'] = function(block) {
   var id = getIntOrVar(block, 'ID');
   var body = block.getInputTargetBlock('BODY');

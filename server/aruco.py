@@ -41,6 +41,7 @@ class Aruco(object):
 		self._markerSize = 0.03
 		self._characters = set()
 		self._seen = set()
+		self._adjustQuat = [0, 0, 0, 0]
 
 		print('Initializing Aruco')
 		self._cap = cv2.VideoCapture(0)
@@ -98,30 +99,73 @@ class Aruco(object):
 
 		positions, rotations = self.estimatePose(corners)
 
+		## This way suits uncalibrated camera better. However, due to the uncertainty
+		## with marker angles it is quite flaky. Left just in case
+		# table = {}
+		# for i in range(len(ids)):
+		# 	if ids[i] <= 4:
+		# 		table[i] = (positions[i][0], rotations[i][0])
+
+		# if len(table) > 2:
+		# 	# Find 'average' quaternion
+		# 	vals = list(table.values())
+
+		# 	def makeQuaternion(r):
+		# 		rotM, _ = cv2.Rodrigues(r)
+		# 		return quaternions.mat2quat(rotM)
+
+		# 	p = np.array(vals[0][0])
+		# 	q = np.array(makeQuaternion(vals[0][1]))
+		# 	for i in range(len(vals) - 1):
+		# 		pos, rot = vals[i + 1]
+		# 		p += pos
+		# 		q = myquat.slerp(q, makeQuaternion(rot), 0.5)
+
+		# 	self._sceneQuat = q
+		# 	self._sceneQuat[0] *= (-1)
+		# 	self._sceneRotate = quaternions.quat2mat(self._sceneQuat)
+
+		# 	self._scenePos = p / (-float(len(vals)))
+
+		# This is too accurate for an uncalibrated camera, but is less flaky
+		# and with some additional calibration coming from the blockly
+		# program is best
 		table = {}
 		for i in range(len(ids)):
-			if ids[i] <= 3:
+			if ids[i] <= 4:
 				table[i] = positions[i][0]
 
-		if self._sceneQuat is None and len(table) == 3:
+		if len(table) == 4:
 			# Find 'normal' of the scene plane (table).
-			# The plane is described by 3 points - 3 markers on the table
+			# The plane is described by 4 points - 4 markers on the table
 			vals = list(table.values())
 			p1 = np.array(vals[0])
 			p2 = np.array(vals[1])
 			p3 = np.array(vals[2])
+			p4 = np.array(vals[3])
 			v1 = p2 - p1
 			v2 = p3 - p1
-			normal = np.cross(v1, v2)
-			if normal[2] > 0:
-				normal = -1 * normal
+			v3 = p2 - p4
+			v4 = p3 - p4
+			normal1 = np.cross(v1, v2)
+			normal2 = np.cross(v3, v4)
+			# normal = (normal1 + normal2) / 2.0
+			# normal = normal1
+			# if normal[2] > 0:
+			# 	normal = -1 * normal
+			if normal1[2] > 0:
+				normal1 = -1 * normal1
+			if normal2[2] > 0:
+				normal2 = -1 * normal2
 
 			# Find quaternion between desired 'normal' and the actual 'normal' of the plane
 			desiredUp = [0.0, 0.0, 1.0]
-			self._sceneQuat = myquat.fromUnitVectors(vector.normalize(normal), desiredUp)
+			q1 = myquat.fromUnitVectors(vector.normalize(normal1), desiredUp)
+			q2 = myquat.fromUnitVectors(vector.normalize(normal2), desiredUp)
+			self._sceneQuat = myquat.slerp(q1, q2, 0.5)
 
 			# Find center of the scene - center of mass of the triangle
-			self._scenePos = (p1 + p2 + p3) / (-3.0)
+			self._scenePos = (p1 + p2 + p3 + p4) / (-4.0)
 
 			# Combined transformation matrix imposes rotation first followed by translation. Here we want translation first
 			# and only then - rotation.
@@ -145,14 +189,21 @@ class Aruco(object):
 			# Find object quaternion
 			rot = rotations[i][0]
 			rotM, _ = cv2.Rodrigues(rot)
-			resRotM = np.dot(self._sceneRotate, rotM)
-			quat = quaternions.mat2quat(resRotM)
+			if id == 10:
+				quat = quaternions.mat2quat(rotM)
+			elif id == 6:
+				quat = self._sceneQuat
+			else:
+				resRotM = np.dot(self._sceneRotate, rotM)
+				quat = quaternions.mat2quat(resRotM)
 			# Adjust here when image isn't undistorted. That depends on camera pose
 			# quat = quaternions.qmult(quat, [-0.994, 0.094, -0.024, -0.058])
+			# quat = quaternions.qmult(quat, self._adjustQuat)
 			# Translate position
 			pos = positions[i][0]
 			pos = pos + self._scenePos
 			pos = np.dot(self._sceneRotate, pos)
+			# pos = np.array([0, 0, 0])
 			marker = ArucoMarker(id, (pos[:3] * 1000).tolist(), list(quat))
 			ret.append(marker.toDict())
 
@@ -203,3 +254,7 @@ class Aruco(object):
 		self._characters.add(character["id"])
 
 		return character
+
+	def adjustCharacterAngles(self, x, y, z):
+		deg2rad = math.pi / 180.0
+		self._adjustQuat = myquat.fromEuler(x * deg2rad, y * deg2rad, z * deg2rad)

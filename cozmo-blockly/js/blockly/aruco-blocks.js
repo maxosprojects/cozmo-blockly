@@ -21,6 +21,28 @@ var cubes = {
   "3": {"src": "img/thumbnails/cube3.png", "width": 13, "height": 11, "alt": "#3"}
 };
 
+Blockly.Blocks['aruco_adjust_angles'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("adjust characters' angles, x:");
+    this.appendDummyInput()
+        .appendField(new Blockly.FieldNumber(0), "X");
+    this.appendDummyInput()
+        .appendField(" y:");
+    this.appendDummyInput()
+        .appendField(new Blockly.FieldNumber(0), "Y");
+    this.appendDummyInput()
+        .appendField(" z:");
+    this.appendDummyInput()
+        .appendField(new Blockly.FieldNumber(0), "Z");
+    this.setInputsInline(true);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(Blockly.Blocks.cozmo.HUE2);
+    this.setTooltip("Adjusts characters' angles to account for camera lens imperfections");
+  }
+};
+
 Blockly.Blocks['aruco_character'] = {
   init: function() {
     this.appendDummyInput()

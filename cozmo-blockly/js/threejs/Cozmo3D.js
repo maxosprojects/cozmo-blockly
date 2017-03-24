@@ -18,7 +18,9 @@ function Cozmo3d() {
   this._camera = null;
   this._cameraOrthographic = null;
   this._controls = null;
+  this._calibrator = null;
   this._floor = null;
+  this._ground = null;
   this._cozmo = null;
   this._cubes = [];
   this._statics = [];
@@ -87,6 +89,9 @@ function Cozmo3d() {
     // var ambientLight = new THREE.AmbientLight( 0xffffff );
     // that._scene.add( ambientLight );
 
+    // GROUND
+    that._ground = new THREE.Object3D();
+
     // FLOOR
     var floorTexture = CozmoBlockly.loadTexture( 'img/3d/grasslight-thin.jpg' );
     floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping; 
@@ -96,7 +101,8 @@ function Cozmo3d() {
     that._floor = new THREE.Mesh(floorGeometry, floorMaterial);
     // floor.position.y = -0.5;
     that._floor.rotation.x = Math.PI / 2;
-    that._scene.add(that._floor);
+    that._ground.add(that._floor);
+    that._scene.add(that._ground);
 
     // SKYBOX
     // var skyBoxGeometry = new THREE.BoxGeometry( 3000, 3000, 3000 );
@@ -141,6 +147,8 @@ function Cozmo3d() {
 
     that._setControls();
 
+    that._calibrator = new THREE.Calibrator(canvas);
+
     // var objectLoader = new THREE.ObjectLoader();
     // objectLoader.load("models/r2d2/r2-d2.json", function (obj) {
     //   that._scene.add(obj);
@@ -155,6 +163,7 @@ function Cozmo3d() {
     }
 
     that._unsetControls();
+    that._calibrator.dispose();
 
     CozmoBlockly.loadingManager.onLoad = function() {};
 
@@ -168,6 +177,7 @@ function Cozmo3d() {
     that._renderer = null;
 
     that._floor = null;
+    that._ground = null;
 
     that._cozmo = null;
     that._cubes = [];
@@ -304,6 +314,13 @@ function Cozmo3d() {
 
   this._render = function () {
     that._controls.update()
+    if (that._calibrator.isDirty()) {
+      var euler = that._calibrator.getEuler();
+      that._ground.setRotationFromEuler(euler);
+      that._camera.up = new THREE.Vector3(0, 1, 0).applyEuler(euler);
+      that._dirty = true;
+      // console.log('rotating ground');
+    }
 
     if (that._dirty) {
       var camera = that._perspective ? that._camera : that._cameraOrthographic;
@@ -383,7 +400,7 @@ function Cozmo3d() {
   this._setGrid = function() {
     if (!that._gridOn) {
       if (that._grid) {
-        that._scene.remove(that._grid);
+        that._ground.remove(that._grid);
       }
       that._floor.visible = true;
     } else {
@@ -436,7 +453,7 @@ function Cozmo3d() {
         makeAxis("X", -500, -500);
         makeAxis("Y", 500, 500);
       }
-      that._scene.add(that._grid);
+      that._ground.add(that._grid);
     }
   };
 
