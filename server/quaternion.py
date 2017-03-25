@@ -31,21 +31,40 @@ def inv(quat):
 def negate(quat):
    return [-x for x in quat]
 
-def fromEuler(x, y, z):
-    z = z/2.0
-    y = y/2.0
-    x = x/2.0
-    cz = math.cos(z)
-    sz = math.sin(z)
-    cy = math.cos(y)
-    sy = math.sin(y)
-    cx = math.cos(x)
-    sx = math.sin(x)
+def fromEuler(x, y, z, order='XYZ'):
+  xx = x/2.0
+  yy = y/2.0
+  zz = z/2.0
+  cx = math.cos(xx)
+  cy = math.cos(yy)
+  cz = math.cos(zz)
+  sx = math.sin(xx)
+  sy = math.sin(yy)
+  sz = math.sin(zz)
+  if order == 'XYZ':
     return np.array([
              cx*cy*cz - sx*sy*sz,
              cx*sy*sz + cy*cz*sx,
              cx*cz*sy - sx*cy*sz,
              cx*cy*sz + sx*cz*sy])
+  elif order == 'ZYX':
+    return np.array([
+             cx*cy*cz + sx*sy*sz,
+             sx*cy*cz - cx*sy*sz,
+             cx*sy*cz + sx*cy*sz,
+             cx*cy*sz - sx*cy*cz])
+  elif order == 'XZY':
+    return np.array([
+             cx*cy*cz + sx*sy*sz,
+             sx*cy*cz - cx*sy*sz,
+             cx*sy*cz - sx*cy*sz,
+             cx*cy*sz + sx*sy*cz])
+  elif order == 'YZX':
+    return np.array([
+             cx*cy*cz - sx*sy*sz,
+             sx*cy*cz + cx*sy*sz,
+             cx*sy*cz + sx*cy*sz,
+             cx*cy*sz - sx*sy*cz])
 
 def toWlast(quat):
    '''Converts quaternion to W-last notation'''

@@ -17,7 +17,7 @@ Blockly.Python['aruco_adjust_angles'] = function(block) {
 };
 
 Blockly.Python['aruco_character'] = function(block) {
-  var id = getIntOrVar(block, 'ID');
+  var id = Blockly.Python.getIntOrVar(block, 'ID');
   var body = block.getInputTargetBlock('BODY');
   var elements = Blockly.Python.blockToCode(body);
   if (elements.length == 0) {
@@ -31,7 +31,7 @@ Blockly.Python['aruco_character'] = function(block) {
 };
 
 Blockly.Python['aruco_element'] = function(block) {
-  if (!hasParent(block, 'aruco_character')) {
+  if (!Blockly.Python.hasParent(block, 'aruco_character')) {
     return '';
   }
   var size = Blockly.Python.valueToCode(block, 'SIZE', Blockly.Python.ORDER_NONE);
@@ -43,17 +43,17 @@ Blockly.Python['aruco_element'] = function(block) {
 };
 
 Blockly.Python['aruco_element_size'] = function(block) {
-  var width = getFloatOrVar(block, 'WIDTH');
-  var depth = getFloatOrVar(block, 'DEPTH');
-  var height = getFloatOrVar(block, 'HEIGHT');
+  var width = Blockly.Python.getFloatOrVar(block, 'WIDTH');
+  var depth = Blockly.Python.getFloatOrVar(block, 'DEPTH');
+  var height = Blockly.Python.getFloatOrVar(block, 'HEIGHT');
   var code = '{"width": ' + width + ', "depth": ' + depth + ', "height": ' + height + '}';
   return [code, Blockly.Python.ORDER_NONE];
 };
 
 Blockly.Python['aruco_element_move_by'] = function(block) {
-  var x = getFloatOrVar(block, 'X');
-  var y = getFloatOrVar(block, 'Y');
-  var z = getFloatOrVar(block, 'Z');
+  var x = Blockly.Python.getFloatOrVar(block, 'X');
+  var y = Blockly.Python.getFloatOrVar(block, 'Y');
+  var z = Blockly.Python.getFloatOrVar(block, 'Z');
   var code = '{"mx": ' + x + ', "my": ' + y + ', "mz": ' + z + '}';
   return [code, Blockly.Python.ORDER_NONE];
 };

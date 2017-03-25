@@ -48,12 +48,12 @@ Blockly.Python['cozmo_set_cube_model'] = function(block) {
 
 Blockly.Python['cozmo_add_static_model'] = function(block) {
   var model = block.getFieldValue('MODEL');
-  var x1 = getFloatOrVar(block, 'X1');
-  var y1 = getFloatOrVar(block, 'Y1');
-  var x2 = getFloatOrVar(block, 'X2');
-  var y2 = getFloatOrVar(block, 'Y2');
-  var depth = getFloatOrVar(block, 'DEPTH');
-  var height = getFloatOrVar(block, 'HEIGHT');
+  var x1 = Blockly.Python.getFloatOrVar(block, 'X1');
+  var y1 = Blockly.Python.getFloatOrVar(block, 'Y1');
+  var x2 = Blockly.Python.getFloatOrVar(block, 'X2');
+  var y2 = Blockly.Python.getFloatOrVar(block, 'Y2');
+  var depth = Blockly.Python.getFloatOrVar(block, 'DEPTH');
+  var height = Blockly.Python.getFloatOrVar(block, 'HEIGHT');
   var code = 'bot.addStaticObject("' + model + '",' + x1 + ',' + y1 + ',' + x2 + ',' + y2 + ',' + depth + ',' + height + ')\n';
   return code;
 };
@@ -134,8 +134,8 @@ Blockly.Python['cozmo_drive_wheels_speed'] = function(block) {
 };
 
 Blockly.Python['cozmo_drive_to'] = function(block) {
-  var x = getFloatOrVar(block, 'X');
-  var y = getFloatOrVar(block, 'Y');
+  var x = Blockly.Python.getFloatOrVar(block, 'X');
+  var y = Blockly.Python.getFloatOrVar(block, 'Y');
   var code = 'bot.driveTo(' + x + ', ' + y + ')\n';
   return code;
 };

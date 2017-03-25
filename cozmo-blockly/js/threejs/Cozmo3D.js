@@ -36,6 +36,7 @@ function Cozmo3d() {
     'characters': []
   };
   this._lastCameraPos = [-500,450,500];
+  this.camUpdate = function(){};
 
   this.init = function() {
     if (that._initialized) {
@@ -96,11 +97,13 @@ function Cozmo3d() {
     var floorTexture = CozmoBlockly.loadTexture( 'img/3d/grasslight-thin.jpg' );
     floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping; 
     floorTexture.repeat.set( 1, 10 );
-    var floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.BackSide } );
+    // var floorTexture = new THREE.Texture(document.getElementById('canvas_cam'));
+    // that.camUpdate = function() {floorTexture.needsUpdate = true};
+    var floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.FrontSide } );
     var floorGeometry = new THREE.PlaneGeometry(1000, 1000, 10, 10);
     that._floor = new THREE.Mesh(floorGeometry, floorMaterial);
     // floor.position.y = -0.5;
-    that._floor.rotation.x = Math.PI / 2;
+    that._floor.rotation.x = -Math.PI / 2;
     that._ground.add(that._floor);
     that._scene.add(that._ground);
 
@@ -176,6 +179,7 @@ function Cozmo3d() {
     that._renderer.dispose();
     that._renderer = null;
 
+    that.camUpdate = function(){};
     that._floor = null;
     that._ground = null;
 

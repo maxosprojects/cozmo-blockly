@@ -252,4 +252,4 @@ class Aruco(object):
 
 	def adjustGroundAngles(self, x, y, z):
 		deg2rad = math.pi / 180.0
-		self._adjustQuat = myquat.fromEuler(x * deg2rad, y * deg2rad, z * deg2rad)
+		self._adjustQuat = myquat.fromEuler(x * deg2rad, y * deg2rad, z * deg2rad, 'XYZ')

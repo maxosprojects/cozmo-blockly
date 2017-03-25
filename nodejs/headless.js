@@ -32,6 +32,8 @@ require('../cozmo-blockly/js/blockly/common-blocks.js');
 require('../cozmo-blockly/js/blockly/common-python-generator.js');
 require('../cozmo-blockly/js/blockly/cozmo-blocks.js');
 require('../cozmo-blockly/js/blockly/cozmo-python-generator.js');
+require('../cozmo-blockly/js/blockly/aruco-blocks.js');
+require('../cozmo-blockly/js/blockly/aruco-python-generator.js');
 
 require('../blockly/msg/messages.js');
 

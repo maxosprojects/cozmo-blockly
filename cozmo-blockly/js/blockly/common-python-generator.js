@@ -25,7 +25,7 @@ Blockly.Python['math_angle'] = function(block) {
 // Utils
 ////////////////////////////////////
 
-function getFloatOrVar(block, fieldName) {
+Blockly.Python.getFloatOrVar = function(block, fieldName) {
   var value = parseFloat(Blockly.Python.valueToCode(block, fieldName, Blockly.Python.ORDER_NONE));
   if (isNaN(value)) {
     return Blockly.Python.valueToCode(block, fieldName, Blockly.Python.ORDER_NONE);
@@ -34,7 +34,7 @@ function getFloatOrVar(block, fieldName) {
   }
 }
 
-function getIntOrVar(block, fieldName) {
+Blockly.Python.getIntOrVar = function(block, fieldName) {
   var value = parseInt(Blockly.Python.valueToCode(block, fieldName, Blockly.Python.ORDER_NONE));
   if (isNaN(value)) {
     return Blockly.Python.valueToCode(block, fieldName, Blockly.Python.ORDER_NONE);
@@ -43,14 +43,14 @@ function getIntOrVar(block, fieldName) {
   }
 }
 
-function hasParent(block, parentType) {
+Blockly.Python.hasParent = function(block, parentType) {
   if (block === null) {
     return false;
   } else {
     if (block.type === parentType) {
       return true;
     } else {
-      return hasParent(block.getParent(), parentType);
+      return Blockly.Python.hasParent(block.getParent(), parentType);
     }
   }
 }

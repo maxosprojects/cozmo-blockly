@@ -293,8 +293,9 @@ Code.drawImageBinary = function(data, canvas, context) {
   var img = new Image();
   img.onload = function (e) {
     context.drawImage(img, 0, 0);
-    window.URL.revokeObjectURL(img.src);    
-    img = null;  
+    window.URL.revokeObjectURL(img.src);
+    img = null;
+    Code.cozmo3d.camUpdate();
   };
   img.onerror = img.onabort = function () {         
     img = null;
@@ -835,7 +836,7 @@ Code.loadXmlFromUrl = function(urlToLoadFrom) {
     dataType: 'text'
   })
   .done(function(data, textStatus, jqXHR) {
-    console.log('Loading code: ', data);
+    // console.log('Loading code: ', data);
     Code.workspace.clear();
 
     try {
@@ -865,9 +866,7 @@ Code.getFiles = function() {
   })
   .done(function(data, textStatus, jqXHR) {
     var files;
-    
-    console.log('Got files list: ', data);
-
+    // console.log('Got files list: ', data);
     try {
       Code.files = $.parseJSON(data);
       $(Code.files).each(function(num, file) {
