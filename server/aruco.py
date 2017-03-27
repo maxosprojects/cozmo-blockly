@@ -41,7 +41,14 @@ class Aruco(object):
 		self._markerSize = 0.03
 		self._characters = set()
 		self._seen = set()
+		self._aruco_lib = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_250)
+		self._aruco_params = cv2.aruco.DetectorParameters_create()
+		self._aruco_params.doCornerRefinement = True
+		self._sceneQuat = None
+		self._scenePos = None
+		self._sceneRotate = None
 		self._adjustQuat = None
+		self._adjusted = False
 
 		print('Initializing Aruco')
 		self._cap = cv2.VideoCapture(0)
@@ -62,12 +69,6 @@ class Aruco(object):
 		print("Actual camera size:", frame.shape)
 		self._height = frame.shape[0]
 		self._width = frame.shape[1]
-
-		self._aruco_lib = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_250)
-		self._aruco_params = cv2.aruco.DetectorParameters_create()
-		self._aruco_params.doCornerRefinement = True
-		self._sceneQuat = None
-		self._scenePos = None
 
 	def detectAruco(self, gray):
 		corners, ids, _ = cv2.aruco.detectMarkers(gray, self._aruco_lib, parameters=self._aruco_params)
@@ -99,7 +100,108 @@ class Aruco(object):
 
 		positions, rotations = self.estimatePose(corners)
 
-		## This way suits uncalibrated camera better. However, due to the uncertainty
+		if self._sceneRotate is None or (not self._adjustQuat is None and not self._adjusted):
+			table = {}
+			for i in range(len(ids)):
+				id = ids[i][0]
+				if id <= 3:
+					table[id] = (positions[i][0], rotations[i][0])
+			if len(table) > 2:
+				self.setup(table)
+			elif self._sceneRotate is None:
+				if withFrame:
+					return list(), self._prepareFrame(frame, ids, corners, rotations, positions)
+				else:
+					return list(), None
+
+		ret = list()
+		visible = set()
+		for i in range(len(ids)):
+			id = int(ids[i][0])
+			# if id == 3 or id == 1:
+			# 	rot = rotations[i][0]
+			# 	rotM, _ = cv2.Rodrigues(rot)
+			# 	quat = quaternions.mat2quat(rotM)
+			# 	print(id, quat)
+			# Skip markers that were not added in blockly program
+			if not id in self._characters:
+				continue
+			self._seen.add(id)
+			visible.add(id)
+			# Find object quaternion
+			rot = rotations[i][0]
+			rotM, _ = cv2.Rodrigues(rot)
+			resRotM = np.dot(self._sceneRotate, rotM)
+			quat = quaternions.mat2quat(resRotM)
+			# Translate position
+			pos = positions[i][0]
+			pos = pos - self._scenePos
+			pos = np.dot(self._sceneRotate, pos)
+			marker = ArucoMarker(id, (pos[:3] * 1000).tolist(), list(quat))
+			ret.append(marker.toDict())
+
+		# Notify about markers that have not been seen
+		notSeen = self._characters.difference(self._seen)
+		for id in notSeen:
+			ret.append({'id': id, 'pos': {'x': 0, 'y': 0, 'z': 0}, 'rot': [0, 0, 0, 0], 'seen': False, 'visible': False})
+
+		# Notify about markers that are not visible in this frame
+		notVisible = self._characters.difference(notSeen, visible)
+		for id in notVisible:
+			ret.append({'id': id, 'pos': {'x': 0, 'y': 0, 'z': 0}, 'rot': [0, 0, 0, 0], 'seen': True, 'visible': False})
+
+		if withFrame:
+			return ret, self._prepareFrame(frame, ids, corners, rotations, positions)
+		else:
+			return ret, None
+
+	def _prepareFrame(self, frame, ids=None, corners=None, rotations=None, positions=None):
+		displayim = frame
+		if not ids is None:
+			displayim = cv2.aruco.drawDetectedMarkers(displayim, corners, ids)
+			for i in range(len(ids)):
+				displayim = cv2.aruco.drawAxis(displayim, cameraMatrix, None, rotations[i], positions[i], self._markerSize)
+				# if ids[i][0] == 1 and not self._sceneRotate is None:
+				# 	tvec = positions[i][0]
+				# 	tvec[0] += 0.05
+				# 	# print(tvec)
+				# 	rvec, _ = cv2.Rodrigues(self._sceneRotate)
+				# 	displayim = cv2.aruco.drawAxis(displayim, cameraMatrix, None, rvec, tvec, self._markerSize)
+
+		# displayim = cv2.resize(displayim, None, fx=0.5, fy=0.5, interpolation = cv2.INTER_CUBIC)
+		ret, buf = cv2.imencode('.jpeg', displayim)
+		if not ret:
+			return None
+		return buf.tobytes()
+
+	def cameraSize(self):
+		# return self._width / 2, self._height / 2
+		return self._width, self._height
+
+	def addCharacter(self, character):
+		if character["id"] < 5 or character["id"] > 40:
+			character["elements"] = []
+			return character
+
+		for i in range(len(character["elements"])):
+			element = character["elements"][i]
+			element["size"]['width'] *= 10
+			element["size"]['depth'] *= 10
+			element["size"]['height'] *= 10
+			element["moveby"]['mx'] *= 10
+			element["moveby"]['my'] *= 10
+			element["moveby"]['mz'] *= 10
+
+		self._characters.add(character["id"])
+
+		return character
+
+	def adjustGroundAngles(self, x, y, z):
+		deg2rad = math.pi / 180.0
+		self._adjustQuat = myquat.fromEuler(x * deg2rad, y * deg2rad, z * deg2rad, 'XYZ')
+
+	def setup(self, table):
+		## This way suit uncalibrated camera better. However, due to the uncertainty
 		## with marker angles it is quite flaky. Left just in case
 		# table = {}
 		# for i in range(len(ids)):
@@ -131,125 +233,47 @@ class Aruco(object):
 		# and with some additional calibration coming from the blockly
 		# program is best
 
-		if self._sceneQuat is None:
-			table = {}
-			for i in range(len(ids)):
-				if ids[i] <= 4:
-					table[i] = positions[i][0]
+		# Find 'normal' of the scene plane (table).
+		# The plane is described by 4 points - 4 markers on the table
+		p1 = np.array(table[1][0])
+		p2 = np.array(table[2][0])
+		p3 = np.array(table[3][0])
+		# p4 = np.array(vals[3])
+		v1 = vector.normalize(p2 - p1)
+		v2 = vector.normalize(p3 - p1)
+		# v3 = p2 - p4
+		# v4 = p3 - p4
+		normal1 = np.cross(v1, v2)
+		# normal2 = np.cross(v3, v4)
+		# normal = (normal1 + normal2) / 2.0
+		normal = normal1
+		# normal = normal * (-1)
+		# if normal[2] < 0:
+		# 	normal[2] *= (-1)
+		# if normal1[2] > 0:
+		# 	normal1 = -1 * normal1
+		# if normal2[2] > 0:
+		# 	normal2 = -1 * normal2
 
-		if self._sceneQuat is None and len(table) == 4 and not self._adjustQuat is None:
-			# Find 'normal' of the scene plane (table).
-			# The plane is described by 4 points - 4 markers on the table
-			vals = list(table.values())
-			p1 = np.array(vals[0])
-			p2 = np.array(vals[1])
-			p3 = np.array(vals[2])
-			p4 = np.array(vals[3])
-			v1 = p2 - p1
-			v2 = p3 - p1
-			v3 = p2 - p4
-			v4 = p3 - p4
-			normal1 = np.cross(v1, v2)
-			normal2 = np.cross(v3, v4)
-			# normal = (normal1 + normal2) / 2.0
-			# normal = normal1
-			# if normal[2] > 0:
-			# 	normal = -1 * normal
-			if normal1[2] > 0:
-				normal1 = -1 * normal1
-			if normal2[2] > 0:
-				normal2 = -1 * normal2
+		# Find quaternion between desired 'normal' and the actual 'normal' of the plane
+		desiredUp = [0.0, 0.0, 1.0]
+		# q1 = myquat.fromUnitVectors(vector.normalize(normal1), desiredUp)
+		# q2 = myquat.fromUnitVectors(vector.normalize(normal2), desiredUp)
+		# self._sceneQuat = myquat.slerp(q1, q2, 0.5)
 
-			# Find quaternion between desired 'normal' and the actual 'normal' of the plane
-			desiredUp = [0.0, 0.0, 1.0]
-			q1 = myquat.fromUnitVectors(vector.normalize(normal1), desiredUp)
-			q2 = myquat.fromUnitVectors(vector.normalize(normal2), desiredUp)
-			self._sceneQuat = myquat.slerp(q1, q2, 0.5)
+		self._sceneQuat = myquat.fromUnitVectors(normal, desiredUp)
+		# self._sceneQuat[0] *= (-1)
+		if not self._adjustQuat is None:
 			self._sceneQuat = quaternions.qmult(self._sceneQuat, self._adjustQuat)
+			self._adjusted = True
 
-			# Find center of the scene - center of mass of the triangle
-			self._scenePos = (p1 + p2 + p3 + p4) / (-4.0)
+		# Find center of the scene - center of mass of the triangle or center of the square
+		# self._scenePos = (p1 + p2 + p3 + p4) / (-4.0)
 
-			# Combined transformation matrix imposes rotation first followed by translation. Here we want translation first
-			# and only then - rotation.
-			self._sceneRotate = quaternions.quat2mat(self._sceneQuat)
+		# Scene rotation point is the one which was used for normal extraction. This should give consistent results
+		self._scenePos = p1
 
-		if self._sceneQuat is None:
-			if withFrame:
-				return list(), self._prepareFrame(frame, ids, corners, rotations, positions)
-			else:
-				return list(), None
-
-		ret = list()
-		visible = set()
-		for i in range(len(ids)):
-			id = int(ids[i][0])
-			# Skip markers that were not added in blockly program
-			if not id in self._characters:
-				continue
-			self._seen.add(id)
-			visible.add(id)
-			# Find object quaternion
-			rot = rotations[i][0]
-			rotM, _ = cv2.Rodrigues(rot)
-			resRotM = np.dot(self._sceneRotate, rotM)
-			quat = quaternions.mat2quat(resRotM)
-			# Translate position
-			pos = positions[i][0]
-			pos = pos + self._scenePos
-			pos = np.dot(self._sceneRotate, pos)
-			# pos = np.array([0, 0, 0])
-			marker = ArucoMarker(id, (pos[:3] * 1000).tolist(), list(quat))
-			ret.append(marker.toDict())
-
-		# Notify about markers that have not been seen
-		notSeen = self._characters.difference(self._seen)
-		for id in notSeen:
-			ret.append({'id': id, 'pos': {'x': 0, 'y': 0, 'z': 0}, 'rot': [0, 0, 0, 0], 'seen': False, 'visible': False})
-
-		# Notify about markers that are not visible in this frame
-		notVisible = self._characters.difference(notSeen, visible)
-		for id in notVisible:
-			ret.append({'id': id, 'pos': {'x': 0, 'y': 0, 'z': 0}, 'rot': [0, 0, 0, 0], 'seen': True, 'visible': False})
-
-		if withFrame:
-			return ret, self._prepareFrame(frame, ids, corners, rotations, positions)
-		else:
-			return ret, None
-
-	def _prepareFrame(self, frame, ids=None, corners=None, rotations=None, positions=None):
-		displayim = frame
-		if not ids is None:
-			displayim = cv2.aruco.drawDetectedMarkers(displayim, corners, ids)
-			for i in range(len(ids)):
-				displayim = cv2.aruco.drawAxis(displayim, cameraMatrix, None, rotations[i], positions[i], self._markerSize)
-		displayim = cv2.resize(displayim, None, fx=0.5, fy=0.5, interpolation = cv2.INTER_CUBIC)
-		ret, buf = cv2.imencode('.jpeg', displayim)
-		if not ret:
-			return None
-		return buf.tobytes()
-
-	def cameraSize(self):
-		return self._width / 2, self._height / 2
-
-	def addCharacter(self, character):
-		if character["id"] < 5 or character["id"] > 40:
-			character["elements"] = []
-			return character
-
-		for i in range(len(character["elements"])):
-			element = character["elements"][i]
-			element["size"]['width'] *= 10
-			element["size"]['depth'] *= 10
-			element["size"]['height'] *= 10
-			element["moveby"]['mx'] *= 10
-			element["moveby"]['my'] *= 10
-			element["moveby"]['mz'] *= 10
-
-		self._characters.add(character["id"])
-
-		return character
-
-	def adjustGroundAngles(self, x, y, z):
-		deg2rad = math.pi / 180.0
-		self._adjustQuat = myquat.fromEuler(x * deg2rad, y * deg2rad, z * deg2rad, 'XYZ')
+		# Combined transformation matrix imposes rotation first followed by translation. Here we want translation first
+		# and only then - rotation.
+		self._sceneRotate = quaternions.quat2mat(self._sceneQuat)
+		# print(self._sceneRotate)

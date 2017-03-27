@@ -284,5 +284,6 @@ CozmoBlockly.aruco2threejs.position = function(pose) {
 }
 
 CozmoBlockly.aruco2threejs.rotation = function(rot) {
-  return [rot[1], rot[3], rot[2], rot[0]];
+  // return [rot[1], rot[3], rot[2], rot[0]];
+  return [rot[0], rot[1], rot[3], rot[2]];
 }

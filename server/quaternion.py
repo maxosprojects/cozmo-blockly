@@ -105,6 +105,7 @@ def fromUnitVectors(vFrom, vTo):
          v = [0, -vFrom[2], vFrom[1]]
    else:
       v = np.cross(vFrom, vTo)
+      # print(v)
 
    return normalize([r, v[0], v[1], v[2]])
 
