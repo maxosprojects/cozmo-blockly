@@ -37,6 +37,9 @@ function Cozmo3d() {
   };
   this._lastCameraPos = [-500,450,500];
   this.camUpdate = function(){};
+  this._nonArCameraPos = null;
+  this._nonArCameraQuat = null;
+  this._arOn = false;
 
   this.init = function() {
     if (that._initialized) {
@@ -59,7 +62,7 @@ function Cozmo3d() {
     that._scene.add(that._camera);
     that._scene.add(that._cameraOrthographic);
 
-    that._renderer = new THREE.WebGLRenderer({canvas: canvas, antialias: true});
+    that._renderer = new THREE.WebGLRenderer({canvas: canvas, antialias: true, alpha: true});
     that._renderer.setSize(width, height);
     that._renderer.setPixelRatio( window.devicePixelRatio );
     
@@ -478,10 +481,19 @@ function Cozmo3d() {
     } else if (data.setCubeModel) {
       var mod = data.setCubeModel;
       that.setCubeModel(mod.model, mod.cubeNum);
+    } else if (data.arInitData) {
+      console.log('Received arInitData', data.arInitData);
+      that._arPos = data.arInitData.pos;
+      that._arRot = data.arInitData.rot;
     } else if (data.aruco) {
       for (var i = 0; i < data.aruco.length; i++) {
         var markerData = data.aruco[i];
         var character = that._characters[markerData.id];
+        // hack: overwrite position to not get into refactoring now
+        if (that._arOn) {
+          markerData.pos = markerData.arPos;
+          markerData.rot = markerData.arRot;
+        }
         character.update(markerData);
       }
     } else if (data.character && data.character.elements.length > 0) {
@@ -503,6 +515,70 @@ function Cozmo3d() {
     oldCube.removeFromScene(that._scene);
     instance.addToScene();
     that._cubes[num-1] = instance;
+  };
+
+  this.arOn = function(on) {
+    if (!that._initialized) {
+      return;
+    }
+    if ((on && that._arOn) || (!on && !that._arOn)) {
+      return;
+    }
+    if (on) {
+      that._controls.enabled = false;
+      that._nonArCameraPos = that._camera.position;
+      that._nonArCameraQuat = that._camera.quaternion;
+
+      var canvasCam = document.getElementById('canvas_cam');
+      var canvas3d = document.getElementById('canvas_3d');
+      $(canvas3d).width(canvasCam.width);
+      $(canvas3d).height(canvasCam.height);
+      var width = $(canvas3d).width();
+      var height = $(canvas3d).height();
+      that._camera.aspect = width / height;
+      that._camera.updateProjectionMatrix();
+      that._renderer.setSize(width, height);
+
+      // var arPosVec = new THREE.Vector3(that._arPos[0], that._arPos[2], that._arPos[1]);
+      // var vec = arPosVec.clone();
+      // var unitVec = arPosVec.clone().normalize();
+      // var toNormal = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), unitVec);
+
+      // console.log(vec);
+      // vec.applyQuaternion(new THREE.Quaternion(that._arRot[1], that._arRot[3], that._arRot[2], that._arRot[0]));
+      // console.log(vec);
+      // vec.applyQuaternion(toNormal);
+      // console.log(vec);
+      // that._camera.position.set(-vec.x, -vec.y, -vec.z);
+
+      // that._camera.lookAt(that._scene)
+
+      that._camera.position.set(0, 0, 0);
+      that._camera.lookAt(new THREE.Vector3(0, 100, 0));
+      that._camera.up.set(0, 0, 1);
+
+      that._ground.visible = false;
+      that._renderer.setClearColor( 0x000000, 0 );
+      that._arOn = true;
+    } else {
+      that._controls.enabled = true;
+      that._camera.position = that._nonArCameraPos;
+      that._camera.quaternion = that._nonArCameraQuat;
+      that._camera.up.set(0, 1, 0);
+
+      var canvas3d = document.getElementById('canvas_3d');
+      $(canvas3d).width('100%');
+      $(canvas3d).height('100%');
+      var width = $(canvas3d).width();
+      var height = $(canvas3d).height();
+      that._camera.aspect = width / height;
+      that._camera.updateProjectionMatrix();
+      that._renderer.setSize(width, height);
+
+      that._ground.visible = true;
+      that._renderer.setClearColor( 0x9999ff, 1 );
+      that._arOn = false;
+    }
   };
 
   this.addStaticModel = function(model, x1, y1, x2, y2, depth, height) {

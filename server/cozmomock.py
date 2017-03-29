@@ -46,7 +46,18 @@ class CozmoBot:
 
 	def feedRobotDataInThread(self):
 		print('Starting data feed')
+		arInitDataSent = False
 		while True:
+
+			if not arInitDataSent:
+				arInitData = self._aruco.getArInitData()
+				if not arInitData is None:
+					data = {
+						'arInitData': arInitData
+					}
+					self._wsClient.send(json.dumps(data))
+					arInitDataSent = True
+
 			markers, frameBuf = self._aruco.getData(True)
 			data = {
 				'aruco': markers
@@ -58,7 +69,7 @@ class CozmoBot:
 				self._camClient.send(frameBuf, binary=True)
 
 			# Take a nap
-			time.sleep(0.1)
+			time.sleep(0.05)
 
 	def _update3d(self):
 		# Feed robot data

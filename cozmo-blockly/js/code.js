@@ -235,7 +235,7 @@ Code.LANG = Code.getLang();
  * @private
  */
 // Code.TABS_ = ['blocks', 'javascript', 'php', 'python', 'dart', 'lua', 'xml'];
-Code.TABS_ = ['blocks', 'camera', '3d', 'python', 'xml'];
+Code.TABS_ = ['blocks', 'camera', '3d', 'ar', 'python', 'xml'];
 
 Code.selected = 'blocks';
 
@@ -267,6 +267,7 @@ Code.tabClick = function(clickedName) {
 
   Code.stopCamera();
   Code.cozmo3d.stop();
+  Code.cozmo3d.arOn(false);
 
   // If blocks tab was open, hide workspace.
   if (document.getElementById('tab_blocks').className == 'tabon') {
@@ -276,14 +277,21 @@ Code.tabClick = function(clickedName) {
   for (var i = 0; i < Code.TABS_.length; i++) {
     var name = Code.TABS_[i];
     document.getElementById('tab_' + name).className = 'taboff';
-    document.getElementById('content_' + name).style.visibility = 'hidden';
+    if (name !== 'ar') {
+      document.getElementById('content_' + name).style.visibility = 'hidden';
+    }
   }
 
   // Select the active tab.
   Code.selected = clickedName;
   document.getElementById('tab_' + clickedName).className = 'tabon';
   // Show the selected pane.
-  document.getElementById('content_' + clickedName).style.visibility = 'visible';
+  if (clickedName === 'ar') {
+    document.getElementById('content_camera').style.visibility = 'visible';
+    document.getElementById('content_3d').style.visibility = 'visible';
+  } else {
+    document.getElementById('content_' + clickedName).style.visibility = 'visible';
+  }
   Code.renderContent();
   Blockly.svgResize(Code.workspace);
 };
@@ -292,7 +300,7 @@ Code.drawImageBinary = function(data, canvas, context) {
   var blob  = new Blob([data],{type: "image/jpeg"});
   var img = new Image();
   img.onload = function (e) {
-    context.drawImage(img, 0, 0);
+    context.drawImage(img, 0, 0, Code.cameraSize.width, Code.cameraSize.height);
     window.URL.revokeObjectURL(img.src);
     img = null;
     Code.cozmo3d.camUpdate();
@@ -328,8 +336,13 @@ Code.renderContent = function() {
   } else if (Code.selected == 'camera') {
     Code.startCamera();
   } else if (Code.selected == '3d') {
-      Code.cozmo3d.init();
-      Code.cozmo3d.start();
+    Code.cozmo3d.init();
+    Code.cozmo3d.start();
+  } else if (Code.selected == 'ar') {
+    Code.startCamera();
+    Code.cozmo3d.init();
+    Code.cozmo3d.start();
+    Code.cozmo3d.arOn(true);
   } else if (Code.selected == 'javascript') {
     var code = Blockly.JavaScript.workspaceToCode(Code.workspace);
     renderInnerContent(code, 'js');
@@ -491,15 +504,17 @@ Code.init = function() {
   var onresize = function(e) {
     var bBox = Code.getBBox_(container);
     for (var i = 0; i < Code.TABS_.length; i++) {
-      var el = document.getElementById('content_' + Code.TABS_[i]);
-      el.style.top = bBox.y + 'px';
-      el.style.left = bBox.x + 'px';
-      // Height and width need to be set, read back, then set again to
-      // compensate for scrollbars.
-      el.style.height = bBox.height + 'px';
-      el.style.height = (2 * bBox.height - el.offsetHeight) + 'px';
-      el.style.width = bBox.width + 'px';
-      el.style.width = (2 * bBox.width - el.offsetWidth) + 'px';
+      if (Code.TABS_[i] !== 'ar') {
+        var el = document.getElementById('content_' + Code.TABS_[i]);
+        el.style.top = bBox.y + 'px';
+        el.style.left = bBox.x + 'px';
+        // Height and width need to be set, read back, then set again to
+        // compensate for scrollbars.
+        el.style.height = bBox.height + 'px';
+        el.style.height = (2 * bBox.height - el.offsetHeight) + 'px';
+        el.style.width = bBox.width + 'px';
+        el.style.width = (2 * bBox.width - el.offsetWidth) + 'px';
+      }
     }
     // Make the 'Blocks' tab line up with the toolbox.
     if (Code.workspace && Code.workspace.toolbox_.width) {

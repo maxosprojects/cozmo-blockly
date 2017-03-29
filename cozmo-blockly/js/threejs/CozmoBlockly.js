@@ -20,19 +20,18 @@ CozmoBlockly.Dynamic = class {
   }
 
   update(data) {
-    var pose = this.convertPose(data);
-    this.mesh.position.x = pose.x + this.offx;
-    this.mesh.position.y = pose.y + this.offy;
-    this.mesh.position.z = pose.z + this.offz;
-    var quat = new THREE.Quaternion(pose.rot[0], pose.rot[1], pose.rot[2], pose.rot[3])
-    this.mesh.setRotationFromQuaternion(quat);
-
     if (data.seen === false) {
       this._setOpacity(0);
     } else if (data.visible === false) {
       this._setOpacity(0.5);
     } else {
       this._setOpacity(1);
+      var pose = this.convertPose(data);
+      this.mesh.position.x = pose.x + this.offx;
+      this.mesh.position.y = pose.y + this.offy;
+      this.mesh.position.z = pose.z + this.offz;
+      var quat = new THREE.Quaternion(pose.rot[0], pose.rot[1], pose.rot[2], pose.rot[3])
+      this.mesh.setRotationFromQuaternion(quat);
     }
   }
 
@@ -284,6 +283,5 @@ CozmoBlockly.aruco2threejs.position = function(pose) {
 }
 
 CozmoBlockly.aruco2threejs.rotation = function(rot) {
-  // return [rot[1], rot[3], rot[2], rot[0]];
-  return [rot[0], rot[1], rot[3], rot[2]];
+  return [rot[1], rot[3], rot[2], rot[0]];
 }

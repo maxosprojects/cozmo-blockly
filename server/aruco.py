@@ -18,18 +18,27 @@ with open('camera.json', 'r') as cameraJson:
     distCoeffs = np.array(cameraData['distCoeffs'])
 
 class ArucoMarker(object):
-	def __init__(self, id, position, rotation):
+	def __init__(self, id, position, rotation, arPos=[0, 0, 0], arRot=[0, 0, 0, 0], seen=True, visible=True):
+		'''
+		arPos - nontranslated position
+		'''
 		self.id = id
 		self.position = position
 		self.rotation = rotation
+		self.arPos = arPos
+		self.arRot = arRot
+		self.seen = seen
+		self.visible = visible
 
 	def toDict(self):
 		return {
 			'id': self.id,
 			'pos': self.position,
 			'rot': self.rotation,
-			'seen': True,
-			'visible': True
+			'arPos': self.arPos,
+			'arRot': self.arRot,
+			'seen': self.seen,
+			'visible': self.visible
 		}
 
 class Aruco(object):
@@ -137,18 +146,23 @@ class Aruco(object):
 			pos = positions[i][0]
 			pos = pos - self._scenePos
 			pos = np.dot(self._sceneRotate, pos)
-			marker = ArucoMarker(id, (pos[:3] * 1000).tolist(), list(quat))
+			arPos = positions[i][0]
+			arQuat = quaternions.mat2quat(rotM)
+			arQuat[2] *= (-1)
+			marker = ArucoMarker(id, (pos[:3] * 1000).tolist(), list(quat), (arPos * 1000).tolist(), list(arQuat))
 			ret.append(marker.toDict())
 
 		# Notify about markers that have not been seen
 		notSeen = self._characters.difference(self._seen)
 		for id in notSeen:
-			ret.append({'id': id, 'pos': {'x': 0, 'y': 0, 'z': 0}, 'rot': [0, 0, 0, 0], 'seen': False, 'visible': False})
+			marker = ArucoMarker(id, [0, 0, 0], [0, 0, 0, 0], seen=False, visible=False)
+			ret.append(marker.toDict())
 
 		# Notify about markers that are not visible in this frame
 		notVisible = self._characters.difference(notSeen, visible)
 		for id in notVisible:
-			ret.append({'id': id, 'pos': {'x': 0, 'y': 0, 'z': 0}, 'rot': [0, 0, 0, 0], 'seen': True, 'visible': False})
+			marker = ArucoMarker(id, [0, 0, 0], [0, 0, 0, 0], seen=True, visible=False)
+			ret.append(marker.toDict())
 
 		if withFrame:
 			return ret, self._prepareFrame(frame, ids, corners, rotations, positions)
@@ -168,8 +182,11 @@ class Aruco(object):
 				# 	rvec, _ = cv2.Rodrigues(self._sceneRotate)
 				# 	displayim = cv2.aruco.drawAxis(displayim, cameraMatrix, None, rvec, tvec, self._markerSize)
 
-		# displayim = cv2.resize(displayim, None, fx=0.5, fy=0.5, interpolation = cv2.INTER_CUBIC)
-		ret, buf = cv2.imencode('.jpeg', displayim)
+		start = time.time()
+		displayim = cv2.resize(displayim, None, fx=0.5, fy=0.5, interpolation = cv2.INTER_CUBIC)
+		ret, buf = cv2.imencode('.jpeg', displayim, [cv2.IMWRITE_JPEG_QUALITY, 50])
+		# ret, buf = cv2.imencode('.jpeg', displayim, [cv2.IMWRITE_JPEG_QUALITY, 10])
+		print('to encode', time.time() - start)
 		if not ret:
 			return None
 		return buf.tobytes()
@@ -199,6 +216,17 @@ class Aruco(object):
 	def adjustGroundAngles(self, x, y, z):
 		deg2rad = math.pi / 180.0
 		self._adjustQuat = myquat.fromEuler(x * deg2rad, y * deg2rad, z * deg2rad, 'XYZ')
+
+	def getArInitData(self):
+		if self._sceneQuat is None or self._scenePos is None:
+			return None
+		else:
+			data = {
+				'pos': (self._scenePos * 1000).tolist(),
+				'rot': self._sceneQuat.tolist()
+				# 'cameraMatrix': cameraMatrix
+			}
+			return data
 
 	def setup(self, table):
 		## This way suit uncalibrated camera better. However, due to the uncertainty

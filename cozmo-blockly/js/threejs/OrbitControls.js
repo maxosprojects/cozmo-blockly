@@ -125,6 +125,10 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 		return function update() {
 
+			if (!scope.enabled) {
+				return false;
+			}
+
 			var position = scope.object.position;
 
 			offset.copy( position ).sub( scope.target );

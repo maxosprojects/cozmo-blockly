@@ -290,6 +290,7 @@ class CozmoBot:
 	def turn(self, angle):
 		print("[Bot] Executing turn " + str(angle))
 		res = self._robot.turn_in_place(degrees(angle)).wait_for_completed()
+		# print('robot.turn_in_place(degrees(', angle, ')).wait_for_completed()')
 		print("[Bot] turn finished")
 		return res.state == cozmo.action.ACTION_SUCCEEDED
 
@@ -318,7 +319,10 @@ class CozmoBot:
 	def driveTo(self, x, y):
 		print("[Bot] Executing driveTo(" + str(x) + ", " + str(y) + ")")
 		pose = Pose(x * 10, y * 10, 0, angle_z=self._robot.pose.rotation.angle_z)
+		# pos = pose.position
+		# print('robot.go_to_pose(pose_z_angle(', pos.x, ', ', pos.y, ', ', pos.z, ', ', pose.rotation.angle_z.degrees, ').wait_for_completed()')
 		res = self._robot.go_to_pose(self._origin.define_pose_relative_this(pose)).wait_for_completed()
+		print(res)
 		print("[Bot] driveTo finished")
 		return res.state == cozmo.action.ACTION_SUCCEEDED
 
@@ -356,6 +360,8 @@ class CozmoBot:
 		angle = math.atan2(Y1 - Y2, X1 - X2)
 		pose = Pose(centerX, centerY, centerZ, angle_z=radians(angle))
 		self._robot.world.create_custom_fixed_object(self._origin.define_pose_relative_this(pose), WIDTH, DEPTH, HEIGHT)
+		# pos = pose.position
+		# print('robot.world.create_custom_fixed_object(pose_z_angle(', pos.x, ', ', pos.y, ', ', pos.z, ', ', pose.rotation.angle_z.degrees, '), ', WIDTH, ', ', DEPTH, ', ', HEIGHT, ')')
 
 	def setCubeModel(self, model, num):
 		data = {
