@@ -526,8 +526,8 @@ function Cozmo3d() {
     }
     if (on) {
       that._controls.enabled = false;
-      that._nonArCameraPos = that._camera.position;
-      that._nonArCameraQuat = that._camera.quaternion;
+      that._nonArCameraPos = that._camera.position.clone();
+      that._nonArCameraQuat = that._camera.quaternion.clone();
 
       var canvasCam = document.getElementById('canvas_cam');
       var canvas3d = document.getElementById('canvas_3d');
@@ -562,8 +562,8 @@ function Cozmo3d() {
       that._arOn = true;
     } else {
       that._controls.enabled = true;
-      that._camera.position = that._nonArCameraPos;
-      that._camera.quaternion = that._nonArCameraQuat;
+      that._camera.position.copy(that._nonArCameraPos);
+      that._camera.quaternion.copy(that._nonArCameraQuat);
       that._camera.up.set(0, 1, 0);
 
       var canvas3d = document.getElementById('canvas_3d');

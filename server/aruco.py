@@ -85,6 +85,7 @@ class Aruco(object):
 
 	def estimatePose(self, corners):
 		rvecs, tvecs = cv2.aruco.estimatePoseSingleMarkers(corners, self._markerSize, cameraMatrix, None)
+		# rvecs, tvecs = cv2.aruco.estimatePoseSingleMarkers(corners, self._markerSize, cameraMatrix, distCoeffs)
 		return tvecs, rvecs
 
 	def getData(self, withFrame=False):
@@ -109,7 +110,8 @@ class Aruco(object):
 
 		positions, rotations = self.estimatePose(corners)
 
-		if self._sceneRotate is None or (not self._adjustQuat is None and not self._adjusted):
+		if self._sceneQuat is None or (not self._adjustQuat is None and not self._adjusted):
+		# if self._sceneQuat is None:
 			table = {}
 			for i in range(len(ids)):
 				id = ids[i][0]
@@ -137,18 +139,34 @@ class Aruco(object):
 				continue
 			self._seen.add(id)
 			visible.add(id)
-			# Find object quaternion
-			rot = rotations[i][0]
-			rotM, _ = cv2.Rodrigues(rot)
-			resRotM = np.dot(self._sceneRotate, rotM)
-			quat = quaternions.mat2quat(resRotM)
 			# Translate position
 			pos = positions[i][0]
 			pos = pos - self._scenePos
 			pos = np.dot(self._sceneRotate, pos)
 			arPos = positions[i][0]
-			arQuat = quaternions.mat2quat(rotM)
+			# Find object and AR quaternions
+			rot = rotations[i][0]
+			rotM, _ = cv2.Rodrigues(rot)
+			quatFromMat = quaternions.mat2quat(rotM)
+			# # resRotM = np.dot(self._sceneRotate, rotM)
+			# # quat = quaternions.mat2quat(resRotM)
+			# vecFromCam = vector.normalize(arPos)
+			# # print(vecFromCam)
+			# quatFromCam = myquat.fromUnitVectors([0, 0, 1], vecFromCam)
+			# quatFromCam[0] *= (-1)
+			# # print(quatFromCam)
+			quat = quaternions.qmult(self._sceneQuat, quatFromMat)
+			# quat = quaternions.qmult(quatFromCam, quat)
+			# # quat = [1, 0, 0, 0]
+			# # quat = quatFromCam
+			# # quat = quatWithoutCam
+			# # quat = quatFromMat
+			# # quat = quaternions.qmult(self._sceneQuat, quatFromMat)
+			# # quat = quaternions.qmult(quatFromMat, self._sceneQuat)
+			# pos = np.array([0, 0, 0])
+			arQuat = np.array(quatFromMat)
 			arQuat[2] *= (-1)
+			# Add marker
 			marker = ArucoMarker(id, (pos[:3] * 1000).tolist(), list(quat), (arPos * 1000).tolist(), list(arQuat))
 			ret.append(marker.toDict())
 
@@ -182,11 +200,13 @@ class Aruco(object):
 				# 	rvec, _ = cv2.Rodrigues(self._sceneRotate)
 				# 	displayim = cv2.aruco.drawAxis(displayim, cameraMatrix, None, rvec, tvec, self._markerSize)
 
-		start = time.time()
+		# start = time.time()
 		displayim = cv2.resize(displayim, None, fx=0.5, fy=0.5, interpolation = cv2.INTER_CUBIC)
 		ret, buf = cv2.imencode('.jpeg', displayim, [cv2.IMWRITE_JPEG_QUALITY, 50])
 		# ret, buf = cv2.imencode('.jpeg', displayim, [cv2.IMWRITE_JPEG_QUALITY, 10])
-		print('to encode', time.time() - start)
+		# print('to encode', time.time() - start)
+		# points, _ = cv2.projectPoints(np.array([[0, 0, 0]], dtype=np.float32), np.array([0, 0, 0], dtype=np.float32), np.array([0, 0, 0], dtype=np.float32), cameraMatrix, None)
+		# print(points)
 		if not ret:
 			return None
 		return buf.tobytes()
@@ -289,7 +309,7 @@ class Aruco(object):
 		# q2 = myquat.fromUnitVectors(vector.normalize(normal2), desiredUp)
 		# self._sceneQuat = myquat.slerp(q1, q2, 0.5)
 
-		self._sceneQuat = myquat.fromUnitVectors(normal, desiredUp)
+		self._sceneQuat = np.array(myquat.fromUnitVectors(normal, desiredUp))
 		# self._sceneQuat[0] *= (-1)
 		if not self._adjustQuat is None:
 			self._sceneQuat = quaternions.qmult(self._sceneQuat, self._adjustQuat)
@@ -300,6 +320,15 @@ class Aruco(object):
 
 		# Scene rotation point is the one which was used for normal extraction. This should give consistent results
 		self._scenePos = p1
+
+		# # Also adjust _sceneQuat to the fact that _scenePos isn't in the center of the scene
+		# p1norm = vector.normalize(p1)
+		# # print(p1norm)
+		# toCenterQuat = myquat.fromUnitVectors([0, 0, 1], p1norm)
+		# # toCenterQuat[0] *= (-1)
+		# # print(toCenterQuat)
+		# # self._sceneQuat = quaternions.qmult(self._sceneQuat, toCenterQuat)
+		# self._sceneQuat = quaternions.qmult(toCenterQuat, self._sceneQuat)
 
 		# Combined transformation matrix imposes rotation first followed by translation. Here we want translation first
 		# and only then - rotation.
