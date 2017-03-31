@@ -303,6 +303,7 @@ Code.drawImageBinary = function(data, canvas, context) {
     context.drawImage(img, 0, 0, Code.cameraSize.width, Code.cameraSize.height);
     window.URL.revokeObjectURL(img.src);
     img = null;
+    blob = null;
     Code.cozmo3d.camUpdate();
   };
   img.onerror = img.onabort = function () {         
@@ -690,6 +691,7 @@ Code.sendCodeToUrl = function(urlToSendTo) {
   Code.cozmo3d.deinit();
   Code.cozmo3d.init();
   if (Code.selected == '3d') {
+  // if (Code.selected == '3d' || Code.selected == 'ar') {
       Code.cozmo3d.start();
   }
 

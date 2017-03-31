@@ -11,6 +11,8 @@ import json
 import math
 import vector
 
+renderAxes = False
+
 with open('camera.json', 'r') as cameraJson:
     data=cameraJson.read().replace('\n', '')
     cameraData = json.loads(data)
@@ -143,7 +145,11 @@ class Aruco(object):
 			pos = positions[i][0]
 			pos = pos - self._scenePos
 			pos = np.dot(self._sceneRotate, pos)
-			arPos = positions[i][0]
+			# Establish arPos as actual marker position and its projected xy coordinates. Greately simplifies rendering in ThreeJs
+			arPos = np.array(positions[i][0])
+			proj, _ = cv2.projectPoints(np.array([arPos]), np.array([0, 0, 0], dtype=np.float32), np.array([0, 0, 0], dtype=np.float32), cameraMatrix, None)
+			arPos *= 1000
+			arPos = [arPos[0], arPos[1], arPos[2], proj[0][0][0], proj[0][0][1]]
 			# Find object and AR quaternions
 			rot = rotations[i][0]
 			rotM, _ = cv2.Rodrigues(rot)
@@ -167,7 +173,7 @@ class Aruco(object):
 			arQuat = np.array(quatFromMat)
 			arQuat[2] *= (-1)
 			# Add marker
-			marker = ArucoMarker(id, (pos[:3] * 1000).tolist(), list(quat), (arPos * 1000).tolist(), list(arQuat))
+			marker = ArucoMarker(id, (pos[:3] * 1000).tolist(), list(quat), arPos, list(arQuat))
 			ret.append(marker.toDict())
 
 		# Notify about markers that have not been seen
@@ -189,7 +195,7 @@ class Aruco(object):
 
 	def _prepareFrame(self, frame, ids=None, corners=None, rotations=None, positions=None):
 		displayim = frame
-		if not ids is None:
+		if renderAxes and not ids is None:
 			displayim = cv2.aruco.drawDetectedMarkers(displayim, corners, ids)
 			for i in range(len(ids)):
 				displayim = cv2.aruco.drawAxis(displayim, cameraMatrix, None, rotations[i], positions[i], self._markerSize)
@@ -241,9 +247,19 @@ class Aruco(object):
 		if self._sceneQuat is None or self._scenePos is None:
 			return None
 		else:
+			# http://answers.opencv.org/question/17076/conversion-focal-distance-from-mm-to-pixels/
+			# focal_pixel = (image_width_in_pixels * 0.5) / tan(FOV * 0.5 * PI/180)
+			fxPix = cameraMatrix[0][0]
+			fyPix = cameraMatrix[1][1]
+			fovx = math.atan((self._width / 2.0) / fxPix) / (math.pi * 0.5 / 180.0)
+			fovy = math.atan((self._height / 2.0) / fyPix) / (math.pi * 0.5 / 180.0)
 			data = {
 				'pos': (self._scenePos * 1000).tolist(),
-				'rot': self._sceneQuat.tolist()
+				'rot': self._sceneQuat.tolist(),
+				'fov': {
+					'x': fovx,
+					'y': fovy
+				}
 				# 'cameraMatrix': cameraMatrix
 			}
 			return data

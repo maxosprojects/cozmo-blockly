@@ -40,6 +40,7 @@ function Cozmo3d() {
   this._nonArCameraPos = null;
   this._nonArCameraQuat = null;
   this._arOn = false;
+  this._defaultCamFov = 45;
 
   this.init = function() {
     if (that._initialized) {
@@ -50,7 +51,7 @@ function Cozmo3d() {
     var canvas = document.getElementById("canvas_3d");
     var width = $(canvas).width();
     var height = $(canvas).height();
-    that._camera = new THREE.PerspectiveCamera( 45, width/height, 0.1, 4000 );
+    that._camera = new THREE.PerspectiveCamera( that._defaultCamFov, width/height, 0.1, 4000 );
     that._cameraOrthographic = new THREE.OrthographicCamera( width / -2, width / 2, height / 2, height / -2, 0.1, 4000 );
 
     var pos = this._lastCameraPos;
@@ -485,14 +486,25 @@ function Cozmo3d() {
       console.log('Received arInitData', data.arInitData);
       that._arPos = data.arInitData.pos;
       that._arRot = data.arInitData.rot;
+      that._arFov = data.arInitData.fov;
     } else if (data.aruco) {
       for (var i = 0; i < data.aruco.length; i++) {
         var markerData = data.aruco[i];
         var character = that._characters[markerData.id];
         // hack: overwrite position to not get into refactoring now
         if (that._arOn) {
-          markerData.pos = markerData.arPos;
+          var arPos = markerData.arPos;
+          // markerData.pos = arPos;
           markerData.rot = markerData.arRot;
+          var posVec = new THREE.Vector3(arPos[0], arPos[1], arPos[2]);
+          var length = posVec.length();
+          var canvasCam = document.getElementById('canvas_cam');
+          var width = canvasCam.width;
+          var height = canvasCam.height;
+          posVec = new THREE.Vector3((arPos[3] / width) * 2 - 1, (arPos[4] / height) * 2 - 1, 0.5);
+          posVec.unproject(that._camera);
+          posVec.setLength(length);
+          markerData.pos = [posVec.x, posVec.z, posVec.y];
         }
         character.update(markerData);
       }
@@ -536,7 +548,6 @@ function Cozmo3d() {
       var width = $(canvas3d).width();
       var height = $(canvas3d).height();
       that._camera.aspect = width / height;
-      that._camera.updateProjectionMatrix();
       that._renderer.setSize(width, height);
 
       // var arPosVec = new THREE.Vector3(that._arPos[0], that._arPos[2], that._arPos[1]);
@@ -556,6 +567,9 @@ function Cozmo3d() {
       that._camera.position.set(0, 0, 0);
       that._camera.lookAt(new THREE.Vector3(0, 100, 0));
       that._camera.up.set(0, 0, 1);
+      // that._camera.fov = that._arFov.y;
+
+      that._camera.updateProjectionMatrix();
 
       that._ground.visible = false;
       that._renderer.setClearColor( 0x000000, 0 );
@@ -572,8 +586,10 @@ function Cozmo3d() {
       var width = $(canvas3d).width();
       var height = $(canvas3d).height();
       that._camera.aspect = width / height;
-      that._camera.updateProjectionMatrix();
       that._renderer.setSize(width, height);
+      // that._camera.fov = that._defaultCamFov;
+
+      that._camera.updateProjectionMatrix();
 
       that._ground.visible = true;
       that._renderer.setClearColor( 0x9999ff, 1 );
