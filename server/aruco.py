@@ -112,7 +112,7 @@ class Aruco(object):
 
 		positions, rotations = self.estimatePose(corners)
 
-		if self._sceneQuat is None or (not self._adjustQuat is None and not self._adjusted):
+		if self._sceneQuat is None and not self._adjustQuat is None and not self._adjusted:
 		# if self._sceneQuat is None:
 			table = {}
 			for i in range(len(ids)):
@@ -142,9 +142,12 @@ class Aruco(object):
 			self._seen.add(id)
 			visible.add(id)
 			# Translate position
-			pos = positions[i][0]
-			pos = pos - self._scenePos
-			pos = np.dot(self._sceneRotate, pos)
+			if not self._adjustQuat is None:
+				pos = positions[i][0]
+				pos = pos - self._scenePos
+				pos = np.dot(self._sceneRotate, pos)
+			else:
+				pos = np.array([0, 0, 0])
 			# Establish arPos as actual marker position and its projected xy coordinates. Greately simplifies rendering in ThreeJs
 			arPos = np.array(positions[i][0])
 			proj, _ = cv2.projectPoints(np.array([arPos]), np.array([0, 0, 0], dtype=np.float32), np.array([0, 0, 0], dtype=np.float32), cameraMatrix, None)
@@ -161,7 +164,10 @@ class Aruco(object):
 			# quatFromCam = myquat.fromUnitVectors([0, 0, 1], vecFromCam)
 			# quatFromCam[0] *= (-1)
 			# # print(quatFromCam)
-			quat = quaternions.qmult(self._sceneQuat, quatFromMat)
+			if not self._adjustQuat is None:
+				quat = quaternions.qmult(self._sceneQuat, quatFromMat)
+			else:
+				quat = np.array([1.0, 0, 0, 0])
 			# quat = quaternions.qmult(quatFromCam, quat)
 			# # quat = [1, 0, 0, 0]
 			# # quat = quatFromCam

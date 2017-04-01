@@ -39,6 +39,8 @@ function Cozmo3d() {
   this.camUpdate = function(){};
   this._nonArCameraPos = null;
   this._nonArCameraQuat = null;
+  that._nonArAnaglyph = false;
+  that._nonArPerspective = true;
   this._arOn = false;
   this._defaultCamFov = 45;
 
@@ -537,6 +539,12 @@ function Cozmo3d() {
       return;
     }
     if (on) {
+      that._nonArAnaglyph = that._anaglyph;
+      that._anaglyph = false;
+
+      that._nonArPerspective = that._perspective;
+      that._perspective = true;
+
       that._controls.enabled = false;
       that._nonArCameraPos = that._camera.position.clone();
       that._nonArCameraQuat = that._camera.quaternion.clone();
@@ -575,6 +583,10 @@ function Cozmo3d() {
       that._renderer.setClearColor( 0x000000, 0 );
       that._arOn = true;
     } else {
+      that._anaglyph = that._nonArAnaglyph;
+
+      that._perspective = that._nonArPerspective;
+
       that._controls.enabled = true;
       that._camera.position.copy(that._nonArCameraPos);
       that._camera.quaternion.copy(that._nonArCameraQuat);

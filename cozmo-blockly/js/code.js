@@ -265,9 +265,11 @@ Code.tabClick = function(clickedName) {
     }
   }
 
+  Code.selected = clickedName;
+
   Code.stopCamera();
   Code.cozmo3d.stop();
-  Code.cozmo3d.arOn(false);
+  Code.arOn(false);
 
   // If blocks tab was open, hide workspace.
   if (document.getElementById('tab_blocks').className == 'tabon') {
@@ -277,13 +279,13 @@ Code.tabClick = function(clickedName) {
   for (var i = 0; i < Code.TABS_.length; i++) {
     var name = Code.TABS_[i];
     document.getElementById('tab_' + name).className = 'taboff';
+    // There is no separate content for AR. Instead, it is a combination of Camera and 3D scene overlaid on top
     if (name !== 'ar') {
       document.getElementById('content_' + name).style.visibility = 'hidden';
     }
   }
 
   // Select the active tab.
-  Code.selected = clickedName;
   document.getElementById('tab_' + clickedName).className = 'tabon';
   // Show the selected pane.
   if (clickedName === 'ar') {
@@ -343,7 +345,7 @@ Code.renderContent = function() {
     Code.startCamera();
     Code.cozmo3d.init();
     Code.cozmo3d.start();
-    Code.cozmo3d.arOn(true);
+    Code.arOn(true);
   } else if (Code.selected == 'javascript') {
     var code = Blockly.JavaScript.workspaceToCode(Code.workspace);
     renderInnerContent(code, 'js');
@@ -505,6 +507,7 @@ Code.init = function() {
   var onresize = function(e) {
     var bBox = Code.getBBox_(container);
     for (var i = 0; i < Code.TABS_.length; i++) {
+      // There is no separate content for AR. Instead, it is a combination of Camera and 3D overlaid on top
       if (Code.TABS_[i] !== 'ar') {
         var el = document.getElementById('content_' + Code.TABS_[i]);
         el.style.top = bBox.y + 'px';
@@ -691,8 +694,12 @@ Code.sendCodeToUrl = function(urlToSendTo) {
   Code.cozmo3d.deinit();
   Code.cozmo3d.init();
   if (Code.selected == '3d') {
-  // if (Code.selected == '3d' || Code.selected == 'ar') {
-      Code.cozmo3d.start();
+    Code.cozmo3d.start();
+  }
+  if (Code.selected == 'ar') {
+    Code.arOn(false);
+    Code.cozmo3d.start();
+    Code.arOn(true);
   }
 
   // Static objects are to be populated from the program every time.
@@ -760,6 +767,18 @@ Code.startWs = function(onConnectFunc) {
     } else if (data.cameraSize) {
       console.log('Received camera size', data.cameraSize);
       Code.cameraSize = data.cameraSize;
+      if (Code.selected == 'camera' || Code.selected == 'ar') {
+        Code.stopCamera();
+        Code.startCamera();
+        if (Code.selected == 'ar') {
+          Code.arOn(false);
+          Code.cozmo3d.stop();
+          Code.cozmo3d.deinit();
+          Code.cozmo3d.init();
+          Code.cozmo3d.start();
+          Code.arOn(true);
+        }
+      }
     } else {
       Code.cozmo3d.onData(data);
     }
@@ -783,6 +802,20 @@ Code.stopWs = function() {
     Code.cozmoWs.doDisconnect()
     Code.cozmoWs = null;
   }
+}
+
+Code.arOn = function(on) {
+  var visibility;
+  if (!on && Code.selected == '3d') {
+    visibility = 'visible';
+  } else {
+    visibility = 'hidden';
+  }
+  document.getElementById('toggle_anaglyph').style.visibility = visibility;
+  document.getElementById('toggle_grid').style.visibility = visibility;
+  document.getElementById('toggle_perspective').style.visibility = visibility;
+  document.getElementById('toggle_camerato').style.visibility = visibility;
+  Code.cozmo3d.arOn(on);
 }
 
 Code.toggleAnaglyph = function() {
