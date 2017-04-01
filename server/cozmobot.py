@@ -58,6 +58,7 @@ class CozmoBot:
 			bot = self
 
 			import cozmo
+			import time
 			exec(code, locals(), locals())
 
 		from ws4py.client.threadedclient import WebSocketClient
@@ -379,10 +380,12 @@ class CozmoBot:
 		self._wsClient.send(json.dumps(data))
 
 	def addCharacter(self, character):
-		data = {
-			'character': self._aruco.addCharacter(character)
-		}
-		self._wsClient.send(json.dumps(data))
+		if self._aruco:
+			data = {
+				'character': self._aruco.addCharacter(character)
+			}
+			self._wsClient.send(json.dumps(data))
 
 	def adjustGroundAngles(self, x, y, z):
-		self._aruco.adjustGroundAngles(x, y, z)
+		if self._aruco:
+			self._aruco.adjustGroundAngles(x, y, z)

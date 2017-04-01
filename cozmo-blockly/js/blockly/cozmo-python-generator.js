@@ -34,9 +34,13 @@ Blockly.Python['cozmo_on_start'] = function(block) {
       Blockly.Variables.NAME_TYPE));
   }
   globals = globals.length ? '  global ' + globals.join(', ') + '\n' : '';
+  var exitAtEnd = block.getFieldValue('EXIT_AT_END') === 'TRUE';
   var branch = Blockly.Python.statementToCode(block, 'BODY');
   branch = Blockly.Python.addLoopTrap(branch, block.id) || Blockly.Python.PASS;
   var code = 'def on_start():\n' + globals + branch + '\n';
+  if (!exitAtEnd) {
+    code += Blockly.Python.INDENT + 'while True:\n' + Blockly.Python.INDENT + Blockly.Python.INDENT + 'time.sleep(1)'
+  }
   return code;
 };
 

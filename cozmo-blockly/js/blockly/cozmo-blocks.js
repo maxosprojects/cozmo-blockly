@@ -60,8 +60,12 @@ Blockly.Blocks['math_angle'] = {
 Blockly.Blocks['cozmo_on_start'] = {
   init: function() {
     this.appendDummyInput()
+        .appendField('on start, ')
+        .appendField(new Blockly.FieldCheckbox('FALSE'), 'EXIT_AT_END');
+    this.appendDummyInput()
         .setAlign(Blockly.ALIGN_CENTRE)
-        .appendField("on start");
+        .appendField("stop after last statement");
+    this.setInputsInline(true);
     this.appendStatementInput("BODY");
     this.setColour(Blockly.Blocks.cozmo.HUE2);
     this.setTooltip('Executes the program on start');
