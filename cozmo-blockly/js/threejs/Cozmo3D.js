@@ -20,6 +20,7 @@ function Cozmo3d() {
   this._controls = null;
   this._calibrator = null;
   this._floor = null;
+  this._light = null;
   this._ground = null;
   this._cozmo = null;
   this._cubes = [];
@@ -73,22 +74,30 @@ function Cozmo3d() {
 
     that._renderer.setClearColor( 0x9999ff, 1 );
 
-    var light = new THREE.PointLight(0xffffff, 1, 10000);
-    light.position.set(-100,400,100);
-    that._scene.add(light);
+    // var light = new THREE.PointLight(0xffffff, 1, 10000);
+    // light.position.set(-100,400,100);
+    // that._scene.add(light);
 
-    var lights = [];
-    lights[0] = new THREE.PointLight( 0xffffff, 1, 0 );
-    lights[1] = new THREE.PointLight( 0xffffff, 1, 0 );
-    lights[2] = new THREE.PointLight( 0xffffff, 1, 0 );
+    // var lights = [];
+    // lights[0] = new THREE.PointLight( 0xffffff, 1, 0 );
+    // lights[1] = new THREE.PointLight( 0xffffff, 1, 0 );
+    // lights[2] = new THREE.PointLight( 0xffffff, 1, 0 );
 
-    lights[0].position.set( 0, 200, 0 );
-    lights[1].position.set( 100, 200, 100 );
-    lights[2].position.set( - 100, - 200, - 100 );
+    // lights[0].position.set( 0, 200, 0 );
+    // lights[1].position.set( 100, 200, 100 );
+    // lights[2].position.set( - 100, - 200, - 100 );
 
-    that._scene.add( lights[0] );
-    that._scene.add( lights[1] );
-    that._scene.add( lights[2] );
+    // that._scene.add( lights[0] );
+    // that._scene.add( lights[1] );
+    // that._scene.add( lights[2] );
+
+    that._light = new THREE.DirectionalLight(0xffffff, 2);
+    that._light.position.set(100, 800, 1400);
+    var target = new THREE.Object3D();
+    target.position.set(0, -1000, 0);
+    that._scene.add(target);
+    that._scene.add(that._light);
+    that._light.target = target;
 
     // that._scene.fog = new THREE.Fog( 0xffffff, 1, 5000 );
     // that._scene.fog.color.setHSL( 0.6, 0, 1 );
@@ -581,6 +590,10 @@ function Cozmo3d() {
 
       that._ground.visible = false;
       that._renderer.setClearColor( 0x000000, 0 );
+
+      that._light.position.set(100, 0, 400);
+      that._light.target.position.set(0, 1000, 0);
+
       that._arOn = true;
     } else {
       that._anaglyph = that._nonArAnaglyph;
@@ -605,6 +618,10 @@ function Cozmo3d() {
 
       that._ground.visible = true;
       that._renderer.setClearColor( 0x9999ff, 1 );
+
+      that._light.position.set(100, 800, 1400);
+      that._light.target.position.set(0, -1000, 0);
+
       that._arOn = false;
     }
   };
