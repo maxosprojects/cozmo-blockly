@@ -90,7 +90,7 @@ var MinecraftChar = function(url){
     mapUv(tGeometry, 4,  8, 24, 16, 16) // front
     mapUv(tGeometry, 5, 24, 24, 32, 16) // back
     
-    // // build model.helmet
+    // build model.helmet
     model.helmet    = createCube(sizes.helmetH, sizes.helmetH, sizes.helmetH, tMaterialt);
     model.headGroup.add(model.helmet);
     translateY(model.helmet, sizes.headH/2);

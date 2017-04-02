@@ -30,6 +30,15 @@ Blockly.Python['aruco_character'] = function(block) {
   return code;
 };
 
+Blockly.Python['aruco_character_texture'] = function(block) {
+  if (!Blockly.Python.hasParent(block, 'aruco_character')) {
+    return '';
+  }
+  var texture = Blockly.Python.valueToCode(block, 'TEXTURE', Blockly.Python.ORDER_NONE);
+  var code = 'character["texture"] = ' + texture + '\n';
+  return code;
+};
+
 Blockly.Python['aruco_element'] = function(block) {
   if (!Blockly.Python.hasParent(block, 'aruco_character')) {
     return '';
@@ -40,7 +49,7 @@ Blockly.Python['aruco_element'] = function(block) {
   var branch = Blockly.Python.statementToCode(block, 'BODY');
   branch = Blockly.Python.addLoopTrap(branch, block.id) || Blockly.Python.PASS;
   var code = 'element = ' + element + '\n';
-  // This looks like not that bad hack compared to the one below (with regex)
+  // This looks like not as bad hack as the one below (with regex)
   code += 'if True:\n';
   // // Unindent first line and then the rest
   // var re = new RegExp(Blockly.Python.INDENT);
@@ -48,7 +57,8 @@ Blockly.Python['aruco_element'] = function(block) {
   // re = new RegExp('\n' + Blockly.Python.INDENT, 'g');
   // branch = branch.replace(re, '\n');
   code += branch;
-  code += 'character["elements"].append(element)\n';
+  code += 'if "color" in element or "texture" in element:\n'
+  code += Blockly.Python.INDENT + 'character["elements"].append(element)\n';
   return code;
 };
 
@@ -75,4 +85,28 @@ Blockly.Python['aruco_element_color'] = function(block) {
   var color = Blockly.Python.valueToCode(block, 'COLOR', Blockly.Python.ORDER_NONE);
   var code = 'element["color"] = ' + color + '\n';
   return code;
+};
+
+Blockly.Python['aruco_element_texture'] = function(block) {
+  if (!Blockly.Python.hasParent(block, 'aruco_element')) {
+    return '';
+  }
+  var left = Blockly.Python.valueToCode(block, 'LEFT', Blockly.Python.ORDER_NONE);
+  var front = Blockly.Python.valueToCode(block, 'FRONT', Blockly.Python.ORDER_NONE);
+  var right = Blockly.Python.valueToCode(block, 'RIGHT', Blockly.Python.ORDER_NONE);
+  var back = Blockly.Python.valueToCode(block, 'BACK', Blockly.Python.ORDER_NONE);
+  var top = Blockly.Python.valueToCode(block, 'TOP', Blockly.Python.ORDER_NONE);
+  var bottom = Blockly.Python.valueToCode(block, 'BOTTOM', Blockly.Python.ORDER_NONE);
+  var params = '{"left": ' + left + ', "front": ' + front + ', "right": ' + right + ', "back": ' + back + ', "top": ' + top + ', "bottom": ' + bottom + '}';
+  var code = 'element["texture"] = ' + params + '\n';
+  return code;
+};
+
+Blockly.Python['aruco_element_texture_params'] = function(block) {
+  var x1 = Blockly.Python.getIntOrVar(block, 'X1');
+  var y1 = Blockly.Python.getIntOrVar(block, 'Y1');
+  var x2 = Blockly.Python.getIntOrVar(block, 'X2');
+  var y2 = Blockly.Python.getIntOrVar(block, 'Y2');
+  var code = '{"x1": ' + x1 + ', "y1": ' + y1 + ', "x2": ' + x2 + ', "y2": ' + y2 + '}';
+  return [code, Blockly.Python.ORDER_NONE];
 };

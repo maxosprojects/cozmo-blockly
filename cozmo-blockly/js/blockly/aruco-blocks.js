@@ -12,14 +12,10 @@ goog.require('Blockly.Blocks');
 /**
  * Common HSV hue for all blocks in this category.
  */
-Blockly.Blocks.aruco.HUE = 210;
-Blockly.Blocks.aruco.HUE2 = 118;
-
-var cubes = {
-  "1": {"src": "img/thumbnails/cube1.png", "width": 13, "height": 11, "alt": "#1"},
-  "2": {"src": "img/thumbnails/cube2.png", "width": 13, "height": 11, "alt": "#2"},
-  "3": {"src": "img/thumbnails/cube3.png", "width": 13, "height": 11, "alt": "#3"}
-};
+Blockly.Blocks.aruco.markerHUE = 20;
+Blockly.Blocks.aruco.elementHUE = 180;
+Blockly.Blocks.aruco.paramsHUE = 100;
+Blockly.Blocks.aruco.elementPartsHUE = 120;
 
 Blockly.Blocks['aruco_adjust_angles'] = {
   init: function() {
@@ -38,7 +34,7 @@ Blockly.Blocks['aruco_adjust_angles'] = {
     this.setInputsInline(true);
     this.setPreviousStatement(true);
     this.setNextStatement(true);
-    this.setColour(Blockly.Blocks.cozmo.HUE2);
+    this.setColour(Blockly.Blocks.aruco.markerHUE);
     this.setTooltip("Adjusts ground angles to account for camera lens imperfections");
   }
 };
@@ -58,8 +54,24 @@ Blockly.Blocks['aruco_character'] = {
     this.setInputsInline(true);
     this.setPreviousStatement(true);
     this.setNextStatement(true);
-    this.setColour(Blockly.Blocks.cozmo.HUE2);
+    this.setColour(Blockly.Blocks.aruco.markerHUE);
     this.setTooltip('Builds a character');
+  }
+};
+
+Blockly.Blocks['aruco_character_texture'] = {
+  init: function() {
+    this.appendValueInput("TEXTURE")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("set character texture");
+    this.appendDummyInput()
+        .setAlign(Blockly.ALIGN_LEFT)
+        .appendField(".png");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setInputsInline(true);
+    this.setColour(Blockly.Blocks.aruco.markerHUE);
+    this.setTooltip('Set texture to use for the character');
   }
 };
 
@@ -84,7 +96,7 @@ Blockly.Blocks['aruco_element'] = {
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setInputsInline(false);
-    this.setColour(Blockly.Blocks.cozmo.HUE2);
+    this.setColour(Blockly.Blocks.aruco.elementHUE);
     this.setTooltip('Builds an element of the character');
   }
 };
@@ -106,7 +118,7 @@ Blockly.Blocks['aruco_element_size'] = {
     this.setOutput(true, "Aruco_Size");
     this.setMovable(false);
     this.setInputsInline(true);
-    this.setColour(Blockly.Blocks.cozmo.HUE);
+    this.setColour(Blockly.Blocks.aruco.paramsHUE);
     this.setTooltip('Sets size of the element');
   }
 };
@@ -128,7 +140,7 @@ Blockly.Blocks['aruco_element_move_by'] = {
     this.setOutput(true, "Aruco_Move_By");
     this.setMovable(false);
     this.setInputsInline(true);
-    this.setColour(Blockly.Blocks.cozmo.HUE);
+    this.setColour(Blockly.Blocks.aruco.paramsHUE);
     this.setTooltip('Moves element in any direction from the Origin (marker)');
   }
 };
@@ -142,7 +154,69 @@ Blockly.Blocks['aruco_element_color'] = {
     this.setInputsInline(true);
     this.setPreviousStatement(true);
     this.setNextStatement(true);
-    this.setColour(Blockly.Blocks.cozmo.HUE);
+    this.setColour(Blockly.Blocks.aruco.elementPartsHUE);
     this.setTooltip('Sets color of the element');
+  }
+};
+
+Blockly.Blocks['aruco_element_texture'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("set element texture");
+    this.appendValueInput("LEFT")
+        .setCheck("Aruco_Texture_Params")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("left");
+    this.appendValueInput("FRONT")
+        .setCheck("Aruco_Texture_Params")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("front");
+    this.appendValueInput("RIGHT")
+        .setCheck("Aruco_Texture_Params")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("right");
+    this.appendValueInput("BACK")
+        .setCheck("Aruco_Texture_Params")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("back");
+    this.appendValueInput("TOP")
+        .setCheck("Aruco_Texture_Params")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("top");
+    this.appendValueInput("BOTTOM")
+        .setCheck("Aruco_Texture_Params")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("bottom");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setInputsInline(false);
+    this.setColour(Blockly.Blocks.aruco.elementPartsHUE);
+    this.setTooltip("Sets up element texture chunk from character's main texture");
+  }
+};
+
+Blockly.Blocks['aruco_element_texture_params'] = {
+  init: function() {
+    this.appendValueInput("X1")
+        .setCheck("Number")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("x1");
+    this.appendValueInput("Y1")
+        .setCheck("Number")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("y1");
+    this.appendValueInput("X2")
+        .setCheck("Number")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("x2");
+    this.appendValueInput("Y2")
+        .setCheck("Number")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("y2");
+    this.setOutput(true, "Aruco_Texture_Params");
+    // this.setMovable(false);
+    this.setInputsInline(true);
+    this.setColour(Blockly.Blocks.aruco.paramsHUE);
+    this.setTooltip("Element texture top-left and bottom-right corners' coordinates");
   }
 };
