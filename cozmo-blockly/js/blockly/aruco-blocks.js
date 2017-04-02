@@ -163,18 +163,18 @@ Blockly.Blocks['aruco_element_texture'] = {
   init: function() {
     this.appendDummyInput()
         .appendField("set element texture");
-    this.appendValueInput("LEFT")
-        .setCheck("Aruco_Texture_Params")
-        .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField("left");
-    this.appendValueInput("FRONT")
-        .setCheck("Aruco_Texture_Params")
-        .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField("front");
     this.appendValueInput("RIGHT")
         .setCheck("Aruco_Texture_Params")
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField("right");
+    this.appendValueInput("FRONT")
+        .setCheck("Aruco_Texture_Params")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("front");
+    this.appendValueInput("LEFT")
+        .setCheck("Aruco_Texture_Params")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("left");
     this.appendValueInput("BACK")
         .setCheck("Aruco_Texture_Params")
         .setAlign(Blockly.ALIGN_RIGHT)
@@ -213,6 +213,9 @@ Blockly.Blocks['aruco_element_texture_params'] = {
         .setCheck("Number")
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField("y2");
+    this.appendDummyInput()
+        .appendField(new Blockly.FieldCheckbox('FALSE'), 'MIRRORED')
+        .appendField('mirrored');
     this.setOutput(true, "Aruco_Texture_Params");
     // this.setMovable(false);
     this.setInputsInline(true);

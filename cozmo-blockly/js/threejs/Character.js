@@ -15,7 +15,6 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
       var tmpTxture = CozmoBlockly.loadTexture('custom-textures/' + charT + '.png', function(texture) {
         texture.magFilter = THREE.NearestFilter;
         texture.minFilter = THREE.NearestFilter;
-        // this._tTexture = tTexture
 
         cMaterial = new THREE.MeshBasicMaterial({
             transparent: true,
@@ -31,19 +30,12 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
             var mesh = createCuboid(size.width, size.height, size.depth, cMaterial);
             var geometry = mesh.geometry;
             geometry.faceVertexUvs[0] = [];
-            // console.log(elemT);
-            mapUv(geometry, texture, 0, elemT.left) // left
-            mapUv(geometry, texture, 1, elemT.right) // right
-            mapUv(geometry, texture, 2, elemT.top) // top
-            mapUv(geometry, texture, 3, elemT.bottom) // bottom
-            mapUv(geometry, texture, 4, elemT.front) // front
-            mapUv(geometry, texture, 5, elemT.back) // back
-            // mapUv(geometry, 0, 16, 24, 24, 16) // left
-            // mapUv(geometry, 1,  0, 24,  8, 16) // right
-            // mapUv(geometry, 2,  8, 32, 16, 24) // top
-            // mapUv(geometry, 3, 16, 32, 24, 24) // bottom
-            // mapUv(geometry, 4,  8, 24, 16, 16) // front
-            // mapUv(geometry, 5, 24, 24, 32, 16) // back
+            mapUv(geometry, texture, 0, elemT.left)
+            mapUv(geometry, texture, 1, elemT.right)
+            mapUv(geometry, texture, 2, elemT.top)
+            mapUv(geometry, texture, 3, elemT.bottom)
+            mapUv(geometry, texture, 4, elemT.front)
+            mapUv(geometry, texture, 5, elemT.back)
 
             root.add(mesh);
             var moveby = elem.moveby
@@ -113,12 +105,10 @@ function createCuboid(w, h, d, material) {
 };
 
 function mapUv(geometry, texture, faceIdx, points) {
-  // console.log(texture.image.width, texture.image.height);
   var x1 = points.x1;
   var y1 = points.y1;
   var x2 = points.x2;
   var y2 = points.y2;
-  // console.log(geometry, texture, faceIdx, x1, y1, x2, y2);
   var imgWidth = texture.image.width;
   var imgHeight = texture.image.height;
   var tileUvW = 1/imgWidth;
@@ -127,16 +117,15 @@ function mapUv(geometry, texture, faceIdx, points) {
   var xmax = (Math.max(x1, x2) + 1) * tileUvW;
   var ymin = (imgHeight - Math.min(y1, y2)) * tileUvH;
   var ymax = (imgHeight - Math.max(y1, y2) - 1) * tileUvH;
-  // var xmin = Math.min(x1, x2);
-  // var xmax = Math.max(x1, x2);
-  // var ymin = (height - Math.min(y1, y2));
-  // var ymax = (height - Math.max(y1, y2));
   var XminYmin = new THREE.Vector2(xmin, ymin);
   var XmaxYmin = new THREE.Vector2(xmax, ymin);
   var XmaxYmax = new THREE.Vector2(xmax, ymax);
   var XminYmax = new THREE.Vector2(xmin, ymax);
-  // console.log(points);
-  // console.log(XminYmin, XmaxYmin, XmaxYmax, XminYmax);
-  geometry.faceVertexUvs[0][faceIdx * 2] = [XminYmin, XminYmax, XmaxYmin];
-  geometry.faceVertexUvs[0][faceIdx * 2 + 1] = [XminYmax, XmaxYmax, XmaxYmin];
+  if (points.mirrored) {
+    geometry.faceVertexUvs[0][faceIdx * 2] = [XmaxYmin, XmaxYmax, XminYmin];
+    geometry.faceVertexUvs[0][faceIdx * 2 + 1] = [XmaxYmax, XminYmax, XminYmin];
+  } else {
+    geometry.faceVertexUvs[0][faceIdx * 2] = [XminYmin, XminYmax, XmaxYmin];
+    geometry.faceVertexUvs[0][faceIdx * 2 + 1] = [XminYmax, XmaxYmax, XmaxYmin];
+  }
 };

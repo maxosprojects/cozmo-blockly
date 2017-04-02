@@ -107,6 +107,7 @@ Blockly.Python['aruco_element_texture_params'] = function(block) {
   var y1 = Blockly.Python.getIntOrVar(block, 'Y1');
   var x2 = Blockly.Python.getIntOrVar(block, 'X2');
   var y2 = Blockly.Python.getIntOrVar(block, 'Y2');
-  var code = '{"x1": ' + x1 + ', "y1": ' + y1 + ', "x2": ' + x2 + ', "y2": ' + y2 + '}';
+  var mirrored = block.getFieldValue('MIRRORED') === 'TRUE' ? 'True' : 'False';
+  var code = '{"x1": ' + x1 + ', "y1": ' + y1 + ', "x2": ' + x2 + ', "y2": ' + y2 + ', "mirrored": ' + mirrored + '}';
   return [code, Blockly.Python.ORDER_NONE];
 };
