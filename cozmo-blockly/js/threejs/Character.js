@@ -10,46 +10,62 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
     var elements = character.elements;
 
     var charT = character.texture;
-    var texture;
     var cMaterial;
     if (charT) {
-      texture = CozmoBlockly.loadTexture('custom-textures/' + charT + '.png');
-      texture.magFilter = THREE.NearestFilter;
-      texture.minFilter = THREE.NearestFilter;
-      // this._tTexture = tTexture
+      var tmpTxture = CozmoBlockly.loadTexture('custom-textures/' + charT + '.png', function(texture) {
+        texture.magFilter = THREE.NearestFilter;
+        texture.minFilter = THREE.NearestFilter;
+        // this._tTexture = tTexture
 
-      cMaterial = new THREE.MeshBasicMaterial({
-          transparent: true,
-          map: texture
+        cMaterial = new THREE.MeshBasicMaterial({
+            transparent: true,
+            map: texture
+        });
+        materials.push(cMaterial);
+
+        for (var i = 0; i < elements.length; i++) {
+          var elem = elements[i];
+          var elemT = elem.texture;
+          var size = elem.size;
+          if (elemT) {
+            var mesh = createCuboid(size.width, size.height, size.depth, cMaterial);
+            var geometry = mesh.geometry;
+            geometry.faceVertexUvs[0] = [];
+            // console.log(elemT);
+            mapUv(geometry, texture, 0, elemT.left) // left
+            mapUv(geometry, texture, 1, elemT.right) // right
+            mapUv(geometry, texture, 2, elemT.top) // top
+            mapUv(geometry, texture, 3, elemT.bottom) // bottom
+            mapUv(geometry, texture, 4, elemT.front) // front
+            mapUv(geometry, texture, 5, elemT.back) // back
+            // mapUv(geometry, 0, 16, 24, 24, 16) // left
+            // mapUv(geometry, 1,  0, 24,  8, 16) // right
+            // mapUv(geometry, 2,  8, 32, 16, 24) // top
+            // mapUv(geometry, 3, 16, 32, 24, 24) // bottom
+            // mapUv(geometry, 4,  8, 24, 16, 16) // front
+            // mapUv(geometry, 5, 24, 24, 32, 16) // back
+
+            root.add(mesh);
+            var moveby = elem.moveby
+            translate(mesh, moveby.mx, moveby.mz, moveby.my);
+          }
+        }
       });
-      materials.push(cMaterial);
-    }
-
-    for (var i = 0; i < elements.length; i++) {
-      var elem = elements[i];
-      var elemT = elem.texture;
-      var size = elem.size;
-      var mesh;
-      if (charT && elemT) {
-        mesh = createCuboid(size.width, size.height, size.depth, cMaterial);
-        var geometry = mesh.geometry;
-        geometry.faceVertexUvs[0] = [];
-        mapUv(geometry, 0, 16, 24, 24, 16) // left
-        mapUv(geometry, 1,  0, 24,  8, 16) // right
-        mapUv(geometry, 2,  8, 32, 16, 24) // top
-        mapUv(geometry, 3, 16, 32, 24, 24) // bottom
-        mapUv(geometry, 4,  8, 24, 16, 16) // front
-        mapUv(geometry, 5, 24, 24, 32, 16) // back
-      } else {
+    } else {
+      for (var i = 0; i < elements.length; i++) {
+        var elem = elements[i];
+        var size = elem.size;
+        var mesh;
         var colorStr = elem.color.replace('#', '');
         var color = parseInt(colorStr, 16);
         var elemMaterial = new THREE.MeshLambertMaterial( { color: color, side: THREE.FrontSide, transparent: true } );
         materials.push(elemMaterial);
         mesh = createCuboid(size.width, size.height, size.depth, elemMaterial);
+
+        root.add(mesh);
+        var moveby = elem.moveby
+        translate(mesh, moveby.mx, moveby.mz, moveby.my);
       }
-      root.add(mesh);
-      var moveby = elem.moveby
-      translate(mesh, moveby.mx, moveby.mz, moveby.my);
     }
 
     this.mesh = root;
@@ -92,17 +108,35 @@ function translate(obj, x, y, z) {
 function createCuboid(w, h, d, material) {
   var geometry = new THREE.BoxGeometry(w, h, d);
   // set the geometry.dynamic by default
-  geometry.dynamic= true;
+  geometry.dynamic = true;
   return new THREE.Mesh(geometry, material)
 };
 
-function mapUv(geometry, faceIdx, x1, y1, x2, y2) {
-  var tileUvW = 1/64;
-  var tileUvH = 1/32;
-  var x1y1 = new THREE.Vector2(x1 * tileUvW, y1 * tileUvH);
-  var x2y1 = new THREE.Vector2(x2 * tileUvW, y1 * tileUvH);
-  var x2y2 = new THREE.Vector2(x2 * tileUvW, y2 * tileUvH);
-  var x1y2 = new THREE.Vector2(x1 * tileUvW, y2 * tileUvH);
-  geometry.faceVertexUvs[0][faceIdx * 2] = [x1y2, x1y1, x2y2];
-  geometry.faceVertexUvs[0][faceIdx * 2 + 1] = [x1y1, x2y1, x2y2];
+function mapUv(geometry, texture, faceIdx, points) {
+  // console.log(texture.image.width, texture.image.height);
+  var x1 = points.x1;
+  var y1 = points.y1;
+  var x2 = points.x2;
+  var y2 = points.y2;
+  // console.log(geometry, texture, faceIdx, x1, y1, x2, y2);
+  var imgWidth = texture.image.width;
+  var imgHeight = texture.image.height;
+  var tileUvW = 1/imgWidth;
+  var tileUvH = 1/imgHeight;
+  var xmin = Math.min(x1, x2) * tileUvW;
+  var xmax = (Math.max(x1, x2) + 1) * tileUvW;
+  var ymin = (imgHeight - Math.min(y1, y2)) * tileUvH;
+  var ymax = (imgHeight - Math.max(y1, y2) - 1) * tileUvH;
+  // var xmin = Math.min(x1, x2);
+  // var xmax = Math.max(x1, x2);
+  // var ymin = (height - Math.min(y1, y2));
+  // var ymax = (height - Math.max(y1, y2));
+  var XminYmin = new THREE.Vector2(xmin, ymin);
+  var XmaxYmin = new THREE.Vector2(xmax, ymin);
+  var XmaxYmax = new THREE.Vector2(xmax, ymax);
+  var XminYmax = new THREE.Vector2(xmin, ymax);
+  // console.log(points);
+  // console.log(XminYmin, XmaxYmin, XmaxYmax, XminYmax);
+  geometry.faceVertexUvs[0][faceIdx * 2] = [XminYmin, XminYmax, XmaxYmin];
+  geometry.faceVertexUvs[0][faceIdx * 2 + 1] = [XminYmax, XmaxYmax, XmaxYmin];
 };

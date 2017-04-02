@@ -2,6 +2,7 @@
 var CozmoBlockly = {};
 
 CozmoBlockly.textureMap = {};
+CozmoBlockly.maxAnisotropy = 0;
 CozmoBlockly.loadingManager = new THREE.LoadingManager();
 CozmoBlockly.textureLoader = new THREE.TextureLoader(CozmoBlockly.loadingManager);
 CozmoBlockly.cozmo2threejs = {};
@@ -215,13 +216,46 @@ CozmoBlockly.Crate = class extends CozmoBlockly.Dynamic {
 
 ///////////////// UTILS ////////////////////////
 
-CozmoBlockly.loadTexture = function(url) {
-  if (CozmoBlockly.textureMap[url]) {
-    return CozmoBlockly.textureMap[url];
+CozmoBlockly.loadTexture = function(url, onLoad) {
+  var elem = CozmoBlockly.textureMap[url];
+  if (elem) {
+    if (onLoad) {
+      if (elem.texture.image) {
+        onLoad(elem.texture);
+      } else {
+        elem.loaders.push(onLoad);
+      }
+    }
+    return elem.texture;
   }
-  var texture = CozmoBlockly.textureLoader.load(url + "?" + new Date().getTime());
-  CozmoBlockly.textureMap[url] = texture;
+
+  var loaders = [];
+  if (onLoad) {
+    loaders.push(onLoad);
+  }
+  // console.log('Adding onLoad for texture', url);
+  var texture = CozmoBlockly.textureLoader.load(url + "?" + new Date().getTime(), function(loadedTexture) {
+    // console.log('Running onLoad for texture', url);
+    // loadedTexture.anisotropy = CozmoBlockly.maxAnisotropy;
+    for (var i = 0; i < loaders.length; i++) {
+      loaders[i](loadedTexture);
+    }
+  });
+  CozmoBlockly.textureMap[url] = {
+    texture: texture,
+    loaders: loaders
+  };
   return texture;
+}
+
+CozmoBlockly.disposeTextures = function() {
+  for (var key in CozmoBlockly.textureMap) {
+    if (CozmoBlockly.textureMap.hasOwnProperty(key)) {
+      var texture = CozmoBlockly.textureMap[key].texture;
+      texture.dispose();
+    }
+  }
+  CozmoBlockly.textureMap = {};
 }
 
 // Cozmo2ThreeJs

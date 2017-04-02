@@ -74,6 +74,8 @@ function Cozmo3d() {
 
     that._renderer.setClearColor( 0x9999ff, 1 );
 
+    CozmoBlockly.maxAnisotropy = that._renderer.getMaxAnisotropy();
+
     // var light = new THREE.PointLight(0xffffff, 1, 10000);
     // light.position.set(-100,400,100);
     // that._scene.add(light);
@@ -210,13 +212,7 @@ function Cozmo3d() {
 
     that._effect = null;
 
-    for (var key in CozmoBlockly.textureMap) {
-      if (CozmoBlockly.textureMap.hasOwnProperty(key)) {
-        var texture = CozmoBlockly.textureMap[key];
-        texture.dispose();
-      }
-    }
-    CozmoBlockly.textureMap = {};
+    CozmoBlockly.disposeTextures();
 
     that._initialized = false;
   };
@@ -603,7 +599,9 @@ function Cozmo3d() {
       that._controls.enabled = true;
       that._camera.position.copy(that._nonArCameraPos);
       that._camera.quaternion.copy(that._nonArCameraQuat);
-      that._camera.up.set(0, 1, 0);
+      // that._camera.up.set(0, 1, 0);
+      var euler = that._calibrator.getRadians();
+      that._camera.up = new THREE.Vector3(0, 1, 0).applyEuler(euler);
 
       var canvas3d = document.getElementById('canvas_3d');
       $(canvas3d).width('100%');
