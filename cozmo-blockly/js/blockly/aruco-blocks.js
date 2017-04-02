@@ -47,10 +47,13 @@ Blockly.Blocks['aruco_character'] = {
   init: function() {
     this.appendDummyInput()
         .setAlign(Blockly.ALIGN_CENTRE)
-        .appendField("character for marker");
+        .appendField("marker");
     this.appendValueInput("ID")
         .setCheck("Number")
         .setAlign(Blockly.ALIGN_RIGHT);
+    this.appendDummyInput()
+        .appendField("as")
+        .appendField(new Blockly.FieldTextInput("character"), "ELEM_NAME");
     this.appendStatementInput("BODY");
     this.setInputsInline(true);
     this.setPreviousStatement(true);
@@ -63,8 +66,7 @@ Blockly.Blocks['aruco_character'] = {
 Blockly.Blocks['aruco_element'] = {
   init: function() {
     this.appendDummyInput()
-        .setAlign(Blockly.ALIGN_CENTRE)
-        .appendField("element");
+        .appendField(new Blockly.FieldTextInput("element"), "ELEM_NAME");
     this.appendValueInput("SIZE")
         .setCheck("Aruco_Size")
         .setAlign(Blockly.ALIGN_RIGHT)
@@ -76,7 +78,9 @@ Blockly.Blocks['aruco_element'] = {
     this.appendValueInput("COLOR")
         .setCheck("Colour")
         .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField("color");
+        .appendField("color")
+        // .setVisible(false);
+    this.appendStatementInput("BODY");
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setInputsInline(false);
@@ -126,5 +130,19 @@ Blockly.Blocks['aruco_element_move_by'] = {
     this.setInputsInline(true);
     this.setColour(Blockly.Blocks.cozmo.HUE);
     this.setTooltip('Moves element in any direction from the Origin (marker)');
+  }
+};
+
+Blockly.Blocks['aruco_element_color'] = {
+  init: function() {
+    this.appendValueInput("COLOR")
+        .setCheck("Colour")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("element color");
+    this.setInputsInline(true);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(Blockly.Blocks.cozmo.HUE);
+    this.setTooltip('Sets color of the element');
   }
 };

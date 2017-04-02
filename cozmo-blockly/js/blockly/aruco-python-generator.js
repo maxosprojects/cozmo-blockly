@@ -36,9 +36,19 @@ Blockly.Python['aruco_element'] = function(block) {
   }
   var size = Blockly.Python.valueToCode(block, 'SIZE', Blockly.Python.ORDER_NONE);
   var moveby = Blockly.Python.valueToCode(block, 'MOVE_BY', Blockly.Python.ORDER_NONE);
-  var color = Blockly.Python.valueToCode(block, 'COLOR', Blockly.Python.ORDER_NONE);
-  var element = '{"size": ' + size + ', "moveby": ' + moveby + ', "color": ' + color + '}';
-  var code = 'element = ' + element + '\ncharacter["elements"].append(element)\n';
+  var element = '{"size": ' + size + ', "moveby": ' + moveby + '}';
+  var branch = Blockly.Python.statementToCode(block, 'BODY');
+  branch = Blockly.Python.addLoopTrap(branch, block.id) || Blockly.Python.PASS;
+  var code = 'element = ' + element + '\n';
+  // This looks like not that bad hack compared to the one below (with regex)
+  code += 'if True:\n';
+  // // Unindent first line and then the rest
+  // var re = new RegExp(Blockly.Python.INDENT);
+  // branch = branch.replace(re, '');
+  // re = new RegExp('\n' + Blockly.Python.INDENT, 'g');
+  // branch = branch.replace(re, '\n');
+  code += branch;
+  code += 'character["elements"].append(element)\n';
   return code;
 };
 
@@ -56,4 +66,13 @@ Blockly.Python['aruco_element_move_by'] = function(block) {
   var z = Blockly.Python.getFloatOrVar(block, 'Z');
   var code = '{"mx": ' + x + ', "my": ' + y + ', "mz": ' + z + '}';
   return [code, Blockly.Python.ORDER_NONE];
+};
+
+Blockly.Python['aruco_element_color'] = function(block) {
+  if (!Blockly.Python.hasParent(block, 'aruco_element')) {
+    return '';
+  }
+  var color = Blockly.Python.valueToCode(block, 'COLOR', Blockly.Python.ORDER_NONE);
+  var code = 'element["color"] = ' + color + '\n';
+  return code;
 };
