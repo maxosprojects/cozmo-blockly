@@ -39,6 +39,31 @@ Blockly.Python['aruco_character_texture'] = function(block) {
   return code;
 };
 
+Blockly.Python['aruco_character_move_by'] = function(block) {
+  if (!Blockly.Python.hasParent(block, 'aruco_character')) {
+    return '';
+  }
+  var moveby = Blockly.Python.valueToCode(block, 'MOVE_BY', Blockly.Python.ORDER_NONE);
+  var code = 'character["moveby"] = ' + moveby + '\n';
+  return code;
+};
+
+Blockly.Python['aruco_rotate'] = function(block) {
+  if (!Blockly.Python.hasParent(block, 'aruco_character')) {
+    return '';
+  }
+  var pivot = Blockly.Python.valueToCode(block, 'PIVOT', Blockly.Python.ORDER_NONE);
+  var angles = Blockly.Python.valueToCode(block, 'ANGLES', Blockly.Python.ORDER_NONE);
+  var rotate = '{"pivot": ' + pivot + ', "angles": ' + angles + '}';
+  var code;
+  if (Blockly.Python.hasParent(block, 'aruco_element')) {
+    code = 'element["rotate"] = ' + rotate + '\n';
+  } else {
+    code = 'character["rotate"] = ' + rotate + '\n';
+  }
+  return code;
+};
+
 Blockly.Python['aruco_element'] = function(block) {
   if (!Blockly.Python.hasParent(block, 'aruco_character')) {
     return '';

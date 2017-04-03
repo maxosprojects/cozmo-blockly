@@ -238,14 +238,25 @@ class Aruco(object):
 			character["elements"] = []
 			return character
 
+		def updateCoords(obj, key):
+			obj[key]['mx'] *= 10
+			obj[key]['my'] *= 10
+			obj[key]['mz'] *= 10
+
 		for i in range(len(character["elements"])):
 			element = character["elements"][i]
 			element["size"]['width'] *= 10
 			element["size"]['depth'] *= 10
 			element["size"]['height'] *= 10
-			element["moveby"]['mx'] *= 10
-			element["moveby"]['my'] *= 10
-			element["moveby"]['mz'] *= 10
+			updateCoords(element, "moveby")
+			if "rotate" in element:
+				updateCoords(element["rotate"], "pivot")
+
+		if "moveby" in character:
+			updateCoords(character, "moveby")
+
+		if "rotate" in character:
+			updateCoords(character["rotate"], "pivot")
 
 		self._characters.add(character["id"])
 

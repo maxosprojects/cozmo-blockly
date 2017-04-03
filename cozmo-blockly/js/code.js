@@ -536,18 +536,37 @@ Code.init = function() {
   var toolboxXml = Blockly.Xml.textToDom(toolboxText);
 
   Code.workspace = Blockly.inject('content_blocks',
-      {grid:
-          {spacing: 25,
-           length: 3,
-           colour: '#ccc',
-           snap: true},
-       media: '../blockly/media/',
-       rtl: rtl,
-       toolbox: toolboxXml,
-       zoom:
-           {controls: true,
-            wheel: true}
-      });
+    {
+      grid: {
+        spacing: 25,
+        length: 3,
+        colour: '#ccc',
+        snap: true
+      },
+      media: '../blockly/media/',
+      rtl: rtl,
+      toolbox: toolboxXml,
+      zoom: {
+          controls: true,
+          wheel: false
+        }
+    });
+
+  Code.workspace.addChangeListener(function(evt) {
+    if (evt.element === 'click') {
+      var block = Code.workspace.getBlockById(evt.blockId);
+      if (block.type === 'aruco_element' || block.type === 'aruco_character') {
+        var lastTime = block.lastTimeClicked;
+        var now = new Date().getTime();
+        if (lastTime && now - lastTime < 500)  {
+          block.setCollapsed(!block.isCollapsed());
+          block.lastTimeClicked = 0;
+        } else {
+          block.lastTimeClicked = now;
+        }
+      }
+    }
+  });
 
   // Add to reserved word list: Local variables in execution environment (runJS)
   // and the infinite loop detection function.

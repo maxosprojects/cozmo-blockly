@@ -9,55 +9,87 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
     var root = new THREE.Object3D();
     var elements = character.elements;
 
+    function populateElements(texture, cMaterial) {
+      var container = new THREE.Object3D();
+      for (var i = 0; i < elements.length; i++) {
+        var elem = elements[i];
+        var elemT = elem.texture;
+        var size = elem.size;
+        var mesh;
+        if (elemT && texture) {
+          var mesh = createCuboid(size.width, size.height, size.depth, cMaterial);
+          var geometry = mesh.geometry;
+          geometry.faceVertexUvs[0] = [];
+          mapUv(geometry, texture, 0, elemT.left)
+          mapUv(geometry, texture, 1, elemT.right)
+          mapUv(geometry, texture, 2, elemT.top)
+          mapUv(geometry, texture, 3, elemT.bottom)
+          mapUv(geometry, texture, 4, elemT.front)
+          mapUv(geometry, texture, 5, elemT.back)
+        } else {
+          var colorStr = elem.color.replace('#', '');
+          var color = parseInt(colorStr, 16);
+          var elemMaterial = new THREE.MeshLambertMaterial( { color: color, side: THREE.FrontSide, transparent: true } );
+          materials.push(elemMaterial);
+          mesh = createCuboid(size.width, size.height, size.depth, elemMaterial);
+        }
+
+        var elemRotate = elem.rotate;
+        if (elemRotate) {
+          var pivot = elemRotate.pivot;
+          var angles = elemRotate.angles;
+          var newMesh = new THREE.Object3D();
+          container.add(newMesh);
+          translate(newMesh, pivot.mx, pivot.mz, pivot.my);
+          translate(mesh, -pivot.mx, -pivot.mz, -pivot.my);
+          newMesh.add(mesh);
+          rotate(newMesh, angles.mx, angles.mz, angles.my);
+          mesh = newMesh;
+        } else {
+          container.add(mesh);
+        }
+
+        var moveby = elem.moveby
+        translate(mesh, moveby.mx, moveby.mz, moveby.my);
+      }
+
+      var charRotate = character.rotate;
+      if (charRotate) {
+        var pivot = charRotate.pivot;
+        var angles = charRotate.angles;
+        var newContainer = new THREE.Object3D();
+        root.add(newContainer);
+        translate(newContainer, pivot.mx, pivot.mz, pivot.my);
+        translate(container, -pivot.mx, -pivot.mz, -pivot.my);
+        newContainer.add(container);
+        rotate(newContainer, angles.mx, angles.mz, angles.my);
+        container = newContainer;
+      } else {
+        root.add(container);
+      }
+
+      var charMoveby = character.moveby;
+      if (charMoveby) {
+        translate(container, charMoveby.mx, charMoveby.mz, charMoveby.my);
+      }
+    }
+
     var charT = character.texture;
-    var cMaterial;
     if (charT) {
       var tmpTxture = CozmoBlockly.loadTexture('custom-textures/' + charT + '.png', function(texture) {
         texture.magFilter = THREE.NearestFilter;
         texture.minFilter = THREE.NearestFilter;
 
-        cMaterial = new THREE.MeshBasicMaterial({
+        var cMaterial = new THREE.MeshBasicMaterial({
             transparent: true,
             map: texture
         });
         materials.push(cMaterial);
 
-        for (var i = 0; i < elements.length; i++) {
-          var elem = elements[i];
-          var elemT = elem.texture;
-          var size = elem.size;
-          if (elemT) {
-            var mesh = createCuboid(size.width, size.height, size.depth, cMaterial);
-            var geometry = mesh.geometry;
-            geometry.faceVertexUvs[0] = [];
-            mapUv(geometry, texture, 0, elemT.left)
-            mapUv(geometry, texture, 1, elemT.right)
-            mapUv(geometry, texture, 2, elemT.top)
-            mapUv(geometry, texture, 3, elemT.bottom)
-            mapUv(geometry, texture, 4, elemT.front)
-            mapUv(geometry, texture, 5, elemT.back)
-
-            root.add(mesh);
-            var moveby = elem.moveby
-            translate(mesh, moveby.mx, moveby.mz, moveby.my);
-          }
-        }
+        populateElements(texture, cMaterial);
       });
     } else {
-      for (var i = 0; i < elements.length; i++) {
-        var elem = elements[i];
-        var size = elem.size;
-        var mesh;
-        var colorStr = elem.color.replace('#', '');
-        var color = parseInt(colorStr, 16);
-        var elemMaterial = new THREE.MeshLambertMaterial( { color: color, side: THREE.FrontSide, transparent: true } );
-        materials.push(elemMaterial);
-        mesh = createCuboid(size.width, size.height, size.depth, elemMaterial);
-
-        root.add(mesh);
-        var moveby = elem.moveby
-        translate(mesh, moveby.mx, moveby.mz, moveby.my);
-      }
+      populateElements();
     }
 
     this.mesh = root;
@@ -95,6 +127,15 @@ function translateZ(obj, distance) {
 
 function translate(obj, x, y, z) {
   obj.position.add(new THREE.Vector3(x, y, z));
+};
+
+function deg2rad(deg) {
+  return deg * Math.PI / 180;
+};
+
+function rotate(obj, x, y, z) {
+  var euler = new THREE.Euler(deg2rad(x), deg2rad(y), deg2rad(z), 'XYZ');
+  obj.setRotationFromEuler(euler);
 };
 
 function createCuboid(w, h, d, material) {

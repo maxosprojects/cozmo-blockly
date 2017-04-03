@@ -75,6 +75,40 @@ Blockly.Blocks['aruco_character_texture'] = {
   }
 };
 
+Blockly.Blocks['aruco_character_move_by'] = {
+  init: function() {
+    this.appendValueInput("MOVE_BY")
+        .setCheck("Aruco_Move_By")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("move character by");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setInputsInline(false);
+    this.setColour(Blockly.Blocks.aruco.markerHUE);
+    this.setTooltip('Moves character in any direction from the origin (marker)');
+  }
+};
+
+Blockly.Blocks['aruco_rotate'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("rotate");
+    this.appendValueInput("PIVOT")
+        .setCheck("Aruco_Move_By")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("pivot");
+    this.appendValueInput("ANGLES")
+        .setCheck("Aruco_Move_By")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("angles");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setInputsInline(false);
+    this.setColour(Blockly.Blocks.aruco.markerHUE);
+    this.setTooltip('Rotates character or element (depends on block location)');
+  }
+};
+
 Blockly.Blocks['aruco_element'] = {
   init: function() {
     this.appendDummyInput()
