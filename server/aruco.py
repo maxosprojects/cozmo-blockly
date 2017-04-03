@@ -104,11 +104,27 @@ class Aruco(object):
 		gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 		(ids, corners) = self.detectAruco(gray)
 
+		def populateNotVisibleNotSeen(ret, visible):
+			# Notify about markers that have not been seen
+			notSeen = self._characters.difference(self._seen)
+			for id in notSeen:
+				marker = ArucoMarker(id, [0, 0, 0], [0, 0, 0, 0], seen=False, visible=False)
+				ret.append(marker.toDict())
+
+			# Notify about markers that are not visible in this frame
+			notVisible = self._characters.difference(notSeen, visible)
+			for id in notVisible:
+				marker = ArucoMarker(id, [0, 0, 0], [0, 0, 0, 0], seen=True, visible=False)
+				ret.append(marker.toDict())
+
+			return ret
+
 		if ids is None:
+			ret = populateNotVisibleNotSeen(list(), set())
 			if withFrame:
-				return list(), self._prepareFrame(frame)
+				return ret, self._prepareFrame(frame)
 			else:
-				return list(), None
+				return ret, None
 
 		positions, rotations = self.estimatePose(corners)
 
@@ -182,17 +198,7 @@ class Aruco(object):
 			marker = ArucoMarker(id, (pos[:3] * 1000).tolist(), list(quat), arPos, list(arQuat))
 			ret.append(marker.toDict())
 
-		# Notify about markers that have not been seen
-		notSeen = self._characters.difference(self._seen)
-		for id in notSeen:
-			marker = ArucoMarker(id, [0, 0, 0], [0, 0, 0, 0], seen=False, visible=False)
-			ret.append(marker.toDict())
-
-		# Notify about markers that are not visible in this frame
-		notVisible = self._characters.difference(notSeen, visible)
-		for id in notVisible:
-			marker = ArucoMarker(id, [0, 0, 0], [0, 0, 0, 0], seen=True, visible=False)
-			ret.append(marker.toDict())
+		populateNotVisibleNotSeen(ret, visible)
 
 		if withFrame:
 			return ret, self._prepareFrame(frame, ids, corners, rotations, positions)
