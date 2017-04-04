@@ -80,12 +80,29 @@ Blockly.Blocks['aruco_character_move_by'] = {
     this.appendValueInput("MOVE_BY")
         .setCheck("Aruco_Move_By")
         .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField("move character by");
+        .appendField("translate character");
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setInputsInline(false);
     this.setColour(Blockly.Blocks.aruco.markerHUE);
-    this.setTooltip('Moves character in any direction from the origin (marker)');
+    this.setTooltip('Translates character in any direction from the origin (marker). Applied after character rotation, if any');
+  }
+};
+
+Blockly.Blocks['aruco_character_scale'] = {
+  init: function() {
+    this.appendValueInput("SCALE")
+        .setCheck("Number")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("character scale");
+    this.appendDummyInput()
+        .setAlign(Blockly.ALIGN_LEFT)
+        .appendField("%");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setInputsInline(true);
+    this.setColour(Blockly.Blocks.aruco.markerHUE);
+    this.setTooltip('Scales character. Origin remains the same relative to the updated character (i.e. if it was the bottom, it remains the bottom');
   }
 };
 
@@ -105,7 +122,7 @@ Blockly.Blocks['aruco_rotate'] = {
     this.setNextStatement(true);
     this.setInputsInline(false);
     this.setColour(Blockly.Blocks.aruco.markerHUE);
-    this.setTooltip('Rotates character or element (depends on block location)');
+    this.setTooltip('Rotates character or element. Applied before translation, if any. Pivot point defines new Origin (for character that means the marker location)');
   }
 };
 
@@ -120,7 +137,7 @@ Blockly.Blocks['aruco_element'] = {
     this.appendValueInput("MOVE_BY")
         .setCheck("Aruco_Move_By")
         .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField("move by");
+        .appendField("translate");
     this.appendValueInput("COLOR")
         .setCheck("Colour")
         .setAlign(Blockly.ALIGN_RIGHT)
@@ -175,7 +192,7 @@ Blockly.Blocks['aruco_element_move_by'] = {
     this.setMovable(false);
     this.setInputsInline(true);
     this.setColour(Blockly.Blocks.aruco.paramsHUE);
-    this.setTooltip('Moves element in any direction from the Origin (marker)');
+    this.setTooltip('Translates element in any direction from the Origin');
   }
 };
 

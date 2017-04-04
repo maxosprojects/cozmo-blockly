@@ -93,13 +93,24 @@ function Cozmo3d() {
     // that._scene.add( lights[1] );
     // that._scene.add( lights[2] );
 
-    that._light = new THREE.DirectionalLight(0xffffff, 2);
-    that._light.position.set(100, 800, 1400);
-    var target = new THREE.Object3D();
-    target.position.set(0, -1000, 0);
-    that._scene.add(target);
+    that._light = new THREE.Object3D();
+
+    var light;
+    light = new THREE.PointLight(0xffffff, 0.7);
+    light.position.set(800, 0, 1400);
+    that._light.add(light);
+    light = new THREE.PointLight(0xffffff, 0.7);
+    light.position.set(-800, 0, -1400);
+    that._light.add(light);
+    light = new THREE.PointLight(0xffffff, 0.7);
+    light.position.set(800, 0, -1400);
+    that._light.add(light);
+    light = new THREE.PointLight(0xffffff, 0.7);
+    light.position.set(-800, 0, 1400);
+    that._light.add(light);
+
+    that._light.position.set(0, 800, 0);
     that._scene.add(that._light);
-    that._light.target = target;
 
     // that._scene.fog = new THREE.Fog( 0xffffff, 1, 5000 );
     // that._scene.fog.color.setHSL( 0.6, 0, 1 );
@@ -498,6 +509,9 @@ function Cozmo3d() {
       for (var i = 0; i < data.aruco.length; i++) {
         var markerData = data.aruco[i];
         var character = that._characters[markerData.id];
+        if (!character) {
+          return;
+        }
         // hack: overwrite position to not get into refactoring now
         if (that._arOn) {
           var arPos = markerData.arPos;
@@ -587,8 +601,7 @@ function Cozmo3d() {
       that._ground.visible = false;
       that._renderer.setClearColor( 0x000000, 0 );
 
-      that._light.position.set(100, 0, 400);
-      that._light.target.position.set(0, 1000, 0);
+      that._light.position.set(0, -800, 0);
 
       that._arOn = true;
     } else {
@@ -617,8 +630,7 @@ function Cozmo3d() {
       that._ground.visible = true;
       that._renderer.setClearColor( 0x9999ff, 1 );
 
-      that._light.position.set(100, 800, 1400);
-      that._light.target.position.set(0, -1000, 0);
+      that._light.position.set(0, 800, 0);
 
       that._arOn = false;
     }

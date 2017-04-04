@@ -72,6 +72,19 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
       if (charMoveby) {
         translate(container, charMoveby.mx, charMoveby.mz, charMoveby.my);
       }
+
+      var charScale = character.scale;
+      if (charScale) {
+        var scale = charScale / 100.0;
+        container.scale.set(scale, scale, scale);
+        // Precompute geometry (a questionable optimization). Requires moving things around
+        // container.traverse(function(obj) {
+        //   if (obj.geometry) {
+        //     // console.log(obj.geometry.scale);
+        //     obj.geometry.scale(scale, scale, scale);
+        //   }
+        // });
+      }
     }
 
     var charT = character.texture;
@@ -80,7 +93,7 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
         texture.magFilter = THREE.NearestFilter;
         texture.minFilter = THREE.NearestFilter;
 
-        var cMaterial = new THREE.MeshBasicMaterial({
+        var cMaterial = new THREE.MeshLambertMaterial({
             transparent: true,
             map: texture
         });

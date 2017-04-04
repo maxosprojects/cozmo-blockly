@@ -555,7 +555,7 @@ Code.init = function() {
   Code.workspace.addChangeListener(function(evt) {
     if (evt.element === 'click') {
       var block = Code.workspace.getBlockById(evt.blockId);
-      if (block.type === 'aruco_element' || block.type === 'aruco_character') {
+      if (block.type === 'aruco_element' || block.type === 'aruco_character' || block.type === 'aruco_element_texture') {
         var lastTime = block.lastTimeClicked;
         var now = new Date().getTime();
         if (lastTime && now - lastTime < 500)  {

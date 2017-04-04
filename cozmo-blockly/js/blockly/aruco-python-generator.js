@@ -48,6 +48,15 @@ Blockly.Python['aruco_character_move_by'] = function(block) {
   return code;
 };
 
+Blockly.Python['aruco_character_scale'] = function(block) {
+  if (!Blockly.Python.hasParent(block, 'aruco_character')) {
+    return '';
+  }
+  var scale = Blockly.Python.valueToCode(block, 'SCALE', Blockly.Python.ORDER_NONE);
+  var code = 'character["scale"] = ' + scale + '\n';
+  return code;
+};
+
 Blockly.Python['aruco_rotate'] = function(block) {
   if (!Blockly.Python.hasParent(block, 'aruco_character')) {
     return '';
