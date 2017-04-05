@@ -72,7 +72,7 @@ function Cozmo3d() {
     
     // that._renderer.sortObjects = false;
 
-    that._renderer.setClearColor( 0x9999ff, 1 );
+    that._renderer.setClearColor( 0xbfd1e5, 1 );
 
     CozmoBlockly.maxAnisotropy = that._renderer.getMaxAnisotropy();
 
@@ -93,23 +93,30 @@ function Cozmo3d() {
     // that._scene.add( lights[1] );
     // that._scene.add( lights[2] );
 
-    that._light = new THREE.Object3D();
+    // that._light = new THREE.Object3D();
 
-    var light;
-    light = new THREE.PointLight(0xffffff, 0.7);
-    light.position.set(800, 0, 1400);
-    that._light.add(light);
-    light = new THREE.PointLight(0xffffff, 0.7);
-    light.position.set(-800, 0, -1400);
-    that._light.add(light);
-    light = new THREE.PointLight(0xffffff, 0.7);
-    light.position.set(800, 0, -1400);
-    that._light.add(light);
-    light = new THREE.PointLight(0xffffff, 0.7);
-    light.position.set(-800, 0, 1400);
-    that._light.add(light);
+    // var light;
+    // light = new THREE.PointLight(0xffffff, 0.7);
+    // light.position.set(800, 0, 1400);
+    // that._light.add(light);
+    // light = new THREE.PointLight(0xffffff, 0.7);
+    // light.position.set(-800, 0, -1400);
+    // that._light.add(light);
+    // light = new THREE.PointLight(0xffffff, 0.7);
+    // light.position.set(800, 0, -1400);
+    // that._light.add(light);
+    // light = new THREE.PointLight(0xffffff, 0.7);
+    // light.position.set(-800, 0, 1400);
+    // that._light.add(light);
 
-    that._light.position.set(0, 800, 0);
+    var ambientLight = new THREE.AmbientLight( 0xa0a0a0 );
+    that._scene.add( ambientLight );
+
+    that._light = new THREE.DirectionalLight( 0xffffff, 1 );
+    // light.position.set( -500, -500, 5 );
+    // that._light.add(light);
+
+    that._light.position.set(500, 500, 500);
     that._scene.add(that._light);
 
     // that._scene.fog = new THREE.Fog( 0xffffff, 1, 5000 );
@@ -434,11 +441,11 @@ function Cozmo3d() {
     } else {
       that._floor.visible = false;
       if (!that._grid) {
-        that._grid = new THREE.GridHelper( 1000, 20, 0xeeeeee, 0x44ee77 );
+        that._grid = new THREE.GridHelper( 1000, 20, 0xeeeeee, 0x648CB7 );
         that._grid.position.x = 1;
         var fontLoader = new THREE.FontLoader();
         var font = fontLoader.parse(font_gentilis_bold);
-        var textMaterial = new THREE.MeshBasicMaterial( { color: 0x44ee77, side: THREE.FrontSide } );
+        var textMaterial = new THREE.MeshBasicMaterial( { color: 0x648CB7, side: THREE.FrontSide } );
         function makeAxis(text, x, z) {
           var mesh = makeText(text);
           mesh.position.x = x;
@@ -601,7 +608,7 @@ function Cozmo3d() {
       that._ground.visible = false;
       that._renderer.setClearColor( 0x000000, 0 );
 
-      that._light.position.set(0, -800, 0);
+      that._light.position.set(10, -100, 20);
 
       that._arOn = true;
     } else {
@@ -628,9 +635,9 @@ function Cozmo3d() {
       that._camera.updateProjectionMatrix();
 
       that._ground.visible = true;
-      that._renderer.setClearColor( 0x9999ff, 1 );
+      that._renderer.setClearColor( 0xbfd1e5, 1 );
 
-      that._light.position.set(0, 800, 0);
+      that._light.position.set(500, 500, 500);
 
       that._arOn = false;
     }
