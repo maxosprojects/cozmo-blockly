@@ -17,8 +17,15 @@ function Cozmo3d() {
   this._scene = null;
   this._camera = null;
   this._cameraOrthographic = null;
+  this._cameraAr = null;
+  this._lastCameraPos = [-500,450,500];
+  that._nonArAnaglyph = false;
+  that._anaglyph = false;
+  that._perspective = true;
+  that._nonArPerspective = true;
   this._controls = null;
-  this._calibrator = null;
+  this._beacons = null;
+  // this._calibrator = null;
   this._floor = null;
   this._light = null;
   this._ground = null;
@@ -36,14 +43,9 @@ function Cozmo3d() {
     'statics': [],
     'characters': []
   };
-  this._lastCameraPos = [-500,450,500];
-  this.camUpdate = function(){};
-  this._nonArCameraPos = null;
-  this._nonArCameraQuat = null;
-  that._nonArAnaglyph = false;
-  that._nonArPerspective = true;
   this._arOn = false;
   this._defaultCamFov = 45;
+  this.camUpdate = function(){};
 
   this.init = function() {
     if (that._initialized) {
@@ -54,17 +56,6 @@ function Cozmo3d() {
     var canvas = document.getElementById("canvas_3d");
     var width = $(canvas).width();
     var height = $(canvas).height();
-    that._camera = new THREE.PerspectiveCamera( that._defaultCamFov, width/height, 0.1, 4000 );
-    that._cameraOrthographic = new THREE.OrthographicCamera( width / -2, width / 2, height / 2, height / -2, 0.1, 4000 );
-
-    var pos = this._lastCameraPos;
-    that._camera.position.set(pos[0], pos[1], pos[2]);
-    that._cameraOrthographic.position.set(pos[0], pos[1], pos[2]);
-    // that._camera.focalLength = 3;
-    that._camera.lookAt(that._scene.position);
-    that._cameraOrthographic.lookAt(that._scene.position);
-    that._scene.add(that._camera);
-    that._scene.add(that._cameraOrthographic);
 
     that._renderer = new THREE.WebGLRenderer({canvas: canvas, antialias: true, alpha: true});
     that._renderer.setSize(width, height);
@@ -129,9 +120,9 @@ function Cozmo3d() {
     that._ground = new THREE.Object3D();
 
     // FLOOR
-    var floorTexture = CozmoBlockly.loadTexture( 'img/3d/grasslight-thin.jpg' );
+    var floorTexture = CozmoBlockly.loadTexture( 'img/3d/grass-minecraft.png' );
     floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping; 
-    floorTexture.repeat.set( 1, 10 );
+    floorTexture.repeat.set( 10, 10 );
     // var floorTexture = new THREE.Texture(document.getElementById('canvas_cam'));
     // that.camUpdate = function() {floorTexture.needsUpdate = true};
     var floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.FrontSide } );
@@ -141,6 +132,23 @@ function Cozmo3d() {
     that._floor.rotation.x = -Math.PI / 2;
     that._ground.add(that._floor);
     that._scene.add(that._ground);
+
+    that._camera = new THREE.PerspectiveCamera( that._defaultCamFov, width/height, 0.1, 4000 );
+    that._cameraOrthographic = new THREE.OrthographicCamera( width / -2, width / 2, height / 2, height / -2, 0.1, 4000 );
+    that._cameraAr = new THREE.PerspectiveCamera( that._defaultCamFov, width/height, 0.1, 4000 );
+
+    var pos = this._lastCameraPos;
+    that._camera.position.set(pos[0], pos[1], pos[2]);
+    that._cameraOrthographic.position.set(pos[0], pos[1], pos[2]);
+    // that._camera.focalLength = 3;
+    that._camera.lookAt(that._scene.position);
+    that._cameraOrthographic.lookAt(that._scene.position);
+    that._cameraAr.position.set(0, 0, 0);
+    that._cameraAr.lookAt(new THREE.Vector3(0, 100, 0));
+    that._cameraAr.up.set(0, 0, 1);
+    that._ground.add(that._camera);
+    that._ground.add(that._cameraOrthographic);
+    that._scene.add(that._cameraAr);
 
     // SKYBOX
     // var skyBoxGeometry = new THREE.BoxGeometry( 3000, 3000, 3000 );
@@ -185,7 +193,9 @@ function Cozmo3d() {
 
     that._setControls();
 
-    that._calibrator = new THREE.Calibrator(canvas);
+    that.updateBeacons();
+
+    // that._calibrator = new THREE.Calibrator(canvas);
 
     // var objectLoader = new THREE.ObjectLoader();
     // objectLoader.load("models/r2d2/r2-d2.json", function (obj) {
@@ -201,7 +211,7 @@ function Cozmo3d() {
     }
 
     that._unsetControls();
-    that._calibrator.dispose();
+    // that._calibrator.dispose();
 
     CozmoBlockly.loadingManager.onLoad = function() {};
 
@@ -210,12 +220,13 @@ function Cozmo3d() {
     that._lastCameraPos = camera.position.toArray();
     that._camera = null;
     that._cameraOrthographic = null;
+    that._cameraAr = null;
 
     that._renderer.dispose();
     that._renderer = null;
 
-    that.camUpdate = function(){};
     that._floor = null;
+    that._grid = null;
     that._ground = null;
 
     that._cozmo = null;
@@ -347,15 +358,15 @@ function Cozmo3d() {
 
   this._render = function () {
     that._controls.update()
-    if (that._calibrator.isDirty()) {
-      var euler = that._calibrator.getRadians();
-      var degrees = that._calibrator.getDegrees();
-      that._ground.setRotationFromEuler(euler);
-      that._camera.up = new THREE.Vector3(0, 1, 0).applyEuler(euler);
-      Code.adjustGround(-degrees.x, degrees.z, degrees.y);
-      that._dirty = true;
-      // console.log('rotating ground');
-    }
+    // if (that._calibrator.isDirty()) {
+    //   var euler = that._calibrator.getRadians();
+    //   var degrees = that._calibrator.getDegrees();
+    //   that._ground.setRotationFromEuler(euler);
+    //   that._camera.up = new THREE.Vector3(0, 1, 0).applyEuler(euler);
+    //   Code.adjustGround(-degrees.x, degrees.z, degrees.y);
+    //   that._dirty = true;
+    //   // console.log('rotating ground');
+    // }
 
     if (that._dirty) {
       var camera = that._perspective ? that._camera : that._cameraOrthographic;
@@ -364,7 +375,9 @@ function Cozmo3d() {
         that._gridNumbers[i].lookAt(camera.position);
       }
 
-      if (that._anaglyph) {
+      if (that._arOn) {
+        that._renderer.render(that._scene, that._cameraAr);
+      } else if (that._anaglyph) {
         that._effect.render(that._scene, camera);
       } else {
         that._renderer.render(that._scene, camera);
@@ -435,7 +448,7 @@ function Cozmo3d() {
   this._setGrid = function() {
     if (!that._gridOn) {
       if (that._grid) {
-        that._ground.remove(that._grid);
+        that._grid.visible = false;
       }
       that._floor.visible = true;
     } else {
@@ -487,8 +500,9 @@ function Cozmo3d() {
         addNumbers(500, null);
         makeAxis("X", -500, -500);
         makeAxis("Y", 500, 500);
+        that._ground.add(that._grid);
       }
-      that._ground.add(that._grid);
+      that._grid.visible = true;
     }
   };
 
@@ -507,11 +521,13 @@ function Cozmo3d() {
     } else if (data.setCubeModel) {
       var mod = data.setCubeModel;
       that.setCubeModel(mod.model, mod.cubeNum);
-    } else if (data.arInitData) {
-      console.log('Received arInitData', data.arInitData);
-      that._arPos = data.arInitData.pos;
-      that._arRot = data.arInitData.rot;
-      that._arFov = data.arInitData.fov;
+    } else if (data.beacons) {
+      // console.log('Received beacons', data.beacons);
+      // that._arPos = data.arInitData.pos;
+      // that._arRot = data.arInitData.rot;
+      // that._arFov = data.arInitData.fov;
+      that._beacons = data.beacons;
+      that.updateBeacons();
     } else if (data.aruco) {
       for (var i = 0; i < data.aruco.length; i++) {
         var markerData = data.aruco[i];
@@ -521,16 +537,17 @@ function Cozmo3d() {
         }
         // hack: overwrite position to not get into refactoring now
         if (that._arOn) {
-          var arPos = markerData.arPos;
-          // markerData.pos = arPos;
-          markerData.rot = markerData.arRot;
+          // markerData.rot = markerData.arRot;
+          // var arPos = markerData.arPos;
+          markerData.rot = markerData.rot;
+          var arPos = markerData.pos;
           var posVec = new THREE.Vector3(arPos[0], arPos[1], arPos[2]);
           var length = posVec.length();
           var canvasCam = document.getElementById('canvas_cam');
           var width = canvasCam.width;
           var height = canvasCam.height;
           posVec = new THREE.Vector3((arPos[3] / width) * 2 - 1, (arPos[4] / height) * 2 - 1, 0.5);
-          posVec.unproject(that._camera);
+          posVec.unproject(that._cameraAr);
           posVec.setLength(length);
           markerData.pos = [posVec.x, posVec.z, posVec.y];
         }
@@ -557,6 +574,43 @@ function Cozmo3d() {
     that._cubes[num-1] = instance;
   };
 
+  this.updateBeacons = function() {
+    if (!that._initialized || !that._beacons || that._beacons.length < 3) {
+      return;
+    }
+    var vectors = [];
+    for (var key in that._beacons) {
+      if (that._beacons.hasOwnProperty(key)) {
+        var beacon = that._beacons[key];
+        var pos = beacon['pos'];
+        vectors.push(new THREE.Vector3(pos[0], pos[2], pos[1]));
+      }
+    }
+    var side1 = new THREE.Vector3().subVectors(vectors[0], vectors[1]);
+    var side2 = new THREE.Vector3().subVectors(vectors[0], vectors[2]);
+    var normal = side1.cross(side2);
+    that._ground.lookAt(normal);
+    that._ground.rotation.x += Math.PI;
+    // var quats = [];
+    // for (var key in that._beacons) {
+    //   if (that._beacons.hasOwnProperty(key)) {
+    //     var beacon = that._beacons[key];
+    //     var rot = CozmoBlockly.aruco2threejs.rotation(beacon['rot']);
+    //     var quat = new THREE.Quaternion(rot[0], rot[1], rot[2], rot[3]);
+    //     quats.push(quat);
+    //   }
+    // }
+    var midPos = vectors[0];
+    // var midQuat = quats[0];
+    for (var i = 1; i < vectors.length; i++) {
+      midPos.lerp(vectors[i], 0.5);
+      // midQuat.slerp(quats[i], 0.5);
+    }
+    // that._ground.setRotationFromQuaternion(midQuat);
+    that._ground.position.copy(midPos);
+    that._renderOnce();
+  };
+
   this.arOn = function(on) {
     if (!that._initialized) {
       return;
@@ -572,8 +626,6 @@ function Cozmo3d() {
       that._perspective = true;
 
       that._controls.enabled = false;
-      that._nonArCameraPos = that._camera.position.clone();
-      that._nonArCameraQuat = that._camera.quaternion.clone();
 
       var canvasCam = document.getElementById('canvas_cam');
       var canvas3d = document.getElementById('canvas_3d');
@@ -581,8 +633,11 @@ function Cozmo3d() {
       $(canvas3d).height(canvasCam.height);
       var width = $(canvas3d).width();
       var height = $(canvas3d).height();
-      that._camera.aspect = width / height;
+      that._cameraAr.aspect = width / height;
       that._renderer.setSize(width, height);
+      // that._camera.fov = that._defaultCamFov;
+
+      that._cameraAr.updateProjectionMatrix();
 
       // var arPosVec = new THREE.Vector3(that._arPos[0], that._arPos[2], that._arPos[1]);
       // var vec = arPosVec.clone();
@@ -598,12 +653,7 @@ function Cozmo3d() {
 
       // that._camera.lookAt(that._scene)
 
-      that._camera.position.set(0, 0, 0);
-      that._camera.lookAt(new THREE.Vector3(0, 100, 0));
-      that._camera.up.set(0, 0, 1);
       // that._camera.fov = that._arFov.y;
-
-      that._camera.updateProjectionMatrix();
 
       that._ground.visible = false;
       that._renderer.setClearColor( 0x000000, 0 );
@@ -613,15 +663,12 @@ function Cozmo3d() {
       that._arOn = true;
     } else {
       that._anaglyph = that._nonArAnaglyph;
-
       that._perspective = that._nonArPerspective;
 
       that._controls.enabled = true;
-      that._camera.position.copy(that._nonArCameraPos);
-      that._camera.quaternion.copy(that._nonArCameraQuat);
       // that._camera.up.set(0, 1, 0);
-      var euler = that._calibrator.getRadians();
-      that._camera.up = new THREE.Vector3(0, 1, 0).applyEuler(euler);
+      // var euler = that._calibrator.getRadians();
+      // that._camera.up = new THREE.Vector3(0, 1, 0).applyEuler(euler);
 
       var canvas3d = document.getElementById('canvas_3d');
       $(canvas3d).width('100%');

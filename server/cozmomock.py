@@ -47,23 +47,22 @@ class CozmoBot:
 
 	def feedRobotDataInThread(self):
 		print('Starting data feed')
-		arInitDataSent = False
+		beaconsSent = False
 		while True:
-
-			if not arInitDataSent:
-				arInitData = self._aruco.getArInitData()
-				if not arInitData is None:
-					data = {
-						'arInitData': arInitData
-					}
-					self._wsClient.send(json.dumps(data))
-					arInitDataSent = True
-
 			markers, frameBuf = self._aruco.getData(True)
 			data = {
 				'aruco': markers
 			}
 			self._wsClient.send(json.dumps(data))
+
+			if not beaconsSent:
+				beacons = self._aruco.getBeacons()
+				if not beacons is None:
+					data = {
+						'beacons': beacons
+					}
+					self._wsClient.send(json.dumps(data))
+					beaconsSent = True
 
 			# Send Aruco image
 			if not frameBuf is None:
