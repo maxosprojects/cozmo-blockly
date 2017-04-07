@@ -303,7 +303,7 @@ class Aruco(object):
 	# 		return data
 
 	def getBeacons(self):
-		if len(self._beacons) > 2:
+		if len(self._beacons) > 3:
 			return self._beacons
 		else:
 			return None

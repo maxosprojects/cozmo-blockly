@@ -575,22 +575,41 @@ function Cozmo3d() {
   };
 
   this.updateBeacons = function() {
-    if (!that._initialized || !that._beacons || that._beacons.length < 3) {
+    if (!that._initialized || !that._beacons) {
+      return;
+    }
+    var cnt = 0;
+    for (var i = 1; i < 5; i++) {
+      if (that._beacons[i]) {
+        cnt++;
+      }
+    }
+    if (cnt < 4) {
       return;
     }
     var vectors = [];
-    for (var key in that._beacons) {
-      if (that._beacons.hasOwnProperty(key)) {
-        var beacon = that._beacons[key];
-        var pos = beacon['pos'];
-        vectors.push(new THREE.Vector3(pos[0], pos[2], pos[1]));
-      }
+    for (var i = 1; i < 5; i++) {
+      var beacon = that._beacons[i];
+      var pos = beacon['pos'];
+      var vec = new THREE.Vector3(pos[0], pos[2], pos[1]);
+      vectors.push(vec);
     }
-    var side1 = new THREE.Vector3().subVectors(vectors[0], vectors[1]);
-    var side2 = new THREE.Vector3().subVectors(vectors[0], vectors[2]);
-    var normal = side1.cross(side2);
-    that._ground.lookAt(normal);
-    that._ground.rotation.x += Math.PI;
+
+    that._ground.position.set(0, 0, 0);
+
+    var side1, side2;
+    side1 = new THREE.Vector3().subVectors(vectors[0], vectors[1]);
+    side2 = new THREE.Vector3().subVectors(vectors[0], vectors[2]);
+    side1.cross(side2);
+    var normal1 = side1.clone();
+    side1 = new THREE.Vector3().subVectors(vectors[3], vectors[1]);
+    side2 = new THREE.Vector3().subVectors(vectors[3], vectors[2]);
+    side1.cross(side2);
+    var normal2 = side1.clone();
+    normal1.lerp(normal2, 0.5);
+    that._ground.lookAt(normal1);
+    that._ground.rotation.z += Math.PI;
+
     // var quats = [];
     // for (var key in that._beacons) {
     //   if (that._beacons.hasOwnProperty(key)) {
@@ -600,14 +619,37 @@ function Cozmo3d() {
     //     quats.push(quat);
     //   }
     // }
-    var midPos = vectors[0];
+
+    // var groundAxes = new THREE.AxisHelper(20);
+    // that._ground.add(groundAxes);
+    // var arrow = new THREE.ArrowHelper(normal2.normalize(), new THREE.Vector3(), 200, 0xffff00);
+    // that._scene.add(arrow);
+    // var sphere = new THREE.SphereGeometry(10, 64, 64);
+    // var obj;
+    // obj = new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( {color: 0xffff00} ) );
+    // obj.position.copy(vectors[0]);
+    // that._scene.add( obj );
+    // obj = new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( {color: 0xffff00} ) );
+    // obj.position.copy(vectors[1]);
+    // that._scene.add( obj );
+    // obj = new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( {color: 0xffff00} ) );
+    // obj.position.copy(vectors[2]);
+    // that._scene.add( obj );
+    // obj = new THREE.Mesh( sphere, new THREE.MeshBasicMaterial( {color: 0xffff00} ) );
+    // obj.position.copy(vectors[3]);
+    // that._scene.add( obj );
+
+    var midPos = vectors[0].clone();
     // var midQuat = quats[0];
     for (var i = 1; i < vectors.length; i++) {
-      midPos.lerp(vectors[i], 0.5);
+      // midPos.lerp(vectors[i], 0.5);
+      midPos.add(vectors[i]);
       // midQuat.slerp(quats[i], 0.5);
     }
+    midPos.divideScalar(4);
     // that._ground.setRotationFromQuaternion(midQuat);
     that._ground.position.copy(midPos);
+
     that._renderOnce();
   };
 

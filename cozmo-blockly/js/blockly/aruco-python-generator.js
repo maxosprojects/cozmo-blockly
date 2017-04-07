@@ -91,7 +91,7 @@ Blockly.Python['aruco_element'] = function(block) {
   // re = new RegExp('\n' + Blockly.Python.INDENT, 'g');
   // branch = branch.replace(re, '\n');
   code += branch;
-  code += 'if "color" in element or "texture" in element:\n'
+  code += 'if "color" in element or ("texture" in element and "texture" in character):\n'
   code += Blockly.Python.INDENT + 'character["elements"].append(element)\n';
   return code;
 };
