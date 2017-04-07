@@ -1,2 +1,3 @@
    <script src="../blockly/blocks_compressed.js"></script>
    <script src="../blockly/python_compressed.js"></script>
+   <script src="../blockly/javascript_compressed.js"></script>

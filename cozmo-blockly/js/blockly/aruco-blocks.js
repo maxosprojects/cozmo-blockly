@@ -115,7 +115,7 @@ Blockly.Blocks['aruco_rotate'] = {
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField("pivot");
     this.appendValueInput("ANGLES")
-        .setCheck("Aruco_Move_By")
+        .setCheck("Aruco_Angles")
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField("angles");
     this.setPreviousStatement(true);
@@ -193,6 +193,28 @@ Blockly.Blocks['aruco_element_move_by'] = {
     this.setInputsInline(true);
     this.setColour(Blockly.Blocks.aruco.paramsHUE);
     this.setTooltip('Translates element in any direction from the Origin');
+  }
+};
+
+Blockly.Blocks['aruco_angles'] = {
+  init: function() {
+    this.appendValueInput("X")
+        .setCheck("Number")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("x");
+    this.appendValueInput("Y")
+        .setCheck("Number")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("y");
+    this.appendValueInput("Z")
+        .setCheck("Number")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("z");
+    this.setOutput(true, "Aruco_Angles");
+    this.setMovable(false);
+    this.setInputsInline(true);
+    this.setColour(Blockly.Blocks.aruco.paramsHUE);
+    this.setTooltip('Rotations');
   }
 };
 

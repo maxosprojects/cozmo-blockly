@@ -533,7 +533,7 @@ function Cozmo3d() {
         var markerData = data.aruco[i];
         var character = that._characters[markerData.id];
         if (!character) {
-          return;
+          continue;
         }
         // hack: overwrite position to not get into refactoring now
         if (that._arOn) {

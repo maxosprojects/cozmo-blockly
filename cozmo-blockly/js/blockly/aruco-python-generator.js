@@ -112,6 +112,14 @@ Blockly.Python['aruco_element_move_by'] = function(block) {
   return [code, Blockly.Python.ORDER_NONE];
 };
 
+Blockly.Python['aruco_angles'] = function(block) {
+  var x = Blockly.Python.getFloatOrVar(block, 'X');
+  var y = Blockly.Python.getFloatOrVar(block, 'Y');
+  var z = Blockly.Python.getFloatOrVar(block, 'Z');
+  var code = '{"mx": ' + x + ', "my": ' + y + ', "mz": ' + z + '}';
+  return [code, Blockly.Python.ORDER_NONE];
+};
+
 Blockly.Python['aruco_element_color'] = function(block) {
   if (!Blockly.Python.hasParent(block, 'aruco_element')) {
     return '';

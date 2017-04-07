@@ -51,7 +51,7 @@ class Aruco(object):
 		self._width = 1280
 		self._height = 720
 		self._markerSize = 0.03
-		self._characters = set()
+		self._characters = set(range(1, 36))
 		self._seen = set()
 		self._aruco_lib = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_250)
 		self._aruco_params = cv2.aruco.DetectorParameters_create()

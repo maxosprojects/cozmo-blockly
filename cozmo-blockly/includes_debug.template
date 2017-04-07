@@ -15,3 +15,12 @@
   <script src="../blockly/generators/python/colour.js"></script>
   <script src="../blockly/generators/python/variables.js"></script>
   <script src="../blockly/generators/python/procedures.js"></script>
+  <script src="../blockly/generators/javascript.js"></script>
+  <script src="../blockly/generators/javascript/logic.js"></script>
+  <script src="../blockly/generators/javascript/loops.js"></script>
+  <script src="../blockly/generators/javascript/math.js"></script>
+  <script src="../blockly/generators/javascript/text.js"></script>
+  <script src="../blockly/generators/javascript/lists.js"></script>
+  <script src="../blockly/generators/javascript/colour.js"></script>
+  <script src="../blockly/generators/javascript/variables.js"></script>
+  <script src="../blockly/generators/javascript/procedures.js"></script>

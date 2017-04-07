@@ -69,6 +69,10 @@ Blockly.FieldAngle.OFFSET = 0;
 Blockly.FieldAngle.WRAP = 360;
 
 Blockly.Python.STATEMENT_PREFIX = 'bot.highlight(%1)\n';
+Blockly.JavaScript.STATEMENT_PREFIX = 'Code.workspace.highlightBlock(%1);\n';
+// Add to reserved word list: Local variables in execution environment (runJS)
+// and the infinite loop detection function.
+Blockly.JavaScript.addReservedWords('code, robot, bot, timeouts, checkTimeout');
 Blockly.Python.addReservedWords('cozmo, robot, bot, tapped_cube');
 
 var defaultXml =
@@ -235,7 +239,7 @@ Code.LANG = Code.getLang();
  * @private
  */
 // Code.TABS_ = ['blocks', 'javascript', 'php', 'python', 'dart', 'lua', 'xml'];
-Code.TABS_ = ['blocks', 'camera', '3d', 'ar', 'python', 'xml'];
+Code.TABS_ = ['blocks', 'camera', '3d', 'ar', 'python', 'javascript', 'xml'];
 
 Code.selected = 'blocks';
 
@@ -568,10 +572,6 @@ Code.init = function() {
     }
   });
 
-  // Add to reserved word list: Local variables in execution environment (runJS)
-  // and the infinite loop detection function.
-  // Blockly.JavaScript.addReservedWords('code,timeouts,checkTimeout');
-
   Code.loadBlocks(defaultXml);
 
   if ('BlocklyStorage' in window) {
@@ -685,11 +685,12 @@ Code.runJS = function() {
     }
   };
   var code = Blockly.JavaScript.workspaceToCode(Code.workspace);
+  code += 'on_start();\n';
   Blockly.JavaScript.INFINITE_LOOP_TRAP = null;
   try {
     eval(code);
   } catch (e) {
-    alert(MSG['badCode'].replace('%1', e));
+    console.error(MSG['badCode'].replace('%1', e));
   }
 };
 
@@ -723,10 +724,20 @@ Code.sendCodeToUrl = function(urlToSendTo) {
 
   // Static objects are to be populated from the program every time.
   Code.cozmo3d.clearStatics();
+  // if (NONSECURE) {
+  //   code = Blockly.Python.workspaceToCode(Code.workspace);
+  // } else {
+  //   var xml = Blockly.Xml.workspaceToDom(Code.workspace);
+  //   code = Blockly.Xml.domToText(xml);
+  // }
+
+  var workspace = new Blockly.Workspace();
+  var xml = Blockly.Xml.textToDom(defaultXml);
+  Blockly.Xml.domToWorkspace(xml, workspace);
   if (NONSECURE) {
-    code = Blockly.Python.workspaceToCode(Code.workspace);
+    code = Blockly.Python.workspaceToCode(workspace);
   } else {
-    var xml = Blockly.Xml.workspaceToDom(Code.workspace);
+    var xml = Blockly.Xml.workspaceToDom(workspace);
     code = Blockly.Xml.domToText(xml);
   }
 
@@ -747,6 +758,8 @@ Code.sendCodeToUrl = function(urlToSendTo) {
   };
 
   Code.startWs(onWsConnected);
+
+  Code.runJS();
 };
 
 Code.startCamera = function() {

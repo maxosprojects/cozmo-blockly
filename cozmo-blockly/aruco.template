@@ -1,0 +1,297 @@
+    <category name="Characters" colour="20">
+
+      <block type="aruco_character">
+        <value name="ID">
+          <shadow type="math_number">
+            <field name="NUM">5</field>
+          </shadow>
+        </value>
+        <statement name="BODY">
+          <block type="aruco_element">
+            <value name="SIZE">
+              <block type="aruco_element_size">
+                <value name="WIDTH">
+                  <shadow type="math_number">
+                    <field name="NUM">5</field>
+                  </shadow>
+                </value>
+                <value name="DEPTH">
+                  <shadow type="math_number">
+                    <field name="NUM">3</field>
+                  </shadow>
+                </value>
+                <value name="HEIGHT">
+                  <shadow type="math_number">
+                    <field name="NUM">10</field>
+                  </shadow>
+                </value>
+              </block>
+            </value>
+            <value name="MOVE_BY">
+              <block type="aruco_element_move_by">
+                <value name="X">
+                  <shadow type="math_number">
+                    <field name="NUM">0</field>
+                  </shadow>
+                </value>
+                <value name="Y">
+                  <shadow type="math_number">
+                    <field name="NUM">0</field>
+                  </shadow>
+                </value>
+                <value name="Z">
+                  <shadow type="math_number">
+                    <field name="NUM">0</field>
+                  </shadow>
+                </value>
+              </block>
+            </value>
+            <value name="COLOR">
+<!-- 
+              <shadow type="colour_picker">
+                <field name="COLOUR">#0074D9</field>
+              </shadow>
+ -->
+            </value>
+          </block>
+        </statement>
+      </block>
+
+      <block type="aruco_element_color">
+        <value name="COLOR">
+          <shadow type="colour_picker">
+            <field name="COLOUR">#0074D9</field>
+          </shadow>
+        </value>
+      </block>
+
+      <block type="aruco_character_texture">
+        <value name="TEXTURE">
+          <shadow type="text">
+            <field name="TEXT">texture-filename</field>
+          </shadow>
+        </value>
+      </block>
+
+      <block type="aruco_character_move_by">
+        <value name="MOVE_BY">
+          <block type="aruco_element_move_by">
+            <value name="X">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="Y">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="Z">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+          </block>
+        </value>
+      </block>
+
+      <block type="aruco_rotate">
+        <value name="PIVOT">
+          <block type="aruco_element_move_by">
+            <value name="X">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="Y">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="Z">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+          </block>
+        </value>
+        <value name="ANGLES">
+          <block type="aruco_angles">
+            <value name="X">
+              <shadow type="math_angle">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="Y">
+              <shadow type="math_angle">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="Z">
+              <shadow type="math_angle">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+          </block>
+        </value>
+      </block>
+
+      <block type="aruco_character_scale">
+        <value name="SCALE">
+          <shadow type="math_number">
+            <field name="NUM">100</field>
+          </shadow>
+        </value>
+      </block>
+
+      <block type="aruco_element_texture">
+        <value name="LEFT">
+          <block type="aruco_element_texture_params">
+            <value name="X1">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="Y1">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="X2">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="Y2">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+          </block>
+        </value>
+        <value name="FRONT">
+          <block type="aruco_element_texture_params">
+            <value name="X1">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="Y1">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="X2">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="Y2">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+          </block>
+        </value>
+        <value name="RIGHT">
+          <block type="aruco_element_texture_params">
+            <value name="X1">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="Y1">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="X2">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="Y2">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+          </block>
+        </value>
+        <value name="BACK">
+          <block type="aruco_element_texture_params">
+            <value name="X1">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="Y1">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="X2">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="Y2">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+          </block>
+        </value>
+        <value name="TOP">
+          <block type="aruco_element_texture_params">
+            <value name="X1">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="Y1">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="X2">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="Y2">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+          </block>
+        </value>
+        <value name="BOTTOM">
+          <block type="aruco_element_texture_params">
+            <value name="X1">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="Y1">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="X2">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="Y2">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+          </block>
+        </value>
+      </block>
+
+      <block type="aruco_adjust_angles">
+      </block>
+
+    </category>

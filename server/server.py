@@ -148,18 +148,24 @@ class CozmoBlockly(tornado.web.Application):
 		def get(self, path):
 			path = '../cozmo-blockly/' + path
 			loader = tornado.template.Loader(path, whitespace='all')
-			file = 'includes.template'
+			includesFile = 'includes.template'
 			if self.args.dev:
-				file = 'includes_debug.template'
-			t = loader.load(file)
+				includesFile = 'includes_debug.template'
+			t = loader.load(includesFile)
 			includes = t.generate()
+
+			blocksFile = 'cozmo.template'
+			if self.args.aruco:
+				blocksFile = 'aruco.template'
+			t = loader.load(blocksFile)
+			blocks = t.generate()
 
 			if self.args.nonsecure:
 				nonsec = 'true'
 			else:
 				nonsec = 'false'
 
-			self.render(path + 'index.html', includes=includes, name=self.args.name, nonsecure=nonsec)
+			self.render(path + 'index.html', includes=includes, blocks=blocks, name=self.args.name, nonsecure=nonsec)
 
 	def stop(self):
 		# with (yield self._lock.acquire()):
@@ -201,7 +207,7 @@ class CozmoBlockly(tornado.web.Application):
 			print('[Server] Running in debug mode')
 		app.listen(9090)
 
-		app._executor = CodeExecutor(args.nonsecure, args.nocozmo, args.aruco)
+		app._executor = CodeExecutor(args.nonsecure, args.aruco)
 		app._lock = locks.Lock()
 		app._wsCamera = None
 		app._ws3d = None
@@ -222,8 +228,6 @@ def main():
 						help='enable development mode (disables caching)')
 	parser.add_argument('--nonsecure', action="store_true",
 						help="run server in non-secure mode, which doesn't require nodejs but python code is accepted from the network for execution")
-	parser.add_argument('--nocozmo', action="store_true",
-						help="mock Cozmo")
 	parser.add_argument('--aruco', action="store_true",
 						help="enable Aruco markers detection")
 	args = parser.parse_args()

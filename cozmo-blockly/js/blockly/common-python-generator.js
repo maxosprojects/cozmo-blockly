@@ -21,6 +21,25 @@ Blockly.Python['math_angle'] = function(block) {
   return [code, order];
 };
 
+Blockly.Python['cozmo_on_start'] = function(block) {
+  // First, add a 'global' statement for every variable that is not shadowed by
+  // a local parameter.
+  var globals = [];
+  for (var i = 0, varName; varName = block.workspace.variableList[i]; i++) {
+    globals.push(Blockly.Python.variableDB_.getName(varName,
+      Blockly.Variables.NAME_TYPE));
+  }
+  globals = globals.length ? '  global ' + globals.join(', ') + '\n' : '';
+  var exitAtEnd = block.getFieldValue('EXIT_AT_END') === 'TRUE';
+  var branch = Blockly.Python.statementToCode(block, 'BODY');
+  branch = Blockly.Python.addLoopTrap(branch, block.id) || Blockly.Python.PASS;
+  var code = 'def on_start():\n' + globals + branch + '\n';
+  if (!exitAtEnd) {
+    code += Blockly.Python.INDENT + 'while True:\n' + Blockly.Python.INDENT + Blockly.Python.INDENT + 'time.sleep(1)'
+  }
+  return code;
+};
+
 ////////////////////////////////////
 // Utils
 ////////////////////////////////////
