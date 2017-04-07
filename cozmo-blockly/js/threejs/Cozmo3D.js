@@ -375,6 +375,13 @@ function Cozmo3d() {
         that._gridNumbers[i].lookAt(camera.position);
       }
 
+      for (var key in that._characters) {
+        if (that._characters.hasOwnProperty(key)) {
+          var instance = that._characters[key];
+          instance.animate();
+        }
+      }
+
       if (that._arOn) {
         that._renderer.render(that._scene, that._cameraAr);
       } else if (that._anaglyph) {
@@ -383,7 +390,7 @@ function Cozmo3d() {
         that._renderer.render(that._scene, camera);
       }
 
-      that._dirty = false;
+      // that._dirty = false;
     }
 
     that._animationId = requestAnimationFrame(that._render);

@@ -74,16 +74,36 @@ Blockly.JavaScript['aruco_rotate'] = function(block) {
   return code;
 };
 
+Blockly.JavaScript['aruco_animate'] = function(block) {
+  if (!Blockly.JavaScript.hasParent(block, 'aruco_character')) {
+    return '';
+  }
+  var pivot = Blockly.JavaScript.valueToCode(block, 'PIVOT', Blockly.JavaScript.ORDER_NONE);
+  var anglesStart = Blockly.JavaScript.valueToCode(block, 'ANGLES_START', Blockly.JavaScript.ORDER_NONE);
+  var anglesStop = Blockly.JavaScript.valueToCode(block, 'ANGLES_STOP', Blockly.JavaScript.ORDER_NONE);
+  var duration = Blockly.JavaScript.getFloatOrVar(block, 'DURATION');
+  var animate = '{"pivot": ' + pivot + ', "anglesStart": ' + anglesStart + ', "anglesStop": ' + anglesStop + ', "duration": ' + duration + '}';
+  var code;
+  if (Blockly.JavaScript.hasParent(block, 'aruco_element')) {
+    code = 'element["animate"] = ' + animate + ';\n';
+  } else {
+    code = 'character["animate"] = ' + animate + ';\n';
+  }
+  return code;
+};
+
 Blockly.JavaScript['aruco_element'] = function(block) {
   if (!Blockly.JavaScript.hasParent(block, 'aruco_character')) {
     return '';
   }
+  var name = block.getFieldValue('ELEM_NAME');
   var size = Blockly.JavaScript.valueToCode(block, 'SIZE', Blockly.JavaScript.ORDER_NONE);
   var moveby = Blockly.JavaScript.valueToCode(block, 'MOVE_BY', Blockly.JavaScript.ORDER_NONE);
-  var element = '{"size": ' + size + ', "moveby": ' + moveby + '}';
+  var element = '{"name": "' + name + '", "size": ' + size + ', "moveby": ' + moveby + '}';
   var branch = Blockly.JavaScript.statementToCode(block, 'BODY');
   branch = Blockly.JavaScript.addLoopTrap(branch, block.id) || Blockly.JavaScript.PASS;
-  var code = 'var element = ' + element + ';\n';
+  var code = '// element "' + name + '"\n';
+  code += 'var element = ' + element + ';\n';
   code += branch;
   code += 'if (element.color || (element.texture && character.texture)) {\n'
   code += Blockly.JavaScript.INDENT + 'character["elements"].push(element);\n';
@@ -134,7 +154,14 @@ Blockly.JavaScript['aruco_element_texture'] = function(block) {
   var back = Blockly.JavaScript.valueToCode(block, 'BACK', Blockly.JavaScript.ORDER_NONE);
   var top = Blockly.JavaScript.valueToCode(block, 'TOP', Blockly.JavaScript.ORDER_NONE);
   var bottom = Blockly.JavaScript.valueToCode(block, 'BOTTOM', Blockly.JavaScript.ORDER_NONE);
-  var params = '{"left": ' + left + ', "front": ' + front + ', "right": ' + right + ', "back": ' + back + ', "top": ' + top + ', "bottom": ' + bottom + '}';
+  var params = '{\n';
+  params += Blockly.JavaScript.INDENT + '"left": ' + left + ',\n';
+  params += Blockly.JavaScript.INDENT + '"front": ' + front + ',\n';
+  params += Blockly.JavaScript.INDENT + '"right": ' + right + ',\n';
+  params += Blockly.JavaScript.INDENT + '"back": ' + back + ',\n';
+  params += Blockly.JavaScript.INDENT + '"top": ' + top + ',\n';
+  params += Blockly.JavaScript.INDENT + '"bottom": ' + bottom + ',\n';
+  params += '}';
   var code = 'element["texture"] = ' + params + ';\n';
   return code;
 };

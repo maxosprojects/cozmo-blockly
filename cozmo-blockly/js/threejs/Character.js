@@ -1,4 +1,35 @@
 
+var Animation = class {
+  constructor(mesh, elemAnimate) {
+    this.startTime = null;
+    this.anglesStart = elemAnimate.anglesStart;
+    this.anglesStop = elemAnimate.anglesStop;
+    this.duration = elemAnimate.duration * 1000;
+    this.anglesDiff = {
+      x: (this.anglesStop.mx - this.anglesStart.mx) / this.duration,
+      y: (this.anglesStop.my - this.anglesStart.my) / this.duration,
+      z: (this.anglesStop.mz - this.anglesStart.mz) / this.duration
+    };
+    this.mesh = mesh;
+
+    this.next = function(currTime) {
+      if (!this.startTime) {
+        this.startTime = Date.now();
+        return;
+      }
+      var time = currTime - this.startTime;
+      if (time <= 0 || time > this.duration) {
+        return;
+      }
+      rotate(this.mesh,
+        this.anglesStart.mx + this.anglesDiff.x * time,
+        this.anglesStart.mz + this.anglesDiff.z * time,
+        this.anglesStart.my + this.anglesDiff.y * time);
+    };
+  };
+
+}
+
 CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
   constructor(scene, character) {
     super(scene, 0, 0, 0);
@@ -6,6 +37,7 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
     this.convertPose = CozmoBlockly.aruco2threejs.pose;
     this.id = character.id;
     var materials = [];
+    var animations = [];
     var root = new THREE.Object3D();
     var elements = character.elements;
 
@@ -39,18 +71,32 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
           var pivot = elemRotate.pivot;
           var angles = elemRotate.angles;
           var newMesh = new THREE.Object3D();
-          container.add(newMesh);
           translate(newMesh, pivot.mx, pivot.mz, pivot.my);
           translate(mesh, -pivot.mx, -pivot.mz, -pivot.my);
           newMesh.add(mesh);
           rotate(newMesh, angles.mx, angles.mz, angles.my);
           mesh = newMesh;
-        } else {
-          container.add(mesh);
         }
 
         var moveby = elem.moveby
         translate(mesh, moveby.mx, moveby.mz, moveby.my);
+
+        var elemAnimate = elem.animate;
+        if (elemAnimate) {
+          var pivot = elemAnimate.pivot;
+          var anglesStart = elemAnimate.anglesStart;
+          var anglesStop = elemAnimate.anglesStop;
+          var duration = elemAnimate.duration;
+          var newMesh = new THREE.Object3D();
+          translate(newMesh, pivot.mx, pivot.mz, pivot.my);
+          translate(mesh, -pivot.mx, -pivot.mz, -pivot.my);
+          newMesh.add(mesh);
+          animations.push(new Animation(newMesh, elemAnimate));
+
+          mesh = newMesh;
+        }
+
+        container.add(mesh);
       }
 
       var charRotate = character.rotate;
@@ -107,6 +153,14 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
 
     this.mesh = root;
 
+    this.animate = function() {
+      var now = Date.now();
+      for (var i = 0; i < animations.length; i++) {
+        var animation = animations[i];
+        animation.next(now);
+      }
+    };
+
     this.setOpacity = function(opacity) {
       if (opacity == 0) {
         this.mesh.visible = false;
@@ -117,7 +171,7 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
           material.opacity = opacity;
         }
       }
-    }
+    };
   }
 
 }
@@ -167,19 +221,34 @@ function mapUv(geometry, texture, faceIdx, points) {
   var imgHeight = texture.image.height;
   var tileUvW = 1/imgWidth;
   var tileUvH = 1/imgHeight;
-  var xmin = Math.min(x1, x2) * tileUvW;
-  var xmax = (Math.max(x1, x2) + 1) * tileUvW;
-  var ymin = (imgHeight - Math.min(y1, y2)) * tileUvH;
-  var ymax = (imgHeight - Math.max(y1, y2) - 1) * tileUvH;
-  var XminYmin = new THREE.Vector2(xmin, ymin);
-  var XmaxYmin = new THREE.Vector2(xmax, ymin);
-  var XmaxYmax = new THREE.Vector2(xmax, ymax);
-  var XminYmax = new THREE.Vector2(xmin, ymax);
+  // var xmin = Math.min(x1, x2) * tileUvW;
+  // var xmax = (Math.max(x1, x2) + 1) * tileUvW;
+  // var ymin = (imgHeight - Math.min(y1, y2)) * tileUvH;
+  // var ymax = (imgHeight - Math.max(y1, y2) - 1) * tileUvH;
+  // var XminYmin = new THREE.Vector2(xmin, ymin);
+  // var XmaxYmin = new THREE.Vector2(xmax, ymin);
+  // var XmaxYmax = new THREE.Vector2(xmax, ymax);
+  // var XminYmax = new THREE.Vector2(xmin, ymax);
+  // if (points.mirrored) {
+  //   geometry.faceVertexUvs[0][faceIdx * 2] = [XmaxYmin, XmaxYmax, XminYmin];
+  //   geometry.faceVertexUvs[0][faceIdx * 2 + 1] = [XmaxYmax, XminYmax, XminYmin];
+  // } else {
+  //   geometry.faceVertexUvs[0][faceIdx * 2] = [XminYmin, XminYmax, XmaxYmin];
+  //   geometry.faceVertexUvs[0][faceIdx * 2 + 1] = [XminYmax, XmaxYmax, XmaxYmin];
+  // }
+  var X1 = x1 * tileUvW;
+  var X2 = (x2 + 1) * tileUvW;
+  var Y1 = (imgHeight - y1) * tileUvH;
+  var Y2 = (imgHeight - y2 - 1) * tileUvH;
+  var X1Y1 = new THREE.Vector2(X1, Y1);
+  var X2Y1 = new THREE.Vector2(X2, Y1);
+  var X2Y2 = new THREE.Vector2(X2, Y2);
+  var X1Y2 = new THREE.Vector2(X1, Y2);
   if (points.mirrored) {
-    geometry.faceVertexUvs[0][faceIdx * 2] = [XmaxYmin, XmaxYmax, XminYmin];
-    geometry.faceVertexUvs[0][faceIdx * 2 + 1] = [XmaxYmax, XminYmax, XminYmin];
+    geometry.faceVertexUvs[0][faceIdx * 2] = [X2Y1, X2Y2, X1Y1];
+    geometry.faceVertexUvs[0][faceIdx * 2 + 1] = [X2Y2, X1Y2, X1Y1];
   } else {
-    geometry.faceVertexUvs[0][faceIdx * 2] = [XminYmin, XminYmax, XmaxYmin];
-    geometry.faceVertexUvs[0][faceIdx * 2 + 1] = [XminYmax, XmaxYmax, XmaxYmin];
+    geometry.faceVertexUvs[0][faceIdx * 2] = [X1Y1, X1Y2, X2Y1];
+    geometry.faceVertexUvs[0][faceIdx * 2 + 1] = [X1Y2, X2Y2, X2Y1];
   }
 };

@@ -126,6 +126,35 @@ Blockly.Blocks['aruco_rotate'] = {
   }
 };
 
+Blockly.Blocks['aruco_animate'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("animation")
+        .appendField(new Blockly.FieldTextInput("name"), "ANIM_NAME");
+    this.appendValueInput("PIVOT")
+        .setCheck("Aruco_Move_By")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("pivot");
+    this.appendValueInput("ANGLES_START")
+        .setCheck("Aruco_Angles")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("start angles");
+    this.appendValueInput("ANGLES_STOP")
+        .setCheck("Aruco_Angles")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("stop angles");
+    this.appendValueInput("DURATION")
+        .setCheck("Number")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("duration");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setInputsInline(false);
+    this.setColour(Blockly.Blocks.aruco.markerHUE);
+    this.setTooltip('Executes animation: rotating element or character around pivot point from "start angles" to "stop angles" for specifid duration');
+  }
+};
+
 Blockly.Blocks['aruco_element'] = {
   init: function() {
     this.appendDummyInput()

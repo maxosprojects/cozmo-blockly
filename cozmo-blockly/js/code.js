@@ -239,7 +239,8 @@ Code.LANG = Code.getLang();
  * @private
  */
 // Code.TABS_ = ['blocks', 'javascript', 'php', 'python', 'dart', 'lua', 'xml'];
-Code.TABS_ = ['blocks', 'camera', '3d', 'ar', 'python', 'javascript', 'xml'];
+// Code.TABS_ = ['blocks', 'camera', '3d', 'ar', 'python', 'javascript', 'xml'];
+Code.TABS_ = ['blocks', 'camera', '3d', 'ar', 'javascript', 'xml'];
 
 Code.selected = 'blocks';
 
@@ -559,7 +560,10 @@ Code.init = function() {
   Code.workspace.addChangeListener(function(evt) {
     if (evt.element === 'click') {
       var block = Code.workspace.getBlockById(evt.blockId);
-      if (block.type === 'aruco_element' || block.type === 'aruco_character' || block.type === 'aruco_element_texture') {
+      if (block.type === 'aruco_element'
+            || block.type === 'aruco_character'
+            || block.type === 'aruco_element_texture'
+            || block.type === 'aruco_animate') {
         var lastTime = block.lastTimeClicked;
         var now = new Date().getTime();
         if (lastTime && now - lastTime < 500)  {
@@ -758,8 +762,6 @@ Code.sendCodeToUrl = function(urlToSendTo) {
   };
 
   Code.startWs(onWsConnected);
-
-  Code.runJS();
 };
 
 Code.startCamera = function() {
@@ -811,6 +813,7 @@ Code.startWs = function(onConnectFunc) {
           Code.arOn(true);
         }
       }
+      Code.runJS();
     } else {
       Code.cozmo3d.onData(data);
     }
