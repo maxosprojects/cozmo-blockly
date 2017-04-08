@@ -2,9 +2,14 @@
 var Animation = class {
   constructor(mesh, elemAnimate) {
     this.startTime = null;
+    this.running = true;
+    this.local = elemAnimate.local;
+    this.andBack = elemAnimate.andBack;
+    this.loop = elemAnimate.loop;
     this.anglesStart = elemAnimate.anglesStart;
     this.anglesStop = elemAnimate.anglesStop;
-    this.duration = elemAnimate.duration * 1000;
+    this.duration = elemAnimate.duration > 0 ? elemAnimate.duration * 1000 : 1;
+    this.forward = true;
     this.anglesDiff = {
       x: (this.anglesStop.mx - this.anglesStart.mx) / this.duration,
       y: (this.anglesStop.my - this.anglesStart.my) / this.duration,
@@ -13,18 +18,52 @@ var Animation = class {
     this.mesh = mesh;
 
     this.next = function(currTime) {
+      if (!this.running) {
+        return;
+      }
       if (!this.startTime) {
         this.startTime = Date.now();
         return;
       }
-      var time = currTime - this.startTime;
-      if (time <= 0 || time > this.duration) {
-        return;
+      var time;
+      if (this.forward) {
+        time = currTime - this.startTime;
+      } else {
+        time = this.startTime + this.duration - currTime;
       }
-      rotate(this.mesh,
-        this.anglesStart.mx + this.anglesDiff.x * time,
-        this.anglesStart.mz + this.anglesDiff.z * time,
-        this.anglesStart.my + this.anglesDiff.y * time);
+      if (time > this.duration && this.forward) {
+        if (this.andBack) {
+          this.forward = false;
+          this.startTime = currTime;
+          return;
+        } else if (this.loop) {
+          this.startTime = currTime;
+        } else {
+          this.running = false;
+        }
+      } else if (time <= 0) {
+        if (this.loop) {
+          this.forward = true;
+          this.startTime = currTime;
+          return;
+        } else {
+          this.running = false;
+        }
+      }
+      var quat = new THREE.Quaternion();
+      var euler = new THREE.Euler(
+        deg2rad(this.anglesStart.mx + this.anglesDiff.x * time),
+        deg2rad(this.anglesStart.mz + this.anglesDiff.z * time),
+        deg2rad(this.anglesStart.my + this.anglesDiff.y * time),
+        'XYZ');
+      quat.setFromEuler(euler);
+      if (this.local) {
+        quat = this.mesh.originQuat.clone().multiply(quat);
+      } else {
+        quat = quat.multiply(this.mesh.originQuat);
+      }
+      this.mesh.quaternion.copy(quat);
+      // console.log(this.forward, time, quat);
     };
   };
 
@@ -71,10 +110,11 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
           var pivot = elemRotate.pivot;
           var angles = elemRotate.angles;
           var newMesh = new THREE.Object3D();
-          translate(newMesh, pivot.mx, pivot.mz, pivot.my);
-          translate(mesh, -pivot.mx, -pivot.mz, -pivot.my);
-          newMesh.add(mesh);
+          var pos = mesh.position;
+          translate(newMesh, pivot.mx + pos.x, pivot.mz + pos.y, pivot.my + pos.z);
+          mesh.position.set(-pivot.mx, -pivot.mz, -pivot.my);
           rotate(newMesh, angles.mx, angles.mz, angles.my);
+          newMesh.add(mesh);
           mesh = newMesh;
         }
 
@@ -88,11 +128,18 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
           var anglesStop = elemAnimate.anglesStop;
           var duration = elemAnimate.duration;
           var newMesh = new THREE.Object3D();
-          translate(newMesh, pivot.mx, pivot.mz, pivot.my);
-          translate(mesh, -pivot.mx, -pivot.mz, -pivot.my);
-          newMesh.add(mesh);
-          animations.push(new Animation(newMesh, elemAnimate));
 
+          var pos = mesh.position;
+          translate(newMesh, pivot.mx + pos.x, pivot.mz + pos.y, pivot.my + pos.z);
+          mesh.position.set(-pivot.mx, -pivot.mz, -pivot.my);
+
+          var quat = mesh.quaternion;
+          newMesh.originQuat = quat.clone();
+          rotate(mesh, 0, 0, 0);
+          newMesh.quaternion.copy(quat);
+
+          animations.push(new Animation(newMesh, elemAnimate));
+          newMesh.add(mesh);
           mesh = newMesh;
         }
 
@@ -114,11 +161,6 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
         root.add(container);
       }
 
-      var charMoveby = character.moveby;
-      if (charMoveby) {
-        translate(container, charMoveby.mx, charMoveby.mz, charMoveby.my);
-      }
-
       var charScale = character.scale;
       if (charScale) {
         var scale = charScale / 100.0;
@@ -130,6 +172,16 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
         //     obj.geometry.scale(scale, scale, scale);
         //   }
         // });
+      }
+
+      var charMoveby = character.moveby;
+      if (charMoveby) {
+        if (charScale) {
+          var scale = charScale / 100.0;
+          translate(container, charMoveby.mx * scale, charMoveby.mz * scale, charMoveby.my * scale);
+        } else {
+          translate(container, charMoveby.mx, charMoveby.mz, charMoveby.my);
+        }
       }
     }
 
@@ -176,21 +228,21 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
 
 }
 
-function translateOnAxis( obj, axis, distance ) {
-  obj.position.add( axis.multiplyScalar( distance ) );
-}
+// function translateOnAxis( obj, axis, distance ) {
+//   obj.position.add( axis.multiplyScalar( distance ) );
+// }
 
-function translateX(obj, distance) {
-  translateOnAxis( obj, new THREE.Vector3( 1, 0, 0 ), distance );
-};
+// function translateX(obj, distance) {
+//   translateOnAxis( obj, new THREE.Vector3( 1, 0, 0 ), distance );
+// };
 
-function translateY(obj, distance) {
-  translateOnAxis( obj, new THREE.Vector3( 0, 1, 0 ), distance );
-};
+// function translateY(obj, distance) {
+//   translateOnAxis( obj, new THREE.Vector3( 0, 1, 0 ), distance );
+// };
 
-function translateZ(obj, distance) {
-  translateOnAxis( obj, new THREE.Vector3( 0, 0, 1 ), distance );
-};
+// function translateZ(obj, distance) {
+//   translateOnAxis( obj, new THREE.Vector3( 0, 0, 1 ), distance );
+// };
 
 function translate(obj, x, y, z) {
   obj.position.add(new THREE.Vector3(x, y, z));

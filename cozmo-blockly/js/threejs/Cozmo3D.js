@@ -179,11 +179,11 @@ function Cozmo3d() {
     }
 
     // CHARACTERS
-    for (var i = 0; i < that._models.characters.length; i++) {
-      var instance = new CozmoBlockly.Character(that._scene, that._models.characters[i]);
-      instance.addToScene();
-      that._characters[character.id] = instance;
-    }
+    // for (var i = 0; i < that._models.characters.length; i++) {
+    //   var instance = new CozmoBlockly.Character(that._scene, that._models.characters[i]);
+    //   instance.addToScene();
+    //   that._characters[character.id] = instance;
+    // }
 
     that._effect = new THREE.AnaglyphEffect( that._renderer, width || 2, height || 2 );
 

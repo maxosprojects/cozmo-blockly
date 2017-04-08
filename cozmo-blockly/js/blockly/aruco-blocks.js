@@ -49,7 +49,7 @@ Blockly.Blocks['aruco_character'] = {
         .setAlign(Blockly.ALIGN_RIGHT);
     this.appendDummyInput()
         .appendField("as")
-        .appendField(new Blockly.FieldTextInput("character"), "ELEM_NAME");
+        .appendField(new Blockly.FieldTextInput("character"), "CHAR_NAME");
     this.appendStatementInput("BODY");
     this.setInputsInline(true);
     this.setPreviousStatement(true);
@@ -59,9 +59,27 @@ Blockly.Blocks['aruco_character'] = {
   }
 };
 
+Blockly.Blocks['aruco_character_static'] = {
+  init: function() {
+    this.appendDummyInput()
+        .setAlign(Blockly.ALIGN_CENTRE)
+        .appendField("static");
+    this.appendValueInput("CHAR_NAME")
+        .setCheck("String")
+        .setAlign(Blockly.ALIGN_RIGHT);
+    this.appendStatementInput("BODY");
+    this.setInputsInline(true);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(Blockly.Blocks.aruco.markerHUE);
+    this.setTooltip('Builds a static character');
+  }
+};
+
 Blockly.Blocks['aruco_character_texture'] = {
   init: function() {
     this.appendValueInput("TEXTURE")
+        .setCheck("String")
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField("set character texture");
     this.appendDummyInput()
@@ -131,6 +149,15 @@ Blockly.Blocks['aruco_animate'] = {
     this.appendDummyInput()
         .appendField("animation")
         .appendField(new Blockly.FieldTextInput("name"), "ANIM_NAME");
+    this.appendDummyInput()
+        .appendField(new Blockly.FieldCheckbox('FALSE'), 'LOCAL')
+        .appendField('local');
+    this.appendDummyInput()
+        .appendField(new Blockly.FieldCheckbox('FALSE'), 'AND_BACK')
+        .appendField('forth and back');
+    this.appendDummyInput()
+        .appendField(new Blockly.FieldCheckbox('FALSE'), 'LOOP')
+        .appendField('loop');
     this.appendValueInput("PIVOT")
         .setCheck("Aruco_Move_By")
         .setAlign(Blockly.ALIGN_RIGHT)
