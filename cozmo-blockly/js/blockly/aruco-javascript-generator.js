@@ -92,6 +92,7 @@ Blockly.JavaScript['aruco_animate'] = function(block) {
   if (!hasCharParent(block, 'aruco_character')) {
     return '';
   }
+  var name = block.getFieldValue('ANIM_NAME');
   var local = block.getFieldValue('LOCAL') === 'TRUE';
   var andBack = block.getFieldValue('AND_BACK') === 'TRUE';
   var loop = block.getFieldValue('LOOP') === 'TRUE';
@@ -99,8 +100,8 @@ Blockly.JavaScript['aruco_animate'] = function(block) {
   var anglesStart = Blockly.JavaScript.valueToCode(block, 'ANGLES_START', Blockly.JavaScript.ORDER_NONE);
   var anglesStop = Blockly.JavaScript.valueToCode(block, 'ANGLES_STOP', Blockly.JavaScript.ORDER_NONE);
   var duration = Blockly.JavaScript.getFloatOrVar(block, 'DURATION');
-  var animate = '{"pivot": ' + pivot + ', "anglesStart": ' + anglesStart + ', "anglesStop": ' + anglesStop + ', "duration": ' + duration + '}';
   var animate = '{\n';
+  animate += Blockly.JavaScript.INDENT + '"name": "' + name + '",\n';
   animate += Blockly.JavaScript.INDENT + '"local": ' + local + ',\n';
   animate += Blockly.JavaScript.INDENT + '"andBack": ' + andBack + ',\n';
   animate += Blockly.JavaScript.INDENT + '"loop": ' + loop + ',\n';
@@ -200,6 +201,43 @@ Blockly.JavaScript['aruco_element_texture_params'] = function(block) {
   var mirrored = block.getFieldValue('MIRRORED') === 'TRUE';
   var code = '{"x1": ' + x1 + ', "y1": ' + y1 + ', "x2": ' + x2 + ', "y2": ' + y2 + ', "mirrored": ' + mirrored + '}';
   return [code, Blockly.JavaScript.ORDER_NONE];
+};
+
+Blockly.JavaScript['aruco_conditional'] = function(block) {
+  var condition = Blockly.JavaScript.valueToCode(block, 'CONDITION', Blockly.JavaScript.ORDER_NONE);
+  if (condition.length == 0) {
+    return '';
+  }
+  var bodyBlock = block.getInputTargetBlock('BODY');
+  var body = Blockly.JavaScript.blockToCode(bodyBlock);
+  body = Blockly.JavaScript.prefixLines(body, Blockly.JavaScript.INDENT);
+  var code = 'Code.cozmo3d.addConditional(function() {\n';
+  code += Blockly.JavaScript.INDENT + 'if (' + condition + ') {\n';
+  code += body;
+  code += '}\n';
+  code += '});\n';
+  return code;
+};
+
+Blockly.JavaScript['aruco_distance'] = function(block) {
+  var from = Blockly.JavaScript.getIntOrVar(block, 'FROM');
+  var to = Blockly.JavaScript.getIntOrVar(block, 'TO');
+  var code = 'Code.cozmo3d.characterDistance(' + from + ', ' + to + ') / 10';
+  return [code, Blockly.JavaScript.ORDER_NONE];
+};
+
+Blockly.JavaScript['aruco_animation_start'] = function(block) {
+  var character = Blockly.JavaScript.getIntOrVar(block, 'CHARACTER');
+  var name = Blockly.JavaScript.valueToCode(block, 'ANIM_NAME', Blockly.JavaScript.ORDER_NONE);
+  var code = 'Code.cozmo3d.characterAnimationStart(' + character + ', ' + name + ');\n';
+  return code;
+};
+
+Blockly.JavaScript['aruco_animation_stop'] = function(block) {
+  var character = Blockly.JavaScript.getIntOrVar(block, 'CHARACTER');
+  var name = Blockly.JavaScript.valueToCode(block, 'ANIM_NAME', Blockly.JavaScript.ORDER_NONE);
+  var code = 'Code.cozmo3d.characterAnimationStop(' + character + ', ' + name + ');\n';
+  return code;
 };
 
 

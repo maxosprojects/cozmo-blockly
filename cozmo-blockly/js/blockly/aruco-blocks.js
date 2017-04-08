@@ -352,3 +352,69 @@ Blockly.Blocks['aruco_element_texture_params'] = {
     this.setTooltip("Element texture top-left and bottom-right corners' coordinates");
   }
 };
+
+Blockly.Blocks['aruco_conditional'] = {
+  init: function() {
+    this.appendValueInput("CONDITION")
+        .setCheck("Boolean")
+        .appendField('on condition');
+    this.appendStatementInput("BODY");
+    this.setColour(Blockly.Blocks.cozmo.HUE2);
+    this.setTooltip('Executes piece of program on condition');
+  }
+};
+
+Blockly.Blocks['aruco_distance'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField('distance');
+    this.appendValueInput("FROM")
+        .setCheck("Number")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("from marker");
+    this.appendValueInput("TO")
+        .setCheck("Number")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("to marker");
+    this.setOutput(true, "Number");
+    this.setInputsInline(true);
+    this.setColour(Blockly.Blocks.aruco.paramsHUE);
+    this.setTooltip("Distance between markers, cm");
+  }
+};
+
+Blockly.Blocks['aruco_animation_start'] = {
+  init: function() {
+    this.appendValueInput("ANIM_NAME")
+        .setCheck("String")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("start");
+    this.appendValueInput("CHARACTER")
+        .setCheck("Number")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("animation on character");
+    this.setInputsInline(true);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(Blockly.Blocks.aruco.markerHUE);
+    this.setTooltip("Start animation with given name on given character");
+  }
+};
+
+Blockly.Blocks['aruco_animation_stop'] = {
+  init: function() {
+    this.appendValueInput("ANIM_NAME")
+        .setCheck("String")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("stop");
+    this.appendValueInput("CHARACTER")
+        .setCheck("Number")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("animation on character");
+    this.setInputsInline(true);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(Blockly.Blocks.aruco.markerHUE);
+    this.setTooltip("Stop animation with given name on given character");
+  }
+};

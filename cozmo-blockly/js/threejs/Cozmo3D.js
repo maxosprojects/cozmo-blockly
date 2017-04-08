@@ -14,6 +14,8 @@ function Cozmo3d() {
   this._initialized = false;
   this._animationId = null;
   this._renderLoopId = null;
+  this._conditionalsLoopId = null;
+  this._conditionals = []
   this._dirty = false;
   this._scene = null;
   this._camera = null;
@@ -34,7 +36,7 @@ function Cozmo3d() {
   this._cozmo = null;
   this._cubes = [];
   this._statics = [];
-  this._characters = [];
+  this._characters = {};
   this._anaglyph = false;
   this._gridOn = false;
   this._perspective = true;
@@ -245,6 +247,7 @@ function Cozmo3d() {
       'statics': [],
       'characters': []
     };
+    that._conditionals = [];
 
     that._effect = null;
 
@@ -349,6 +352,7 @@ function Cozmo3d() {
     that._render();
 
     that._renderLoopId = setInterval(that._renderOnce, 33);
+    that._conditionalsLoopId = setInterval(that._conditionalsLoop, 100);
   };
 
   this.stop = function() {
@@ -359,6 +363,18 @@ function Cozmo3d() {
     if (that._renderLoopId) {
       clearInterval(that._renderLoopId);
       that._renderLoopId = null;
+    }
+    if (that._conditionalsLoopId) {
+      clearInterval(that._conditionalsLoopId);
+      that._conditionalsLoopId = null;
+    }
+  };
+
+  this._conditionalsLoop = function() {
+    // console.log('looping conditionals', that._conditionals.length);
+    for (var i = 0; i < that._conditionals.length; i++) {
+      var conditional = that._conditionals[i];
+      conditional();
     }
   };
 
@@ -809,4 +825,36 @@ function Cozmo3d() {
     that._models.characters = []
     that._characters = {};
   };
+
+  this.characterDistance = function(from, to) {
+    var charFrom = that._characters['' + from];
+    var charTo = that._characters['' + to];
+    // console.log('checking distance', from, to, charFrom, charTo, that._characters);
+    if (charFrom && charFrom.container && charTo && charTo.container) {
+      var distance = charFrom.container.getWorldPosition().distanceTo(charTo.container.getWorldPosition());
+      // console.log(distance);
+      return distance;
+    } else {
+      return 100000;
+    }
+  };
+
+  this.characterAnimationStart = function(charNum, animName) {
+    var character = that._characters['' + charNum];
+    if (character) {
+      return character.animationStart(animName);
+    }
+  };
+
+  this.characterAnimationStop = function(charNum, animName) {
+    var character = that._characters['' + charNum];
+    if (character) {
+      return character.animationStop(animName);
+    }
+  };
+
+  this.addConditional = function(func) {
+    that._conditionals.push(func);
+  };
+
 }

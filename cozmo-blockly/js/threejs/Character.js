@@ -2,7 +2,8 @@
 var Animation = class {
   constructor(mesh, elemAnimate) {
     this.startTime = null;
-    this.running = true;
+    this.running = false;
+    this.name = elemAnimate.name;
     this.local = elemAnimate.local;
     this.andBack = elemAnimate.andBack;
     this.loop = elemAnimate.loop;
@@ -80,8 +81,10 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
     var root = new THREE.Object3D();
     var elements = character.elements;
 
+    var that = this;
+
     function populateElements(texture, cMaterial) {
-      var container = new THREE.Object3D();
+      that.container = new THREE.Object3D();
       for (var i = 0; i < elements.length; i++) {
         var elem = elements[i];
         var elemT = elem.texture;
@@ -143,7 +146,7 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
           mesh = newMesh;
         }
 
-        container.add(mesh);
+        that.container.add(mesh);
       }
 
       var charRotate = character.rotate;
@@ -153,20 +156,20 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
         var newContainer = new THREE.Object3D();
         root.add(newContainer);
         translate(newContainer, pivot.mx, pivot.mz, pivot.my);
-        translate(container, -pivot.mx, -pivot.mz, -pivot.my);
-        newContainer.add(container);
+        translate(that.container, -pivot.mx, -pivot.mz, -pivot.my);
+        newContainer.add(that.container);
         rotate(newContainer, angles.mx, angles.mz, angles.my);
-        container = newContainer;
+        that.container = newContainer;
       } else {
-        root.add(container);
+        root.add(that.container);
       }
 
       var charScale = character.scale;
       if (charScale) {
         var scale = charScale / 100.0;
-        container.scale.set(scale, scale, scale);
+        that.container.scale.set(scale, scale, scale);
         // Precompute geometry (a questionable optimization). Requires moving things around
-        // container.traverse(function(obj) {
+        // that.container.traverse(function(obj) {
         //   if (obj.geometry) {
         //     // console.log(obj.geometry.scale);
         //     obj.geometry.scale(scale, scale, scale);
@@ -178,9 +181,9 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
       if (charMoveby) {
         if (charScale) {
           var scale = charScale / 100.0;
-          translate(container, charMoveby.mx * scale, charMoveby.mz * scale, charMoveby.my * scale);
+          translate(that.container, charMoveby.mx * scale, charMoveby.mz * scale, charMoveby.my * scale);
         } else {
-          translate(container, charMoveby.mx, charMoveby.mz, charMoveby.my);
+          translate(that.container, charMoveby.mx, charMoveby.mz, charMoveby.my);
         }
       }
     }
@@ -211,6 +214,24 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
       for (var i = 0; i < animations.length; i++) {
         var animation = animations[i];
         animation.next(now);
+      }
+    };
+
+    this.animationStart = function(name) {
+      for (var i = 0; i < animations.length; i++) {
+        var animation = animations[i];
+        if (animation.name === name) {
+          animation.running = true;
+        }
+      }
+    };
+
+    this.animationStop = function(name) {
+      for (var i = 0; i < animations.length; i++) {
+        var animation = animations[i];
+        if (animation.name === name) {
+          animation.running = false;
+        }
       }
     };
 
