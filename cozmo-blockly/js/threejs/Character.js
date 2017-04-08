@@ -100,7 +100,7 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
         } else {
           var colorStr = elem.color.replace('#', '');
           var color = parseInt(colorStr, 16);
-          var elemMaterial = new THREE.MeshLambertMaterial( { color: color, side: THREE.FrontSide, transparent: true } );
+          var elemMaterial = new THREE.MeshLambertMaterial( { color: color, side: THREE.FrontSide, transparent: true, overdraw: 0.5 } );
           materials.push(elemMaterial);
           mesh = createCuboid(size.width, size.height, size.depth, elemMaterial);
         }
@@ -193,7 +193,8 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
 
         var cMaterial = new THREE.MeshLambertMaterial({
             transparent: true,
-            map: texture
+            map: texture,
+            overdraw: 0.5
         });
         materials.push(cMaterial);
 
