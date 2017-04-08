@@ -13,6 +13,7 @@ function Cozmo3d() {
 
   this._initialized = false;
   this._animationId = null;
+  this._renderLoopId = null;
   this._dirty = false;
   this._scene = null;
   this._camera = null;
@@ -29,6 +30,7 @@ function Cozmo3d() {
   this._floor = null;
   this._light = null;
   this._ground = null;
+  this._groundDynamic = null;
   this._cozmo = null;
   this._cubes = [];
   this._statics = [];
@@ -107,7 +109,7 @@ function Cozmo3d() {
     // light.position.set( -500, -500, 5 );
     // that._light.add(light);
 
-    that._light.position.set(500, 500, 500);
+    that._light.position.set(500, -800, -500);
     that._scene.add(that._light);
 
     // that._scene.fog = new THREE.Fog( 0xffffff, 1, 5000 );
@@ -118,6 +120,9 @@ function Cozmo3d() {
 
     // GROUND
     that._ground = new THREE.Object3D();
+    that._groundDynamic = new THREE.Object3D();
+    that._ground.add(that._groundDynamic);
+    that._scene.add(that._ground);
 
     // FLOOR
     var floorTexture = CozmoBlockly.loadTexture( 'img/3d/grass-minecraft.png' );
@@ -130,8 +135,7 @@ function Cozmo3d() {
     that._floor = new THREE.Mesh(floorGeometry, floorMaterial);
     // floor.position.y = -0.5;
     that._floor.rotation.x = -Math.PI / 2;
-    that._ground.add(that._floor);
-    that._scene.add(that._ground);
+    that._groundDynamic.add(that._floor);
 
     that._camera = new THREE.PerspectiveCamera( that._defaultCamFov, width/height, 0.1, 4000 );
     that._cameraOrthographic = new THREE.OrthographicCamera( width / -2, width / 2, height / 2, height / -2, 0.1, 4000 );
@@ -210,6 +214,8 @@ function Cozmo3d() {
       return;
     }
 
+    that.stop();
+
     that._unsetControls();
     // that._calibrator.dispose();
 
@@ -228,6 +234,7 @@ function Cozmo3d() {
     that._floor = null;
     that._grid = null;
     that._ground = null;
+    that._groundDynamic = null;
 
     that._cozmo = null;
     that._cubes = [];
@@ -340,13 +347,19 @@ function Cozmo3d() {
     that._setGrid();
     that.onData(data);
     that._render();
+
+    that._renderLoopId = setInterval(that._renderOnce, 33);
   };
-  
+
   this.stop = function() {
     if (!that._initialized) {
       return;
     }
     cancelAnimationFrame(that._animationId);
+    if (that._renderLoopId) {
+      clearInterval(that._renderLoopId);
+      that._renderLoopId = null;
+    }
   };
 
   this._renderOnce = function () {
@@ -390,7 +403,7 @@ function Cozmo3d() {
         that._renderer.render(that._scene, camera);
       }
 
-      // that._dirty = false;
+      that._dirty = false;
     }
 
     that._animationId = requestAnimationFrame(that._render);
@@ -507,7 +520,7 @@ function Cozmo3d() {
         addNumbers(500, null);
         makeAxis("X", -500, -500);
         makeAxis("Y", 500, 500);
-        that._ground.add(that._grid);
+        that._groundDynamic.add(that._grid);
       }
       that._grid.visible = true;
     }
@@ -704,7 +717,7 @@ function Cozmo3d() {
 
       // that._camera.fov = that._arFov.y;
 
-      that._ground.visible = false;
+      that._groundDynamic.visible = false;
       that._renderer.setClearColor( 0x000000, 0 );
 
       that._light.position.set(10, -100, 20);
@@ -730,10 +743,10 @@ function Cozmo3d() {
 
       that._camera.updateProjectionMatrix();
 
-      that._ground.visible = true;
+      that._groundDynamic.visible = true;
       that._renderer.setClearColor( 0xbfd1e5, 1 );
 
-      that._light.position.set(500, 500, 500);
+      that._light.position.set(500, -800, -500);
 
       that._arOn = false;
     }
@@ -775,7 +788,13 @@ function Cozmo3d() {
     if (!that._initialized) {
       return;
     }
-    var instance = new CozmoBlockly.Character(that._scene, character);
+    var parent;
+    if (character.static) {
+      parent = that._ground;
+    } else {
+      parent = that._scene;
+    }
+    var instance = new CozmoBlockly.Character(parent, character);
     instance.addToScene();
     that._characters[character.id] = instance;
   };

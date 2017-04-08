@@ -57,6 +57,56 @@
         </statement>
       </block>
 
+<!--       <block type="aruco_character_static">
+        <value name="CHAR_NAME">
+          <shadow type="text">
+            <field name="TEXT">character</field>
+          </shadow>
+        </value>
+        <statement name="BODY">
+          <block type="aruco_element">
+            <value name="SIZE">
+              <block type="aruco_element_size">
+                <value name="WIDTH">
+                  <shadow type="math_number">
+                    <field name="NUM">5</field>
+                  </shadow>
+                </value>
+                <value name="DEPTH">
+                  <shadow type="math_number">
+                    <field name="NUM">3</field>
+                  </shadow>
+                </value>
+                <value name="HEIGHT">
+                  <shadow type="math_number">
+                    <field name="NUM">10</field>
+                  </shadow>
+                </value>
+              </block>
+            </value>
+            <value name="MOVE_BY">
+              <block type="aruco_element_move_by">
+                <value name="X">
+                  <shadow type="math_number">
+                    <field name="NUM">0</field>
+                  </shadow>
+                </value>
+                <value name="Y">
+                  <shadow type="math_number">
+                    <field name="NUM">0</field>
+                  </shadow>
+                </value>
+                <value name="Z">
+                  <shadow type="math_number">
+                    <field name="NUM">0</field>
+                  </shadow>
+                </value>
+              </block>
+            </value>
+          </block>
+        </statement>
+      </block>
+ -->
       <block type="aruco_element_color">
         <value name="COLOR">
           <shadow type="colour_picker">

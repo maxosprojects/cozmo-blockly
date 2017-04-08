@@ -38,8 +38,8 @@ Blockly.JavaScript['aruco_character_static'] = function(block) {
   if (elements.length == 0) {
     return '';
   }
-  var code = 'var character = {"static": true, elements": []};\n';
-  code += 'character["id"] = ' + id + ';\n';
+  var code = 'var character = {"static": true, "elements": []};\n';
+  code += 'character["id"] = ' + name + ';\n';
   code += elements + '\n';
   code += 'Code.cozmo3d.onData({"character": character});\n';
   return code;
@@ -206,5 +206,5 @@ Blockly.JavaScript['aruco_element_texture_params'] = function(block) {
 ///// UTILS ///////
 
 function hasCharParent(block) {
-  return (Blockly.JavaScript.hasParent(block, 'aruco_character') || Blockly.JavaScript.hasParent(block, 'aruco_character'));
+  return (Blockly.JavaScript.hasParent(block, 'aruco_character') || Blockly.JavaScript.hasParent(block, 'aruco_character_static'));
 }
