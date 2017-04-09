@@ -138,8 +138,8 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
 
           var quat = mesh.quaternion;
           newMesh.originQuat = quat.clone();
-          rotate(mesh, 0, 0, 0);
           newMesh.quaternion.copy(quat);
+          rotate(mesh, 0, 0, 0);
 
           animations.push(new Animation(newMesh, elemAnimate));
           newMesh.add(mesh);
