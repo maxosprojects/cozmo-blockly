@@ -83,7 +83,7 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
 
     var that = this;
 
-    function populateElements(texture, cMaterial) {
+    function populateElements(texture, cMaterial, callbacks) {
       that.container = new THREE.Object3D();
       for (var i = 0; i < elements.length; i++) {
         var elem = elements[i];
@@ -94,12 +94,12 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
           var mesh = createCuboid(size.width, size.height, size.depth, cMaterial);
           var geometry = mesh.geometry;
           geometry.faceVertexUvs[0] = [];
-          mapUv(geometry, texture, 0, elemT.left)
-          mapUv(geometry, texture, 1, elemT.right)
-          mapUv(geometry, texture, 2, elemT.top)
-          mapUv(geometry, texture, 3, elemT.bottom)
-          mapUv(geometry, texture, 4, elemT.front)
-          mapUv(geometry, texture, 5, elemT.back)
+          callbacks.push(mapUv.bind(this, geometry, texture, 0, elemT.left));
+          callbacks.push(mapUv.bind(this, geometry, texture, 1, elemT.right));
+          callbacks.push(mapUv.bind(this, geometry, texture, 2, elemT.top));
+          callbacks.push(mapUv.bind(this, geometry, texture, 3, elemT.bottom));
+          callbacks.push(mapUv.bind(this, geometry, texture, 4, elemT.front));
+          callbacks.push(mapUv.bind(this, geometry, texture, 5, elemT.back));
         } else {
           var colorStr = elem.color.replace('#', '');
           var color = parseInt(colorStr, 16);
@@ -190,19 +190,23 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
 
     var charT = character.texture;
     if (charT) {
+      var callbacks = [];
       var tmpTxture = CozmoBlockly.loadTexture('custom-textures/' + charT + '.png', function(texture) {
-        texture.magFilter = THREE.NearestFilter;
-        texture.minFilter = THREE.NearestFilter;
-
-        var cMaterial = new THREE.MeshLambertMaterial({
-            transparent: true,
-            map: texture,
-            overdraw: 0.5
+        callbacks.forEach(function(callback) {
+          callback();
         });
-        materials.push(cMaterial);
-
-        populateElements(texture, cMaterial);
       });
+      tmpTxture.magFilter = THREE.NearestFilter;
+      tmpTxture.minFilter = THREE.NearestFilter;
+
+      var cMaterial = new THREE.MeshLambertMaterial({
+          transparent: true,
+          map: tmpTxture,
+          overdraw: 0.5
+      });
+      materials.push(cMaterial);
+
+      populateElements(tmpTxture, cMaterial, callbacks);
     } else {
       populateElements();
     }
@@ -325,4 +329,5 @@ function mapUv(geometry, texture, faceIdx, points) {
     geometry.faceVertexUvs[0][faceIdx * 2] = [X1Y1, X1Y2, X2Y1];
     geometry.faceVertexUvs[0][faceIdx * 2 + 1] = [X1Y2, X2Y2, X2Y1];
   }
+  geometry.elementsNeedUpdate = true;
 };
