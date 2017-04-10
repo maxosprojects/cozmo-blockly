@@ -2,6 +2,7 @@
 var Animation = class {
   constructor(mesh, elemAnimate) {
     this.startTime = null;
+    this.initialized = false;
     this.running = false;
     this.name = elemAnimate.name;
     this.local = elemAnimate.local;
@@ -59,15 +60,16 @@ var Animation = class {
         deg2rad(this.anglesStart.my + this.anglesDiff.y * time),
         'XYZ');
       quat.setFromEuler(euler);
-      if (this.name === 'static')
-        console.log('before', this.forward, time, quat, this.origQuat);
       quat = this.origQuat.clone().multiply(quat);
       this.mesh.quaternion.copy(quat);
-      if (this.name === 'static')
-        console.log('after', this.forward, time, quat, this.origQuat);
+      // console.log('after', this.forward, time, quat, this.origQuat);
     };
 
     this.start = function() {
+      if (!this.initialized) {
+        this.initialized = true;
+        this.origQuat = mesh.quaternion.clone();
+      }
       this.running = true;
     };
 
