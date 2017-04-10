@@ -26,7 +26,7 @@ CozmoBlockly.Dynamic = class {
     } else if (data.visible === false) {
       this._setOpacity(0.5);
     } else {
-      this._setOpacity(0.5);
+      this._setOpacity(1);
       var pose = this.convertPose(data);
       this.mesh.position.x = pose.x + this.offx;
       this.mesh.position.y = pose.y + this.offy;
