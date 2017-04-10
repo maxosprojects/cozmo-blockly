@@ -10,6 +10,7 @@ var Animation = class {
     this.anglesStart = elemAnimate.anglesStart;
     this.anglesStop = elemAnimate.anglesStop;
     this.duration = elemAnimate.duration > 0 ? elemAnimate.duration * 1000 : 1;
+    this.origQuat = mesh.quaternion.clone();
     this.forward = true;
     this.anglesDiff = {
       x: (this.anglesStop.mx - this.anglesStart.mx) / this.duration,
@@ -58,14 +59,57 @@ var Animation = class {
         deg2rad(this.anglesStart.my + this.anglesDiff.y * time),
         'XYZ');
       quat.setFromEuler(euler);
-      if (this.local) {
-        quat = this.mesh.originQuat.clone().multiply(quat);
-      } else {
-        quat = quat.multiply(this.mesh.originQuat);
-      }
+      if (this.name === 'static')
+        console.log('before', this.forward, time, quat, this.origQuat);
+      quat = this.origQuat.clone().multiply(quat);
       this.mesh.quaternion.copy(quat);
-      // console.log(this.forward, time, quat);
+      if (this.name === 'static')
+        console.log('after', this.forward, time, quat, this.origQuat);
     };
+
+    this.start = function() {
+      this.running = true;
+    };
+
+    this.stop = function() {
+      this.running = false;
+      this.startTime = null;
+      this.forward = true;
+    };
+
+  };
+
+}
+
+var AnimationParallel = class {
+  constructor(data, animations) {
+    this.name = data.name;
+    this.animations = animations;
+    this.running = false;
+
+    this.next = function(currTime) {
+      if (!this.running) {
+        return;
+      }
+      this.animations.forEach(function(elem) {
+        elem.next(currTime);
+      });
+    };
+
+    this.start = function() {
+      this.running = true;
+      this.animations.forEach(function(elem) {
+        elem.start();
+      });
+    };
+
+    this.stop = function() {
+      this.running = false;
+      this.animations.forEach(function(elem) {
+        elem.stop();
+      });
+    };
+
   };
 
 }
@@ -118,32 +162,69 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
           mesh.position.set(-pivot.mx, -pivot.mz, -pivot.my);
           rotate(newMesh, angles.mx, angles.mz, angles.my);
           newMesh.add(mesh);
+          if (elemRotate.displayAxes) {
+            var axisHelper = new THREE.AxisHelper(60);
+            newMesh.add(axisHelper);
+          }
           mesh = newMesh;
         }
 
         var moveby = elem.moveby
         translate(mesh, moveby.mx, moveby.mz, moveby.my);
 
-        var elemAnimate = elem.animate;
-        if (elemAnimate) {
-          var pivot = elemAnimate.pivot;
-          var anglesStart = elemAnimate.anglesStart;
-          var anglesStop = elemAnimate.anglesStop;
-          var duration = elemAnimate.duration;
+        function addAnimation(animData, animMesh, animCollection) {
+          if (animData.kind === 'parallel') {
+            var nextMesh = animMesh;
+            var parallelAnimations = [];
+            for (var k = 0; k < animData.animations.length; k++) {
+              nextMesh = addAnimation(animData.animations[k], nextMesh, parallelAnimations);
+            }
+            animCollection.push(new AnimationParallel(animData, parallelAnimations));
+            return nextMesh;
+          }
+
+          var pivot = animData.pivot;
+          var anglesStart = animData.anglesStart;
+          var anglesStop = animData.anglesStop;
+          var duration = animData.duration;
           var newMesh = new THREE.Object3D();
 
-          var pos = mesh.position;
-          translate(newMesh, pivot.mx + pos.x, pivot.mz + pos.y, pivot.my + pos.z);
-          mesh.position.set(-pivot.mx, -pivot.mz, -pivot.my);
+          var pivotVec = new THREE.Vector3(pivot.mx, pivot.mz, pivot.my);
+          // console.log('1', pivotVec);
+          var meshWorldPos = animMesh.getWorldPosition();
+          // console.log('2', meshWorldPos, animMesh.position);
+          var newAnimMeshPos = pivotVec.clone().negate();
 
-          var quat = mesh.quaternion;
-          newMesh.originQuat = quat.clone();
-          newMesh.quaternion.copy(quat);
-          rotate(mesh, 0, 0, 0);
+          newMesh.position.copy(meshWorldPos.clone().add(pivotVec));
+          if (animData.local) {
+            animMesh.position.set(0, 0, 0);
+            animMesh.updateMatrixWorld(true);
+            animMesh.worldToLocal(newAnimMeshPos);
+          }
+          animMesh.position.copy(newAnimMeshPos);
+          // console.log('3', newMesh.position, animMesh.position);
 
-          animations.push(new Animation(newMesh, elemAnimate));
-          newMesh.add(mesh);
-          mesh = newMesh;
+          if (animData.local) {
+            newMesh.quaternion.copy(animMesh.quaternion);
+            rotate(animMesh, 0, 0, 0);
+          }
+
+          animCollection.push(new Animation(newMesh, animData));
+          if (animData.displayAxes) {
+            var axisHelper = new THREE.AxisHelper(60);
+            newMesh.add(axisHelper);
+          }
+
+          newMesh.add(animMesh);
+
+          return newMesh;
+        }
+
+        if (elem.animations) {
+          // console.log('adding animations', elem.animations);
+          for (var j = 0; j < elem.animations.length; j++) {
+            mesh = addAnimation(elem.animations[j], mesh, animations);
+          }
         }
 
         that.container.add(mesh);
@@ -154,14 +235,11 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
         var pivot = charRotate.pivot;
         var angles = charRotate.angles;
         var newContainer = new THREE.Object3D();
-        root.add(newContainer);
         translate(newContainer, pivot.mx, pivot.mz, pivot.my);
         translate(that.container, -pivot.mx, -pivot.mz, -pivot.my);
         newContainer.add(that.container);
         rotate(newContainer, angles.mx, angles.mz, angles.my);
         that.container = newContainer;
-      } else {
-        root.add(that.container);
       }
 
       var charScale = character.scale;
@@ -186,6 +264,8 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
           translate(that.container, charMoveby.mx, charMoveby.mz, charMoveby.my);
         }
       }
+
+      root.add(that.container);
     }
 
     var charT = character.texture;
@@ -225,7 +305,7 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
       for (var i = 0; i < animations.length; i++) {
         var animation = animations[i];
         if (animation.name === name) {
-          animation.running = true;
+          animation.start();
         }
       }
     };
@@ -234,7 +314,7 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
       for (var i = 0; i < animations.length; i++) {
         var animation = animations[i];
         if (animation.name === name) {
-          animation.running = false;
+          animation.stop();
         }
       }
     };

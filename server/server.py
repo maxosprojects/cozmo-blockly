@@ -165,7 +165,7 @@ class CozmoBlockly(tornado.web.Application):
 			else:
 				nonsec = 'false'
 
-			self.render(path + 'index.html', includes=includes, blocks=blocks, name=self.args.name, nonsecure=nonsec)
+			self.render(path + 'index.html', includes=includes, blocks=blocks, name=self.args.name, nonsecure=nonsec, d3=self.args.d3)
 
 	def stop(self):
 		# with (yield self._lock.acquire()):
@@ -230,6 +230,8 @@ def main():
 						help="run server in non-secure mode, which doesn't require nodejs but python code is accepted from the network for execution")
 	parser.add_argument('--aruco', action="store_true",
 						help="enable Aruco markers detection")
+	parser.add_argument('--d3', action="store_true",
+						help="enable D3")
 	args = parser.parse_args()
 
 	CozmoBlockly.start(args)

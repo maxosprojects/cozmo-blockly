@@ -563,6 +563,8 @@ Code.init = function() {
       if (block.type === 'aruco_element'
             || block.type === 'aruco_character'
             || block.type === 'aruco_element_texture'
+            || block.type === 'aruco_animations'
+            || block.type === 'aruco_animation_parallel'
             || block.type === 'aruco_animate') {
         var lastTime = block.lastTimeClicked;
         var now = new Date().getTime();
@@ -977,6 +979,8 @@ Code.runRemotely = function() {
 Code.stopRemoteExecution = function() {
   // Disconnect WS.
   Code.stopWs();
+
+  Code.cozmo3d.stop();
 
   $.ajax({
     url: '/robot/terminate',

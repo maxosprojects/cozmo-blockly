@@ -27,6 +27,7 @@ function Cozmo3d() {
   that._perspective = true;
   that._nonArPerspective = true;
   this._controls = null;
+  this._controlsTransform = null;
   this._beacons = null;
   // this._calibrator = null;
   this._floor = null;
@@ -268,12 +269,31 @@ function Cozmo3d() {
       that._renderOnce();
     };
     that._controls.addEventListener('change', that._controls.customEventListener);
+    
+    var object = new THREE.Object3D();
+    this._ground.add(object);
+    that._controlsTransform = new THREE.TransformControls( camera, canvas );
+    that._controlsTransform.customEventListener = function() {
+      // that._ground.position.copy(object.position);
+      // var camera = that._perspective ? that._camera : that._cameraOrthographic;
+      // camera.position.add(that._ground.position.clone().negate());
+      that._renderOnce();
+    };
+    that._controlsTransform.addEventListener('change', that._controlsTransform.customEventListener);
+    // that._controlsTransform.attach(object);
+    // that._scene.add(that._controlsTransform);
   };
 
   this._unsetControls = function() {
     that._controls.removeEventListener('change', that._controls.customEventListener);
     that._controls.dispose();
     that._controls = null;
+
+    that._controlsTransform.detach();
+    that._scene.remove(that._controlsTransform);
+    that._controlsTransform.removeEventListener('change', that._controlsTransform.customEventListener);
+    that._controlsTransform.dispose();
+    that._controlsTransform = null;
   };
 
   this.start = function() {
@@ -387,6 +407,7 @@ function Cozmo3d() {
 
   this._render = function () {
     that._controls.update()
+    that._controlsTransform.update()
     // if (that._calibrator.isDirty()) {
     //   var euler = that._calibrator.getRadians();
     //   var degrees = that._calibrator.getDegrees();
@@ -704,6 +725,7 @@ function Cozmo3d() {
       that._perspective = true;
 
       that._controls.enabled = false;
+      // that._controlsTransform.visible = false;
 
       var canvasCam = document.getElementById('canvas_cam');
       var canvas3d = document.getElementById('canvas_3d');

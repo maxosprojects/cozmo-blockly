@@ -136,11 +136,39 @@ Blockly.Blocks['aruco_rotate'] = {
         .setCheck("Aruco_Angles")
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField("angles");
+    this.appendDummyInput()
+        .appendField(new Blockly.FieldCheckbox('FALSE'), 'AXES')
+        .appendField('display axes');
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setInputsInline(false);
     this.setColour(Blockly.Blocks.aruco.markerHUE);
     this.setTooltip('Rotates character or element. Applied before translation, if any. Pivot point defines new Origin (for character that means the marker location)');
+  }
+};
+
+Blockly.Blocks['aruco_animations'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField('animations');
+    this.appendStatementInput("BODY");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(Blockly.Blocks.cozmo.HUE2);
+    this.setTooltip('Executes animations');
+  }
+};
+
+Blockly.Blocks['aruco_animation_parallel'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField('parallel animation')
+        .appendField(new Blockly.FieldTextInput("name"), "ANIM_NAME");
+    this.appendStatementInput("BODY");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(Blockly.Blocks.cozmo.HUE2);
+    this.setTooltip('Executes multiple animations in parallel');
   }
 };
 
@@ -174,6 +202,9 @@ Blockly.Blocks['aruco_animate'] = {
         .setCheck("Number")
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField("duration");
+    this.appendDummyInput()
+        .appendField(new Blockly.FieldCheckbox('FALSE'), 'AXES')
+        .appendField('display axes');
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setInputsInline(false);

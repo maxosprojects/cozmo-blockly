@@ -24,8 +24,9 @@ Blockly.JavaScript['aruco_character'] = function(block) {
   if (elements.length == 0) {
     return '';
   }
-  var code = 'var character = {"elements": []};\n';
+  var code = 'var character = {};\n';
   code += 'character["id"] = ' + id + ';\n';
+  code += 'character["elements"] = [];\n';
   code += elements + '\n';
   code += 'Code.cozmo3d.onData({"character": character});\n';
   return code;
@@ -46,7 +47,7 @@ Blockly.JavaScript['aruco_character_static'] = function(block) {
 };
 
 Blockly.JavaScript['aruco_character_texture'] = function(block) {
-  if (!hasCharParent(block, 'aruco_character')) {
+  if (!hasCharParent(block)) {
     return '';
   }
   var texture = Blockly.JavaScript.valueToCode(block, 'TEXTURE', Blockly.JavaScript.ORDER_NONE);
@@ -55,7 +56,7 @@ Blockly.JavaScript['aruco_character_texture'] = function(block) {
 };
 
 Blockly.JavaScript['aruco_character_move_by'] = function(block) {
-  if (!hasCharParent(block, 'aruco_character')) {
+  if (!hasCharParent(block)) {
     return '';
   }
   var moveby = Blockly.JavaScript.valueToCode(block, 'MOVE_BY', Blockly.JavaScript.ORDER_NONE);
@@ -64,7 +65,7 @@ Blockly.JavaScript['aruco_character_move_by'] = function(block) {
 };
 
 Blockly.JavaScript['aruco_character_scale'] = function(block) {
-  if (!hasCharParent(block, 'aruco_character')) {
+  if (!hasCharParent(block)) {
     return '';
   }
   var scale = Blockly.JavaScript.valueToCode(block, 'SCALE', Blockly.JavaScript.ORDER_NONE);
@@ -73,12 +74,13 @@ Blockly.JavaScript['aruco_character_scale'] = function(block) {
 };
 
 Blockly.JavaScript['aruco_rotate'] = function(block) {
-  if (!hasCharParent(block, 'aruco_character')) {
+  if (!hasCharParent(block)) {
     return '';
   }
   var pivot = Blockly.JavaScript.valueToCode(block, 'PIVOT', Blockly.JavaScript.ORDER_NONE);
   var angles = Blockly.JavaScript.valueToCode(block, 'ANGLES', Blockly.JavaScript.ORDER_NONE);
-  var rotate = '{"pivot": ' + pivot + ', "angles": ' + angles + '}';
+  var displayAxes = block.getFieldValue('AXES') === 'TRUE';
+  var rotate = '{"pivot": ' + pivot + ', "angles": ' + angles + ', "displayAxes": ' + displayAxes + '}';
   var code;
   if (Blockly.JavaScript.hasParent(block, 'aruco_element')) {
     code = 'element["rotate"] = ' + rotate + ';\n';
@@ -88,8 +90,42 @@ Blockly.JavaScript['aruco_rotate'] = function(block) {
   return code;
 };
 
+Blockly.JavaScript['aruco_animations'] = function(block) {
+  if (!hasCharParent(block)) {
+    return '';
+  }
+  var bodyBlock = block.getInputTargetBlock('BODY');
+  var body = Blockly.JavaScript.blockToCode(bodyBlock);
+  var code = 'var animations = [];\n';
+  code += body;
+  if (Blockly.JavaScript.hasParent(block, 'aruco_element')) {
+    code += 'element["animations"] = animations;\n';
+  } else if (Blockly.JavaScript.hasParent(block, 'aruco_character')) {
+    code += 'character["animations"] = animations;\n';
+  }
+  return code;
+};
+
+Blockly.JavaScript['aruco_animation_parallel'] = function(block) {
+  if (!Blockly.JavaScript.hasParent(block, 'aruco_animations')) {
+    return '';
+  }
+  var name = block.getFieldValue('ANIM_NAME');
+  var bodyBlock = block.getInputTargetBlock('BODY');
+  var body = Blockly.JavaScript.blockToCode(bodyBlock);
+  var code = 'var animationsParallel = [];\n';
+  code += body;
+  var thisAnimation = '{\n';
+  thisAnimation += Blockly.JavaScript.INDENT + '"kind": "parallel",\n';
+  thisAnimation += Blockly.JavaScript.INDENT + '"name": "' + name + '",\n';
+  thisAnimation += Blockly.JavaScript.INDENT + '"animations": animationsParallel\n';
+  thisAnimation += '}';
+  code += 'animations.push(' + thisAnimation + ');\n';
+  return code;
+};
+
 Blockly.JavaScript['aruco_animate'] = function(block) {
-  if (!hasCharParent(block, 'aruco_character')) {
+  if (!Blockly.JavaScript.hasParent(block, 'aruco_animations')) {
     return '';
   }
   var name = block.getFieldValue('ANIM_NAME');
@@ -100,7 +136,9 @@ Blockly.JavaScript['aruco_animate'] = function(block) {
   var anglesStart = Blockly.JavaScript.valueToCode(block, 'ANGLES_START', Blockly.JavaScript.ORDER_NONE);
   var anglesStop = Blockly.JavaScript.valueToCode(block, 'ANGLES_STOP', Blockly.JavaScript.ORDER_NONE);
   var duration = Blockly.JavaScript.getFloatOrVar(block, 'DURATION');
+  var displayAxes = block.getFieldValue('AXES') === 'TRUE';
   var animate = '{\n';
+  animate += Blockly.JavaScript.INDENT + '"kind": "single",\n';
   animate += Blockly.JavaScript.INDENT + '"name": "' + name + '",\n';
   animate += Blockly.JavaScript.INDENT + '"local": ' + local + ',\n';
   animate += Blockly.JavaScript.INDENT + '"andBack": ' + andBack + ',\n';
@@ -108,19 +146,20 @@ Blockly.JavaScript['aruco_animate'] = function(block) {
   animate += Blockly.JavaScript.INDENT + '"pivot": ' + pivot + ',\n';
   animate += Blockly.JavaScript.INDENT + '"anglesStart": ' + anglesStart + ',\n';
   animate += Blockly.JavaScript.INDENT + '"anglesStop": ' + anglesStop + ',\n';
-  animate += Blockly.JavaScript.INDENT + '"duration": ' + duration + '\n';
+  animate += Blockly.JavaScript.INDENT + '"duration": ' + duration + ',\n';
+  animate += Blockly.JavaScript.INDENT + '"displayAxes": ' + displayAxes + '\n';
   animate += '}';
   var code;
-  if (Blockly.JavaScript.hasParent(block, 'aruco_element')) {
-    code = 'element["animate"] = ' + animate + ';\n';
+  if (Blockly.JavaScript.hasParent(block, 'aruco_animation_parallel')) {
+    code = 'animationsParallel.push(' + animate + ');\n';
   } else {
-    code = 'character["animate"] = ' + animate + ';\n';
+    code = 'animations.push(' + animate + ');\n';
   }
   return code;
 };
 
 Blockly.JavaScript['aruco_element'] = function(block) {
-  if (!hasCharParent(block, 'aruco_character')) {
+  if (!hasCharParent(block)) {
     return '';
   }
   var name = block.getFieldValue('ELEM_NAME');

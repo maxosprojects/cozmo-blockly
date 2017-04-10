@@ -15,6 +15,7 @@
   <script src="js/threejs/three.min.js"></script>
   <script src="js/threejs/AnaglyphEffectOld.js"></script>
   <script src="js/threejs/OrbitControls.js"></script>
+  <script src="js/threejs/TransformControls.js"></script>
   <!-- <script src="js/threejs/Calibrator.js"></script> -->
 
 <!-- Includes block -->
@@ -43,6 +44,7 @@
   <script src="js/threejs/maze.js"></script>
 
   <!-- D3 -->
+  {% if d3 %}
   <script src="//d3js.org/d3.v4.js"></script>
   <style>
     .line {
@@ -51,6 +53,7 @@
       stroke-width: 1.5px;
     }
   </style>
+  {% end %}
 
 </head>
 <body>
@@ -119,7 +122,9 @@
     <canvas id="canvas_cam" width="320" height="240" style="border:1px solid #000000;"></canvas>
 
     <!-- D3 -->
+    {% if d3 %}
     <svg width="960" height="500"></svg>
+    {% end %}
 
   </div>
   <div id="content_3d" class="content">
@@ -454,7 +459,9 @@
 
 
   <!-- D3 -->
+  {% if d3 %}
   <script src="js/d3.js"></script>
+  {% end %}
 
 </body>
 </html>

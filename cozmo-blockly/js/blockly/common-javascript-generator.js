@@ -65,7 +65,7 @@ Blockly.JavaScript.hasParent = function(block, parentType) {
     if (block.type === parentType) {
       return true;
     } else {
-      return Blockly.JavaScript.hasParent(block.getParent(), parentType);
+      return Blockly.JavaScript.hasParent(block.getSurroundParent(), parentType);
     }
   }
 }
