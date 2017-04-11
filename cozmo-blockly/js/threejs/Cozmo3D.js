@@ -46,7 +46,7 @@ function Cozmo3d() {
   this._models = {
     'cubes': ['CRATE', 'CRATE', 'CRATE'],
     'statics': [],
-    'characters': []
+    'characters': {}
   };
   this._arOn = false;
   this._defaultCamFov = 45;
@@ -246,7 +246,7 @@ function Cozmo3d() {
     that._models = {
       'cubes': ['CRATE', 'CRATE', 'CRATE'],
       'statics': [],
-      'characters': []
+      'characters': {}
     };
     that._conditionals = [];
 
@@ -822,7 +822,7 @@ function Cozmo3d() {
 
   this.addCharacterModel = function(character) {
     // console.log("adding character model", character);
-    that._models.characters.push(character);
+    that._models.characters[character.id] = character;
     if (!that._initialized) {
       return;
     }
@@ -831,6 +831,9 @@ function Cozmo3d() {
       parent = that._ground;
     } else {
       parent = that._scene;
+    }
+    if (that._characters[character.id]) {
+      that._characters[character.id].removeFromScene();
     }
     var instance = new CozmoBlockly.Character(parent, character);
     instance.addToScene();
@@ -844,7 +847,7 @@ function Cozmo3d() {
         instance.removeFromScene();
       }
     }
-    that._models.characters = []
+    that._models.characters = {}
     that._characters = {};
   };
 

@@ -565,6 +565,7 @@ Code.init = function() {
             || block.type === 'aruco_element_texture'
             || block.type === 'aruco_animations'
             || block.type === 'aruco_animation_parallel'
+            || block.type === 'aruco_rotate'
             || block.type === 'aruco_animate') {
         var lastTime = block.lastTimeClicked;
         var now = new Date().getTime();
