@@ -279,6 +279,11 @@ Blockly.JavaScript['aruco_animation_stop'] = function(block) {
   return code;
 };
 
+Blockly.JavaScript['aruco_log'] = function(block) {
+  var log = Blockly.JavaScript.valueToCode(block, 'LOG', Blockly.JavaScript.ORDER_NONE);
+  var code = 'console.log(' + log + ');\n';
+  return code;
+};
 
 ///// UTILS ///////
 

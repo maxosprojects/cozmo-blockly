@@ -454,6 +454,9 @@
         </value>
       </block>
 
+      <block type="aruco_log">
+      </block>
+
       <block type="aruco_adjust_angles">
       </block>
 

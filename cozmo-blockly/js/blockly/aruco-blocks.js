@@ -449,3 +449,16 @@ Blockly.Blocks['aruco_animation_stop'] = {
     this.setTooltip("Stop animation with given name on given character");
   }
 };
+
+Blockly.Blocks['aruco_log'] = {
+  init: function() {
+    this.appendValueInput("LOG")
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("log");
+    this.setInputsInline(true);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(Blockly.Blocks.aruco.markerHUE);
+    this.setTooltip("Logs value");
+  }
+};

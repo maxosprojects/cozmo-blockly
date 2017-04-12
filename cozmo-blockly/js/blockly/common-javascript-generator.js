@@ -1,3 +1,55 @@
+
+//////// Override to enable variables in a "scope" ///////
+/**
+ * Initialise the database of variable names.
+ * @param {!Blockly.Workspace} workspace Workspace to generate code from.
+ */
+Blockly.JavaScript.init = function(workspace) {
+  // Create a dictionary of definitions to be printed before the code.
+  Blockly.JavaScript.definitions_ = Object.create(null);
+  // Create a dictionary mapping desired function names in definitions_
+  // to actual function names (to avoid collisions with user functions).
+  Blockly.JavaScript.functionNames_ = Object.create(null);
+
+  if (!Blockly.JavaScript.variableDB_) {
+    Blockly.JavaScript.variableDB_ =
+        new Blockly.Names(Blockly.JavaScript.RESERVED_WORDS_);
+  } else {
+    Blockly.JavaScript.variableDB_.reset();
+  }
+
+  var defvars = [];
+  var variables = workspace.variableList;
+  if (variables.length) {
+    for (var i = 0; i < variables.length; i++) {
+      defvars[i] = Blockly.JavaScript.variableDB_.getName(variables[i],
+          Blockly.Variables.NAME_TYPE);
+    }
+    // Blockly.JavaScript.definitions_['variables'] =
+    //     'var ' + defvars.join(', ') + ';';
+    Blockly.JavaScript.definitions_['variables'] =
+        'var scope = {};';
+  }
+};
+
+Blockly.JavaScript['variables_get'] = function(block) {
+  // Variable getter.
+  var code = 'scope.' + Blockly.JavaScript.variableDB_.getName(block.getFieldValue('VAR'),
+      Blockly.Variables.NAME_TYPE);
+  return [code, Blockly.JavaScript.ORDER_ATOMIC];
+};
+
+Blockly.JavaScript['variables_set'] = function(block) {
+  // Variable setter.
+  var argument0 = Blockly.JavaScript.valueToCode(block, 'VALUE',
+      Blockly.JavaScript.ORDER_ASSIGNMENT) || '0';
+  var varName = 'scope.' + Blockly.JavaScript.variableDB_.getName(
+      block.getFieldValue('VAR'), Blockly.Variables.NAME_TYPE);
+  return varName + ' = ' + argument0 + ';\n';
+};
+
+///// End override ///////
+
 /**
  * @fileoverview Generating JavaScript for Common blocks.
  * @author maxosprojects

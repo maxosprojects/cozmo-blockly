@@ -832,12 +832,17 @@ function Cozmo3d() {
     } else {
       parent = that._scene;
     }
-    if (that._characters[character.id]) {
-      that._characters[character.id].removeFromScene();
-    }
     var instance = new CozmoBlockly.Character(parent, character);
+    var oldInstance = that._characters[character.id];
+    if (oldInstance) {
+      instance.mesh.position.copy(oldInstance.mesh.position);
+      instance.mesh.quaternion.copy(oldInstance.mesh.quaternion);
+      oldInstance.removeFromScene();
+    }
     instance.addToScene();
     that._characters[character.id] = instance;
+    // Force worldMatrix update
+    instance.mesh.updateMatrixWorld(true);
   };
 
   this.clearCharacters = function() {
