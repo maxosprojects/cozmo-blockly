@@ -19,64 +19,65 @@ var Animation = class {
       z: (this.anglesStop.mz - this.anglesStart.mz) / this.duration
     };
     this.mesh = mesh;
+    var that = this;
 
     this.next = function(currTime) {
-      if (!this.running) {
+      if (!that.running) {
         return;
       }
-      if (!this.startTime) {
-        this.startTime = Date.now();
+      if (!that.startTime) {
+        that.startTime = Date.now();
         return;
       }
       var time;
-      if (this.forward) {
-        time = currTime - this.startTime;
+      if (that.forward) {
+        time = currTime - that.startTime;
       } else {
-        time = this.startTime + this.duration - currTime;
+        time = that.startTime + that.duration - currTime;
       }
-      if (time > this.duration && this.forward) {
-        if (this.andBack) {
-          this.forward = false;
-          this.startTime = currTime;
+      if (time > that.duration && that.forward) {
+        if (that.andBack) {
+          that.forward = false;
+          that.startTime = currTime;
           return;
-        } else if (this.loop) {
-          this.startTime = currTime;
+        } else if (that.loop) {
+          that.startTime = currTime;
         } else {
-          this.running = false;
+          that.running = false;
         }
       } else if (time <= 0) {
-        if (this.loop) {
-          this.forward = true;
-          this.startTime = currTime;
+        if (that.loop) {
+          that.forward = true;
+          that.startTime = currTime;
           return;
         } else {
-          this.running = false;
+          that.running = false;
         }
       }
       var quat = new THREE.Quaternion();
       var euler = new THREE.Euler(
-        deg2rad(this.anglesStart.mx + this.anglesDiff.x * time),
-        deg2rad(this.anglesStart.mz + this.anglesDiff.z * time),
-        deg2rad(this.anglesStart.my + this.anglesDiff.y * time),
+        deg2rad(that.anglesStart.mx + that.anglesDiff.x * time),
+        deg2rad(that.anglesStart.mz + that.anglesDiff.z * time),
+        deg2rad(that.anglesStart.my + that.anglesDiff.y * time),
         'XYZ');
       quat.setFromEuler(euler);
-      quat = this.origQuat.clone().multiply(quat);
-      this.mesh.quaternion.copy(quat);
-      // console.log('after', this.forward, time, quat, this.origQuat);
+      quat = that.origQuat.clone().multiply(quat);
+      that.mesh.quaternion.copy(quat);
+      // console.log('after', that.forward, time, quat, that.origQuat);
     };
 
     this.start = function() {
-      if (!this.initialized) {
-        this.initialized = true;
-        this.origQuat = mesh.quaternion.clone();
+      if (!that.initialized) {
+        that.initialized = true;
+        that.origQuat = mesh.quaternion.clone();
       }
-      this.running = true;
+      that.running = true;
     };
 
     this.stop = function() {
-      this.running = false;
-      this.startTime = null;
-      this.forward = true;
+      that.running = false;
+      that.startTime = null;
+      that.forward = true;
     };
 
   };
@@ -88,26 +89,27 @@ var AnimationParallel = class {
     this.name = data.name;
     this.animations = animations;
     this.running = false;
+    var that = this;
 
     this.next = function(currTime) {
-      if (!this.running) {
+      if (!that.running) {
         return;
       }
-      this.animations.forEach(function(elem) {
+      that.animations.forEach(function(elem) {
         elem.next(currTime);
       });
     };
 
     this.start = function() {
-      this.running = true;
-      this.animations.forEach(function(elem) {
+      that.running = true;
+      that.animations.forEach(function(elem) {
         elem.start();
       });
     };
 
     this.stop = function() {
-      this.running = false;
-      this.animations.forEach(function(elem) {
+      that.running = false;
+      that.animations.forEach(function(elem) {
         elem.stop();
       });
     };
@@ -140,12 +142,12 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
           var mesh = createCuboid(size.width, size.height, size.depth, cMaterial);
           var geometry = mesh.geometry;
           geometry.faceVertexUvs[0] = [];
-          callbacks.push(mapUv.bind(this, geometry, texture, 0, elemT.left));
-          callbacks.push(mapUv.bind(this, geometry, texture, 1, elemT.right));
-          callbacks.push(mapUv.bind(this, geometry, texture, 2, elemT.top));
-          callbacks.push(mapUv.bind(this, geometry, texture, 3, elemT.bottom));
-          callbacks.push(mapUv.bind(this, geometry, texture, 4, elemT.front));
-          callbacks.push(mapUv.bind(this, geometry, texture, 5, elemT.back));
+          callbacks.push(mapUv.bind(that, geometry, texture, 0, elemT.left));
+          callbacks.push(mapUv.bind(that, geometry, texture, 1, elemT.right));
+          callbacks.push(mapUv.bind(that, geometry, texture, 2, elemT.top));
+          callbacks.push(mapUv.bind(that, geometry, texture, 3, elemT.bottom));
+          callbacks.push(mapUv.bind(that, geometry, texture, 4, elemT.front));
+          callbacks.push(mapUv.bind(that, geometry, texture, 5, elemT.back));
         } else {
           var colorStr = elem.color.replace('#', '');
           var color = parseInt(colorStr, 16);
