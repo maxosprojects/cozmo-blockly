@@ -221,7 +221,8 @@ CozmoBlockly.loadTexture = function(url, onLoad) {
   if (elem) {
     if (onLoad) {
       if (elem.texture.image) {
-        onLoad(elem.texture);
+        // Keep it async
+        setTimeout(onLoad.bind(this, elem.texture), 1);
       } else {
         elem.loaders.push(onLoad);
       }
@@ -233,18 +234,21 @@ CozmoBlockly.loadTexture = function(url, onLoad) {
   if (onLoad) {
     loaders.push(onLoad);
   }
+  elem = {
+    texture: null,
+    loaders: loaders
+  };
   // console.log('Adding onLoad for texture', url);
   var texture = CozmoBlockly.textureLoader.load(url + "?" + new Date().getTime(), function(loadedTexture) {
     // console.log('Running onLoad for texture', url);
     // loadedTexture.anisotropy = CozmoBlockly.maxAnisotropy;
-    for (var i = 0; i < loaders.length; i++) {
-      loaders[i](loadedTexture);
+    for (var i = 0; i < elem.loaders.length; i++) {
+      elem.loaders[i](loadedTexture);
     }
+    elem.loaders = [];
   });
-  CozmoBlockly.textureMap[url] = {
-    texture: texture,
-    loaders: loaders
-  };
+  elem.texture = texture;
+  CozmoBlockly.textureMap[url] = elem;
   return texture;
 }
 
