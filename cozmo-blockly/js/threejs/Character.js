@@ -176,54 +176,6 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
         var moveby = elem.moveby
         translate(mesh, moveby.mx, moveby.mz, moveby.my);
 
-        function addAnimation(animData, animMesh, animCollection) {
-          if (animData.kind === 'parallel') {
-            var nextMesh = animMesh;
-            var parallelAnimations = [];
-            for (var k = 0; k < animData.animations.length; k++) {
-              nextMesh = addAnimation(animData.animations[k], nextMesh, parallelAnimations);
-            }
-            animCollection.push(new AnimationParallel(animData, parallelAnimations));
-            return nextMesh;
-          }
-
-          var pivot = animData.pivot;
-          var anglesStart = animData.anglesStart;
-          var anglesStop = animData.anglesStop;
-          var duration = animData.duration;
-          var newMesh = new THREE.Object3D();
-
-          var pivotVec = new THREE.Vector3(pivot.mx, pivot.mz, pivot.my);
-          // console.log('1', pivotVec);
-          var meshWorldPos = animMesh.getWorldPosition();
-          // console.log('2', meshWorldPos, animMesh.position);
-          var newAnimMeshPos = pivotVec.clone().negate();
-
-          newMesh.position.copy(meshWorldPos.clone().add(pivotVec));
-          if (animData.local) {
-            animMesh.position.set(0, 0, 0);
-            animMesh.updateMatrixWorld(true);
-            animMesh.worldToLocal(newAnimMeshPos);
-          }
-          animMesh.position.copy(newAnimMeshPos);
-          // console.log('3', newMesh.position, animMesh.position);
-
-          if (animData.local) {
-            newMesh.quaternion.copy(animMesh.quaternion);
-            rotate(animMesh, 0, 0, 0);
-          }
-
-          animCollection.push(new Animation(newMesh, animData));
-          if (animData.displayAxes) {
-            var axisHelper = new THREE.AxisHelper(60);
-            newMesh.add(axisHelper);
-          }
-
-          newMesh.add(animMesh);
-
-          return newMesh;
-        }
-
         if (elem.animations) {
           // console.log('adding animations', elem.animations);
           for (var j = 0; j < elem.animations.length; j++) {
@@ -232,6 +184,12 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
         }
 
         that.container.add(mesh);
+      }
+
+      if (character.animations) {
+        character.animations.forEach(function(animation) {
+          that.container = addAnimation(animation, that.container, animations);
+        });
       }
 
       var charRotate = character.rotate;
@@ -243,6 +201,10 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
         translate(that.container, -pivot.mx, -pivot.mz, -pivot.my);
         newContainer.add(that.container);
         rotate(newContainer, angles.mx, angles.mz, angles.my);
+        if (charRotate.displayAxes) {
+          var axisHelper = new THREE.AxisHelper(60);
+          newContainer.add(axisHelper);
+        }
         that.container = newContainer;
       }
 
@@ -353,6 +315,54 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
 // function translateZ(obj, distance) {
 //   translateOnAxis( obj, new THREE.Vector3( 0, 0, 1 ), distance );
 // };
+
+function addAnimation(animData, animMesh, animCollection) {
+  if (animData.kind === 'parallel') {
+    var nextMesh = animMesh;
+    var parallelAnimations = [];
+    for (var k = 0; k < animData.animations.length; k++) {
+      nextMesh = addAnimation(animData.animations[k], nextMesh, parallelAnimations);
+    }
+    animCollection.push(new AnimationParallel(animData, parallelAnimations));
+    return nextMesh;
+  }
+
+  var pivot = animData.pivot;
+  var anglesStart = animData.anglesStart;
+  var anglesStop = animData.anglesStop;
+  var duration = animData.duration;
+  var newMesh = new THREE.Object3D();
+
+  var pivotVec = new THREE.Vector3(pivot.mx, pivot.mz, pivot.my);
+  // console.log('1', pivotVec);
+  var meshWorldPos = animMesh.getWorldPosition();
+  // console.log('2', meshWorldPos, animMesh.position);
+  var newAnimMeshPos = pivotVec.clone().negate();
+
+  newMesh.position.copy(meshWorldPos.clone().add(pivotVec));
+  if (animData.local) {
+    animMesh.position.set(0, 0, 0);
+    animMesh.updateMatrixWorld(true);
+    animMesh.worldToLocal(newAnimMeshPos);
+  }
+  animMesh.position.copy(newAnimMeshPos);
+  // console.log('3', newMesh.position, animMesh.position);
+
+  if (animData.local) {
+    newMesh.quaternion.copy(animMesh.quaternion);
+    rotate(animMesh, 0, 0, 0);
+  }
+
+  animCollection.push(new Animation(newMesh, animData));
+  if (animData.displayAxes) {
+    var axisHelper = new THREE.AxisHelper(60);
+    newMesh.add(axisHelper);
+  }
+
+  newMesh.add(animMesh);
+
+  return newMesh;
+}
 
 function translate(obj, x, y, z) {
   obj.position.add(new THREE.Vector3(x, y, z));
