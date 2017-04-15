@@ -46,18 +46,11 @@
                 </value>
               </block>
             </value>
-            <value name="COLOR">
-<!-- 
-              <shadow type="colour_picker">
-                <field name="COLOUR">#0074D9</field>
-              </shadow>
- -->
-            </value>
           </block>
         </statement>
       </block>
-
-<!--       <block type="aruco_character_static">
+<!-- 
+      <block type="aruco_character_static">
         <value name="CHAR_NAME">
           <shadow type="text">
             <field name="TEXT">character</field>
@@ -361,6 +354,9 @@
       </block>
 
       <block type="aruco_animation_parallel">
+      </block>
+
+      <block type="aruco_animation_serial">
       </block>
 
       <block type="aruco_animate">

@@ -4,6 +4,7 @@ var Animation = class {
     this.startTime = null;
     this.initialized = false;
     this.running = false;
+    this.finished = false;
     this.name = elemAnimate.name;
     this.local = elemAnimate.local;
     this.andBack = elemAnimate.andBack;
@@ -44,6 +45,7 @@ var Animation = class {
           that.startTime = currTime;
         } else {
           that.running = false;
+          that.finished = true;
         }
       } else if (time <= 0) {
         if (that.loop) {
@@ -52,6 +54,7 @@ var Animation = class {
           return;
         } else {
           that.running = false;
+          that.finished = true;
         }
       }
       var quat = new THREE.Quaternion();
@@ -80,6 +83,10 @@ var Animation = class {
       that.forward = true;
     };
 
+    this.isFinished = function() {
+      return that.finished;
+    };
+
   };
 
 }
@@ -89,6 +96,7 @@ var AnimationParallel = class {
     this.name = data.name;
     this.animations = animations;
     this.running = false;
+    this.finished = false;
     var that = this;
 
     this.next = function(currTime) {
@@ -102,6 +110,7 @@ var AnimationParallel = class {
 
     this.start = function() {
       that.running = true;
+      this.finished = false;
       that.animations.forEach(function(elem) {
         elem.start();
       });
@@ -109,6 +118,77 @@ var AnimationParallel = class {
 
     this.stop = function() {
       that.running = false;
+      this.finished = true;
+      that.animations.forEach(function(elem) {
+        elem.stop();
+      });
+    };
+
+    this.isFinished = function() {
+      if (that.finished) {
+        return true;
+      }
+      var finished = true;
+      that.animations.forEach(function(elem) {
+        if (!elem.isFinished()) {
+          finished = false;
+        }
+      });
+      if (finished) {
+        that.running = false;
+      }
+      that.finished = finished;
+      return finished;
+    };
+
+  };
+
+}
+
+var AnimationSerial = class {
+  constructor(data, animations) {
+    this.name = data.name;
+    this.animations = animations;
+    this.running = false;
+    this.finished = false;
+    this.current = 0;
+    var that = this;
+
+    this.next = function(currTime) {
+      if (!that.running) {
+        return;
+      }
+      var animation = that.animations[that.current];
+      if (animation.isFinished()) {
+        that.current++;
+      } else {
+        animation.next(currTime);
+        return;
+      }
+      if (that.current >= that.animations.length) {
+        that.running = false;
+        that.finished = true;
+        return;
+      } else {
+        animation = that.animations[that.current];
+        animation.start();
+      }
+    };
+
+    this.start = function() {
+      if (that.animations.length === 0) {
+        that.finished = true;
+      }
+      that.running = true;
+      that.finished = false;
+      that.current = 0;
+      var animation = that.animations[that.current];
+      animation.start();
+    };
+
+    this.stop = function() {
+      that.running = false;
+      that.finished = true;
       that.animations.forEach(function(elem) {
         elem.stop();
       });
@@ -317,6 +397,12 @@ CozmoBlockly.Character = class extends CozmoBlockly.Dynamic {
 // };
 
 function addAnimation(animData, animMesh, animCollection) {
+  // Need this check because Blockly doesn't support statements as values and adds extra commas
+  // when a statement generator returns array instead of just a string.
+  // If statement generator returned a string it would be prefixed with a 'highlight' call.
+  if (!animData) {
+    return animMesh;
+  }
   if (animData.kind === 'parallel') {
     var nextMesh = animMesh;
     var parallelAnimations = [];
@@ -324,6 +410,16 @@ function addAnimation(animData, animMesh, animCollection) {
       nextMesh = addAnimation(animData.animations[k], nextMesh, parallelAnimations);
     }
     animCollection.push(new AnimationParallel(animData, parallelAnimations));
+    return nextMesh;
+  }
+
+  if (animData.kind === 'serial') {
+    var nextMesh = animMesh;
+    var serialAnimations = [];
+    for (var k = 0; k < animData.animations.length; k++) {
+      nextMesh = addAnimation(animData.animations[k], nextMesh, serialAnimations);
+    }
+    animCollection.push(new AnimationSerial(animData, serialAnimations));
     return nextMesh;
   }
 

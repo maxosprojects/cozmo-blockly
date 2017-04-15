@@ -96,12 +96,11 @@ Blockly.JavaScript['aruco_animations'] = function(block) {
   }
   var bodyBlock = block.getInputTargetBlock('BODY');
   var body = Blockly.JavaScript.blockToCode(bodyBlock);
-  var code = 'var animations = [];\n';
-  code += body;
+  var code;
   if (Blockly.JavaScript.hasParent(block, 'aruco_element')) {
-    code += 'element["animations"] = animations;\n';
+    code = 'element["animations"] = [\n' + body + '];\n';
   } else if (Blockly.JavaScript.hasParent(block, 'aruco_character')) {
-    code += 'character["animations"] = animations;\n';
+    code = 'character["animations"] = [\n' + body + '];\n';
   }
   return code;
 };
@@ -113,15 +112,33 @@ Blockly.JavaScript['aruco_animation_parallel'] = function(block) {
   var name = block.getFieldValue('ANIM_NAME');
   var bodyBlock = block.getInputTargetBlock('BODY');
   var body = Blockly.JavaScript.blockToCode(bodyBlock);
-  var code = 'var animationsParallel = [];\n';
-  code += body;
-  var thisAnimation = '{\n';
-  thisAnimation += Blockly.JavaScript.INDENT + '"kind": "parallel",\n';
-  thisAnimation += Blockly.JavaScript.INDENT + '"name": "' + name + '",\n';
-  thisAnimation += Blockly.JavaScript.INDENT + '"animations": animationsParallel\n';
-  thisAnimation += '}';
-  code += 'animations.push(' + thisAnimation + ');\n';
-  return code;
+  var code = '{\n';
+  code += Blockly.JavaScript.INDENT + '"kind": "parallel",\n';
+  code += Blockly.JavaScript.INDENT + '"name": "' + name + '",\n';
+  code += Blockly.JavaScript.INDENT + '"animations": [\n' + body + ']\n';
+  code += '},\n';
+  code = Blockly.JavaScript.prefixLines(code, Blockly.JavaScript.INDENT);
+  // A hack: return array to skip adding highlight statement.
+  // That, unfortunately, adds extra comma, thus adding an undefined array element.
+  return [code];
+};
+
+Blockly.JavaScript['aruco_animation_serial'] = function(block) {
+  if (!Blockly.JavaScript.hasParent(block, 'aruco_animations')) {
+    return '';
+  }
+  var name = block.getFieldValue('ANIM_NAME');
+  var bodyBlock = block.getInputTargetBlock('BODY');
+  var body = Blockly.JavaScript.blockToCode(bodyBlock);
+  var code = '{\n';
+  code += Blockly.JavaScript.INDENT + '"kind": "serial",\n';
+  code += Blockly.JavaScript.INDENT + '"name": "' + name + '",\n';
+  code += Blockly.JavaScript.INDENT + '"animations": [\n' + body + ']\n';
+  code += '},\n';
+  code = Blockly.JavaScript.prefixLines(code, Blockly.JavaScript.INDENT);
+  // A hack: return array to skip adding highlight statement.
+  // That, unfortunately, adds extra comma, thus adding an undefined array element.
+  return [code];
 };
 
 Blockly.JavaScript['aruco_animate'] = function(block) {
@@ -137,25 +154,22 @@ Blockly.JavaScript['aruco_animate'] = function(block) {
   var anglesStop = Blockly.JavaScript.valueToCode(block, 'ANGLES_STOP', Blockly.JavaScript.ORDER_NONE);
   var duration = Blockly.JavaScript.getFloatOrVar(block, 'DURATION');
   var displayAxes = block.getFieldValue('AXES') === 'TRUE';
-  var animate = '{\n';
-  animate += Blockly.JavaScript.INDENT + '"kind": "single",\n';
-  animate += Blockly.JavaScript.INDENT + '"name": "' + name + '",\n';
-  animate += Blockly.JavaScript.INDENT + '"local": ' + local + ',\n';
-  animate += Blockly.JavaScript.INDENT + '"andBack": ' + andBack + ',\n';
-  animate += Blockly.JavaScript.INDENT + '"loop": ' + loop + ',\n';
-  animate += Blockly.JavaScript.INDENT + '"pivot": ' + pivot + ',\n';
-  animate += Blockly.JavaScript.INDENT + '"anglesStart": ' + anglesStart + ',\n';
-  animate += Blockly.JavaScript.INDENT + '"anglesStop": ' + anglesStop + ',\n';
-  animate += Blockly.JavaScript.INDENT + '"duration": ' + duration + ',\n';
-  animate += Blockly.JavaScript.INDENT + '"displayAxes": ' + displayAxes + '\n';
-  animate += '}';
-  var code;
-  if (Blockly.JavaScript.hasParent(block, 'aruco_animation_parallel')) {
-    code = 'animationsParallel.push(' + animate + ');\n';
-  } else {
-    code = 'animations.push(' + animate + ');\n';
-  }
-  return code;
+  var code = '{\n';
+  code += Blockly.JavaScript.INDENT + '"kind": "single",\n';
+  code += Blockly.JavaScript.INDENT + '"name": "' + name + '",\n';
+  code += Blockly.JavaScript.INDENT + '"local": ' + local + ',\n';
+  code += Blockly.JavaScript.INDENT + '"andBack": ' + andBack + ',\n';
+  code += Blockly.JavaScript.INDENT + '"loop": ' + loop + ',\n';
+  code += Blockly.JavaScript.INDENT + '"pivot": ' + pivot + ',\n';
+  code += Blockly.JavaScript.INDENT + '"anglesStart": ' + anglesStart + ',\n';
+  code += Blockly.JavaScript.INDENT + '"anglesStop": ' + anglesStop + ',\n';
+  code += Blockly.JavaScript.INDENT + '"duration": ' + duration + ',\n';
+  code += Blockly.JavaScript.INDENT + '"displayAxes": ' + displayAxes + '\n';
+  code += '},\n';
+  code = Blockly.JavaScript.prefixLines(code, Blockly.JavaScript.INDENT);
+  // A hack: return array to skip adding highlight statement.
+  // That, unfortunately, adds extra comma, thus adding an undefined array element.
+  return [code];
 };
 
 Blockly.JavaScript['aruco_element'] = function(block) {

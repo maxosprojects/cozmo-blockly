@@ -142,7 +142,7 @@ Blockly.Blocks['aruco_rotate'] = {
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setInputsInline(false);
-    this.setColour(Blockly.Blocks.aruco.markerHUE);
+    this.setColour(Blockly.Blocks.aruco.markerHUE + 40);
     this.setTooltip('Rotates character or element. Applied before translation, if any. Pivot point defines new Origin (for character that means the marker location)');
   }
 };
@@ -154,7 +154,7 @@ Blockly.Blocks['aruco_animations'] = {
     this.appendStatementInput("BODY");
     this.setPreviousStatement(true);
     this.setNextStatement(true);
-    this.setColour(Blockly.Blocks.cozmo.HUE2);
+    this.setColour(Blockly.Blocks.aruco.markerHUE + 60);
     this.setTooltip('Executes animations');
   }
 };
@@ -167,8 +167,21 @@ Blockly.Blocks['aruco_animation_parallel'] = {
     this.appendStatementInput("BODY");
     this.setPreviousStatement(true);
     this.setNextStatement(true);
-    this.setColour(Blockly.Blocks.cozmo.HUE2);
+    this.setColour(Blockly.Blocks.aruco.elementHUE - 40);
     this.setTooltip('Executes multiple animations in parallel');
+  }
+};
+
+Blockly.Blocks['aruco_animation_serial'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField('serial animation')
+        .appendField(new Blockly.FieldTextInput("name"), "ANIM_NAME");
+    this.appendStatementInput("BODY");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(Blockly.Blocks.aruco.elementHUE + 20);
+    this.setTooltip('Executes animations one-by-one');
   }
 };
 
@@ -208,7 +221,7 @@ Blockly.Blocks['aruco_animate'] = {
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setInputsInline(false);
-    this.setColour(Blockly.Blocks.aruco.markerHUE);
+    this.setColour(Blockly.Blocks.aruco.markerHUE + 60);
     this.setTooltip('Executes animation: rotating element or character around pivot point from "start angles" to "stop angles" for specifid duration');
   }
 };
@@ -225,10 +238,10 @@ Blockly.Blocks['aruco_element'] = {
         .setCheck("Aruco_Move_By")
         .setAlign(Blockly.ALIGN_RIGHT)
         .appendField("translate");
-    this.appendValueInput("COLOR")
-        .setCheck("Colour")
-        .setAlign(Blockly.ALIGN_RIGHT)
-        .appendField("color")
+    // this.appendValueInput("COLOR")
+    //     .setCheck("Colour")
+    //     .setAlign(Blockly.ALIGN_RIGHT)
+    //     .appendField("color")
         // .setVisible(false);
     this.appendStatementInput("BODY");
     this.setPreviousStatement(true);
@@ -390,7 +403,7 @@ Blockly.Blocks['aruco_conditional'] = {
         .setCheck("Boolean")
         .appendField('on condition');
     this.appendStatementInput("BODY");
-    this.setColour(Blockly.Blocks.cozmo.HUE2);
+    this.setColour(Blockly.Blocks.aruco.elementHUE);
     this.setTooltip('Executes piece of program on condition');
   }
 };
@@ -427,7 +440,7 @@ Blockly.Blocks['aruco_animation_start'] = {
     this.setInputsInline(true);
     this.setPreviousStatement(true);
     this.setNextStatement(true);
-    this.setColour(Blockly.Blocks.aruco.markerHUE);
+    this.setColour(Blockly.Blocks.aruco.markerHUE + 80);
     this.setTooltip("Start animation with given name on given character");
   }
 };
@@ -445,7 +458,7 @@ Blockly.Blocks['aruco_animation_stop'] = {
     this.setInputsInline(true);
     this.setPreviousStatement(true);
     this.setNextStatement(true);
-    this.setColour(Blockly.Blocks.aruco.markerHUE);
+    this.setColour(Blockly.Blocks.aruco.markerHUE + 100);
     this.setTooltip("Stop animation with given name on given character");
   }
 };
@@ -458,7 +471,7 @@ Blockly.Blocks['aruco_log'] = {
     this.setInputsInline(true);
     this.setPreviousStatement(true);
     this.setNextStatement(true);
-    this.setColour(Blockly.Blocks.aruco.markerHUE);
+    this.setColour(Blockly.Blocks.aruco.markerHUE + 120);
     this.setTooltip("Logs value");
   }
 };
