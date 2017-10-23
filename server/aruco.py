@@ -10,10 +10,14 @@ import transforms3d.affines as affines
 import json
 import math
 import vector
+import os
 
 renderAxes = False
 
-with open('camera.json', 'r') as cameraJson:
+__location__ = os.path.realpath(
+    os.path.join(os.getcwd(), os.path.dirname(__file__)))
+
+with open(os.path.join(__location__, 'camera.json'), 'r') as cameraJson:
     data=cameraJson.read().replace('\n', '')
     cameraData = json.loads(data)
     cameraMatrix = np.array(cameraData['cameraMatrix'])
